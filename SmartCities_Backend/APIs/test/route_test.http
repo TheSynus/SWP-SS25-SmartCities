@@ -1,0 +1,15 @@
+// File zum Testen der erstellten Routen
+
+POST http://localhost:3000/setup/plz
+Content-Type: application/json
+
+{
+  "plz": "22880"
+}
+
+//Trennzeichen zwischen verschiedenen Request-Tests:
+###
+
+GET http://localhost:3000/call/nina
+
+###
