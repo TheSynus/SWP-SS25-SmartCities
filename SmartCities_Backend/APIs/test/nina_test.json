@@ -1,0 +1,54 @@
+[
+  {
+    "id": "mow.DE-NW-BN-SE030-20201014-30-000",
+    "payload": {
+      "version": 2,
+      "type": "ALERT",
+      "id": "mow.DE-NW-BN-SE030-20201014-30-000",
+      "hash": "d72526da941f98cb79f25dc3f9b56474a313e2161fda46e91f146139811eca4a",
+      "data": {
+        "headline": "Coronavirus; Informationen des Bundesministeriums für  Gesundheit",
+        "provider": "MOWAS",
+        "severity": "Minor",
+        "msgType": "Update",
+        "transKeys": {
+          "event": "BBK-EVC-040"
+        },
+        "area": {
+          "type": "ZGEM",
+          "data": "1+11057100001"
+        }
+      }
+    },
+    "i18nTitle": {
+      "de": "Coronavirus; Informationen des Bundesministeriums für Gesundheit"
+    },
+    "sent": {}
+  },
+  {
+    "id": "mow.DE-NW-BN-SE030-20201014-30-000",
+    "payload": {
+      "version": 2,
+      "type": "ALERT",
+      "id": "mow.DE-NW-BN-SE030-20201014-30-000",
+      "hash": "d72526da941f98cb79f25dc3f9b56474a313e2161fda46e91f146139811eca4a",
+      "data": {
+        "headline": "Coronavirus; Informationen des Bundesministeriums für  Gesundheit",
+        "provider": "MOWAS",
+        "severity": "Minor",
+        "msgType": "Update",
+        "transKeys": {
+          "event": "BBK-EVC-040"
+        },
+        "area": {
+          "type": "ZGEM",
+          "data": "1+11057100001"
+        }
+      }
+    },
+    "i18nTitle": {
+      "de": "Coronavirus; Informationen des Bundesministeriums für Gesundheit"
+    },
+    "sent": {}
+  }
+]

@@ -4,6 +4,9 @@ require('dotenv').config();
 
 // Importieren der anderen Funktionen zur Verwendung innerhalb der Routen
 const { getCityToPLZ, getRegionalKey } = require('./general_utils.js');
+const { getJSONContent, writeValueToJSON } = require('./json_utils.js');
+const { config } = require('dotenv');
+
 
 const app = express();
 const port = process.env.PORT;
@@ -11,7 +14,7 @@ const port = process.env.PORT;
 app.use(express.json());
 
 // Variablen:
-let plz = null; //TODO: momentan nur Variable zu Testzwecken, DB oder per dotenv-modul?
+let plz = null; 
 let city = null;
 let regionalKey = null;
 
@@ -31,8 +34,8 @@ app.get('/test', async (req, res) => {
 // Request Body: JSON Objekt mit "plz"-Field, also z.B.: { "plz" : "12345" }
 
 app.post('/setup/plz', async (req, res) => {
-
-  if (plz !== null) {
+  
+  if (plz !== -1) {
     console.error('USER-ERROR: tried to set postal code, postal code was already set.');
     return res.status(400).send('The postal code was already set');
   }
@@ -53,21 +56,23 @@ app.post('/setup/plz', async (req, res) => {
 
   // Wenn keine Fehler auftreten, wird die neue Postleitzahl gesetzt
   plz = newPlz;
-  //TODO: persistentes speichern!
+  writeValueToJSON("./config.json", "plz", plz);
+
 
   res.send('The postal code set successfully');
   console.log('Postal code was set to: ' + plz);
 
   city = await getCityToPLZ(plz);
+  writeValueToJSON("./config.json", "cityName", city);
+
   regionalKey = getRegionalKey(city);
+  writeValueToJSON("./config.json", "regionalKey", regionalKey);
 });
 
 
 // Abfrage der NINA-Warndaten zur Stadt auf Kreisebene
-// ---- WIP ----
-// Warnungen werden schon abgerufen, allerdings noch keine vernünftige Verarbeitung
 app.get('/call/nina', async (req, res) => {
-  if (regionalKey !== null) {
+  if (regionalKey !== -1) {
     // Regionalschlüssel der Stadt ins richtige Format bringen
     regionalKeyTrimmed = regionalKey.slice(0, 5) + '0000000';
 
@@ -80,12 +85,21 @@ app.get('/call/nina', async (req, res) => {
       }
 
       // JSON-Daten der Antwort parsen - ist Jacascript Array/Object
-      const warnData = await response.json(); 
+      let warnData = await response.json();
+      
+      //FÜR TESTAUFRUF EINFACH WIEDER EINKOMMENTIEREN, gibt zwei Test-Meldungen auf einmal aus
+      //warnData = getJSONContent("./test/nina_test.json");
 
       // Über verschiedene Warnungen iterieren, um an IDs etc zu kommen, um Daten aufzubereiten
+      warnData = warnData.map(m => {
+        return {
+          url:"https://warnung.bund.de/meldungen/" + m.id,
+          type:m.payload.type,
+          headline:m.payload?.data?.headline,
+          severity:m.payload?.data?.severity
+        }
+      })
 
-      // Die Daten aufgeräumt als Antwort zurückgeben //TODO:
-      //res.json(data);#
       res.send(warnData);
     } catch (error) {
       console.error('SERVER-FEHLER: Fehler beim Abrufen der NINA-Warndaten:', error);
@@ -100,5 +114,17 @@ app.get('/call/nina', async (req, res) => {
 
 
 app.listen(port, () => {
+  console.log("----------- Serverstart -----------")
   console.log(`Server läuft auf http://localhost:${port}`);
+  
+  //Initialisieren der Serverconfigwerte aus der JSON
+  console.log("Initialisieren der Servervariablen:")
+  const configJsonContent = getJSONContent("./config.json");
+  plz = configJsonContent.plz;
+  console.log("Postleitzahl aus Config:", plz);
+  city = configJsonContent.cityName;
+  console.log("Stadtname aus Config:", city);
+  regionalKey = configJsonContent.regionalKey;
+  console.log("Regionalschlüssel aus Config:", regionalKey);
+  console.log("-----------------------------------")
 });

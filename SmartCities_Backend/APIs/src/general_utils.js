@@ -1,5 +1,7 @@
 const { readFileSync } = require('fs');
 
+const { getJSONContent } = require('./json_utils.js');
+
 // Verschiedene Funktionen zum Verwenden in den Routen
 
 async function getCityToPLZ(postalCode, page = 1, pageSize = 10) {
@@ -32,8 +34,7 @@ function getRegionalKey(cityName) {
 
     // Öffnen der JSON Datei mit der Zuordnung der Regionalschlüsseln zu Städten
     const pathToFile = './regional_keys.json';
-    const options = {encoding: 'utf8'};
-    const jsonData = JSON.parse(readFileSync(pathToFile, options));
+    const jsonData = getJSONContent(pathToFile);
 
     // Aus den Daten die gesuchte Stadt herausfiltern
     let cityCode = null;
