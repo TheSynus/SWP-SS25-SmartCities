@@ -1,7 +1,7 @@
-import express from 'express'
+const express = require('express');
 const router = express.Router()
 
-app.get('/test', async (req, res) => {
+router.get('/test', async (req, res) => {
   try {
     result = "test"
     res.json(result.rows);
@@ -12,4 +12,4 @@ app.get('/test', async (req, res) => {
   }
 });
 
-export default router
+module.exports = router;
