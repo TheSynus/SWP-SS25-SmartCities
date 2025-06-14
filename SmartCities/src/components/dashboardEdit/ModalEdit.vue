@@ -1,7 +1,9 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import AddDefaultCard from './AddDefaultCard.vue';
+import AddGraphCard from './AddGraphCard.vue';
+</script>
 
 <template>
-
   <!-- Main modal -->
   <div class="relative p-4 w-full max-w-7xl max-h-full">
     <!-- Modal content -->
@@ -36,9 +38,60 @@
       </div>
       <!-- Modal body -->
       <div class="p-4 md:p-5 space-y-4">
-
+        <div class="mb-4 border-b border-gray-200 dark:border-gray-700">
+          <ul
+            class="flex flex-wrap -mb-px text-sm font-medium text-center"
+            id="default-tab"
+            data-tabs-toggle="#default-tab-content"
+            role="tablist"
+          >
+            <li class="me-2" role="presentation">
+              <button
+                class="inline-block p-4 border-b-2 rounded-t-lg"
+                id="profile-tab"
+                data-tabs-target="#profile"
+                type="button"
+                role="tab"
+                aria-controls="profile"
+                aria-selected="false"
+              >
+                Default
+              </button>
+            </li>
+            <li class="me-2" role="presentation">
+              <button
+                class="inline-block p-4 border-b-2 rounded-t-lg hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300"
+                id="dashboard-tab"
+                data-tabs-target="#dashboard"
+                type="button"
+                role="tab"
+                aria-controls="dashboard"
+                aria-selected="false"
+              >
+                Graphen
+              </button>
+            </li>
+          </ul>
+        </div>
+        <div id="default-tab-content">
+          <div
+            class="hidden p-4 rounded-lg"
+            id="profile"
+            role="tabpanel"
+            aria-labelledby="profile-tab"
+          >
+            <AddDefaultCard/>
+          </div>
+          <div
+            class="hidden p-4 rounded-lg"
+            id="dashboard"
+            role="tabpanel"
+            aria-labelledby="dashboard-tab"
+          >
+           <AddGraphCard/>
+          </div>
+        </div>
       </div>
-
     </div>
   </div>
 </template>

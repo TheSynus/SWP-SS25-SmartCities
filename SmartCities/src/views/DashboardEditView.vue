@@ -1,8 +1,20 @@
 <script setup lang="ts">
-import DefaultCard from '../components/DefaultCard.vue'
-import AddCardButton from '../components/dashboardEdit/AddCardButton.vue'
 import PhoneMockup from '../components/dashboardEdit/PhoneMockup.vue'
 import ModalEdit from '../components/dashboardEdit/ModalEdit.vue'
+import DashboardContent from '@/components/DashboardContent.vue'
+import { ref } from 'vue'
+
+const cards = ref([
+  { id: 1, name: 'Wetter' },
+  { id: 2, name: 'Nina' },
+  { id: 3, name: 'Luftqualität' },
+  { id: 4, name: 'Wasserstand' },
+  { id: 5, name: 'Pollen' },
+  { id: 6, name: 'Windgeschwindigkeit' },
+  { id: 7, name: 'Bildkachel' },
+])
+
+
 </script>
 
 <template>
@@ -12,26 +24,12 @@ import ModalEdit from '../components/dashboardEdit/ModalEdit.vue'
 
     <!-- Scrollable Middle Column -->
     <div class="flex justify-center overflow-y-scroll h-full custom-scrollbar">
-      <ul>
-        <AddCardButton />
-        <li class="py-4"><DefaultCard /></li>
-        <AddCardButton />
-        <li class="py-4"><DefaultCard /></li>
-        <AddCardButton />
-        <li class="py-4"><DefaultCard /></li>
-        <AddCardButton />
-        <li class="py-4"><DefaultCard /></li>
-        <AddCardButton />
-        <li class="py-4"><DefaultCard /></li>
-        <AddCardButton />
-        <li class="py-4"><DefaultCard /></li>
-        <AddCardButton />
-      </ul>
+      <DashboardContent :cards="cards" :showAddButtons="true" />
     </div>
 
     <!-- Right Column -->
     <div class="self-start">
-      <PhoneMockup />
+      <PhoneMockup :cards="cards" />
     </div>
   </div>
 
@@ -46,9 +44,3 @@ import ModalEdit from '../components/dashboardEdit/ModalEdit.vue'
   </div>
 </template>
 
-<style scoped>
-/* Hide scrollbar arrows */
-::-webkit-scrollbar-button {
-  display: none;
-}
-</style>
