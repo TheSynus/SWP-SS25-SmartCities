@@ -2,21 +2,27 @@
 import PhoneMockup from '../components/dashboardEdit/PhoneMockup.vue'
 import ModalEdit from '../components/dashboardEdit/ModalEdit.vue'
 import DashboardContent from '@/components/DashboardContent.vue'
+import 'flowbite'
 import { ref } from 'vue'
+import { onMounted } from 'vue'
+import { initFlowbite } from 'flowbite'
+
+onMounted(() => {
+  // Flowbite Modals neu initialisieren
+  initFlowbite()
+})
 
 const cards = ref([
   { id: 1, name: 'Wetter' },
   { id: 2, name: 'Nina' },
   { id: 3, name: 'Luftqualität' },
-  { id: 4, name: 'Wasserstand' }
+  { id: 4, name: 'Wasserstand' },
 ])
-
 
 </script>
 
 <template>
   <div class="grid grid-cols-2 overflow-hidden h-screen pt-20 items-center">
-
     <!-- Scrollable Left Column -->
     <div class="flex justify-center overflow-y-scroll h-full custom-scrollbar items-center">
       <DashboardContent :cards="cards" :showAddButtons="true" />
@@ -38,4 +44,3 @@ const cards = ref([
     <ModalEdit />
   </div>
 </template>
-
