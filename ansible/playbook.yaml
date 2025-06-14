@@ -15,16 +15,32 @@
             repo: deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu noble stable
             state: present
 
-    - name: Install docker
-      ansible.builtin.apt:
-        pkg:
-          - docker-ce
-          - docker-ce-cli
-          - containerd.io
-          - docker-buildx-plugin
-          - docker-compose-plugin
+        - name: Install docker
+          ansible.builtin.apt:
+            pkg:
+              - docker-ce
+              - docker-ce-cli
+              - containerd.io
+              - docker-buildx-plugin
+              - docker-compose-plugin
 
-    - name: Enable and start docker
-      ansible.builtin.service:
-        name: docker
-        enabled: yes
+        - name: Enable and start docker
+          ansible.builtin.service:
+            name: docker
+            enabled: yes
+
+    - name: Create app
+      block:
+        - name: Create app directory
+          ansible.builtin.file:
+            path: /apps/smartcities
+            state: directory
+            mode: '0755'
+
+        - name: Ensure docker compose file
+          ansible.builtin.copy:
+            src: ../docker-compose.yaml
+            dest: /apps/smartcities/docker-compose.yaml
+            owner: root
+            group: root
+            mode: '0644'
