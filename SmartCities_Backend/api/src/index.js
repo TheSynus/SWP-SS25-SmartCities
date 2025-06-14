@@ -32,7 +32,7 @@ app.get('/test', async (req, res) => {
   }
 });
 
-// Route zum initialen Annehmen der Postleitzahl und automatischen Ermitteln der Stadt und des Regionalschlüssels
+// Route zum initialen Annehmen der Postleitzahl und automatischen Ermitteln der Stadt
 // Request Body: JSON Objekt mit "plz"-Field, also z.B.: { "plz" : "12345" }
 app.post('/setup/plz', async (req, res) => {
   
@@ -65,7 +65,36 @@ app.post('/setup/plz', async (req, res) => {
   city = await getCityToPLZ(plz);
   writeValueToJSON("./config.json", "cityName", city);
 
-  regionalKey = getRegionalKey(city);
+  //regionalKey = getRegionalKey(city);
+  //writeValueToJSON("./config.json", "regionalKey", regionalKey);
+});
+
+
+// Route zum initialen Annehmen des Regionalschlüssels
+// Request Body: JSON Objekt mit "regionalKey"-Field, also z.B.: { "regionalKey" : "012345678912" }
+app.post('/setup/regionalKey', async (req, res) => {
+  // Fehler, wenn der Regionalschlüssel bereits gesetzt wurde
+  if (regionalKey !== -1) {
+    console.error('USER-ERROR: tried to set regional key, regional key was already set.');
+    return res.status(400).send('The regional key was already set');
+  }
+
+  const { regionalKey : newRegionalKey } = req.body;
+  // Fehler, wenn kein Regionalschlüssel mitgeschickt wurde
+  if (!newRegionalKey) {
+    console.error('USER-ERROR: tried to set regional key, no regional key provided');
+    return res.status(400).send('A regional key is required');
+  }
+
+  // Überprüfen, ob Regionalschlüssel dem richtigen Format entspricht - 12 Zahlen
+  const isValidKey = /^\d{12}$/.test(newRegionalKey);
+  if (!isValidKey) {
+    console.error('USER-ERROR: tried to set regional key, provided regional key not in valid format');
+    return res.status(400).send('The regional key is not in a valid format. It must be exactly 12 digits long and only contain numbers.');
+  }
+
+  // Wenn keine Fehler auftreten, wird der Regionalschlüssel gesetzt
+  regionalKey = newRegionalKey;
   writeValueToJSON("./config.json", "regionalKey", regionalKey);
 });
 
