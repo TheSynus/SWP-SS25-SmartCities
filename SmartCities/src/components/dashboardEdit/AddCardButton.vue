@@ -4,7 +4,7 @@
   <div
     data-modal-target="static-modal"
     data-modal-toggle="static-modal"
-    class="grid justify-center border rounded-md hover:bg-gray-500 max-w-sm"
+    class="grid justify-center border rounded-md hover:bg-gray-500 w-sm cursor-pointer"
   >
     <svg
       class="w-6 h-6 text-gray-800 dark:text-white"

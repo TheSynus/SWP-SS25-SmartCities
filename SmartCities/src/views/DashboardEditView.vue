@@ -8,27 +8,22 @@ const cards = ref([
   { id: 1, name: 'Wetter' },
   { id: 2, name: 'Nina' },
   { id: 3, name: 'Luftqualität' },
-  { id: 4, name: 'Wasserstand' },
-  { id: 5, name: 'Pollen' },
-  { id: 6, name: 'Windgeschwindigkeit' },
-  { id: 7, name: 'Bildkachel' },
+  { id: 4, name: 'Wasserstand' }
 ])
 
 
 </script>
 
 <template>
-  <div class="grid grid-cols-2 overflow-hidden h-[calc(100vh-64px)]">
-    <!-- Left Column -->
-    <!-- <div class="self-start">PLATZHALTER</div> -->
+  <div class="grid grid-cols-2 overflow-hidden h-screen pt-20 items-center">
 
-    <!-- Scrollable Middle Column -->
-    <div class="flex justify-center overflow-y-scroll h-full custom-scrollbar">
+    <!-- Scrollable Left Column -->
+    <div class="flex justify-center overflow-y-scroll h-full custom-scrollbar items-center">
       <DashboardContent :cards="cards" :showAddButtons="true" />
     </div>
 
     <!-- Right Column -->
-    <div class="self-start">
+    <div>
       <PhoneMockup :cards="cards" />
     </div>
   </div>
