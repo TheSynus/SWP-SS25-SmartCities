@@ -1,8 +1,6 @@
-version: '3.8'
-
 services:
   postgres:
-    image: postgres:15
+    image: postgres
     container_name: postgres_db
     restart: unless-stopped
     environment:
@@ -32,14 +30,14 @@ services:
     container_name: node_api
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "3001:3001"
     environment:
       - DB_HOST=postgres
       - DB_PORT=5432
       - DB_NAME=webportal
       - DB_USER=admin
       - DB_PASSWORD=Admin!1234
-      - PORT=3000
+      - PORT=3001
     depends_on:
       - postgres
 
