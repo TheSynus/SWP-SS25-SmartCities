@@ -1,17 +1,17 @@
 const express = require('express');
-const pool = require('./db');
-require('dotenv').config();
-
-// Importieren der anderen Funktionen zur Verwendung innerhalb der Routen
+const dotenv = require('dotenv');
+const pool = require('./db.js');
 const { getCityToPLZ, getRegionalKey } = require('./general_utils.js');
 const { getJSONContent, writeValueToJSON } = require('./json_utils.js');
-const { config } = require('dotenv');
 
+dotenv.config();
 
 const app = express();
-const port = process.env.PORT;
+const port = process.env.PORT || 3000;
 
 app.use(express.json());
+
+require('dotenv').config();
 
 // Variablen:
 let plz = null; 
@@ -56,17 +56,16 @@ app.post('/setup/plz', async (req, res) => {
 
   // Wenn keine Fehler auftreten, wird die neue Postleitzahl gesetzt
   plz = newPlz;
-  writeValueToJSON("./config.json", "plz", plz);
-
+  writeValueToJSON("../config.json", "plz", plz);
 
   res.send('The postal code set successfully');
   console.log('Postal code was set to: ' + plz);
 
   city = await getCityToPLZ(plz);
-  writeValueToJSON("./config.json", "cityName", city);
+  writeValueToJSON("../config.json", "cityName", city);
 
   regionalKey = getRegionalKey(city);
-  writeValueToJSON("./config.json", "regionalKey", regionalKey);
+  writeValueToJSON("../config.json", "regionalKey", regionalKey);
 });
 
 
@@ -119,7 +118,7 @@ app.listen(port, () => {
   
   //Initialisieren der Serverconfigwerte aus der JSON
   console.log("Initialisieren der Servervariablen:")
-  const configJsonContent = getJSONContent("./config.json");
+  const configJsonContent = getJSONContent("../config.json");
   plz = configJsonContent.plz;
   console.log("Postleitzahl aus Config:", plz);
   city = configJsonContent.cityName;
@@ -127,4 +126,12 @@ app.listen(port, () => {
   regionalKey = configJsonContent.regionalKey;
   console.log("Regionalschlüssel aus Config:", regionalKey);
   console.log("-----------------------------------")
+});
+
+app.get('/test', async (req, res) => {
+  res.json({ status: "ok" });
+});
+
+app.listen(port, () => {
+  console.log(`Server läuft auf http://localhost:${port}`);
 });
