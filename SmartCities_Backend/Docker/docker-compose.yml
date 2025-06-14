@@ -1,0 +1,54 @@
+services:
+  postgres:
+    image: postgres
+    container_name: postgres_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: Admin!1234
+      POSTGRES_DB: webportal
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: postgres_admin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+    ports:
+      - "8080:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+
+  web:
+    image: nginx:alpine
+    container_name: nginx_web
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+    volumes:
+      - ./website:/usr/share/nginx/html:ro
+
+  api:
+    build: ./api
+    container_name: flask_api
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=webportal
+      - DB_USER=admin
+      - DB_PASSWORD=Admin!1234
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_data:
+  pgadmin_data:
