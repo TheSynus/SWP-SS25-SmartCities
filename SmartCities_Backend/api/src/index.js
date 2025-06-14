@@ -3,6 +3,8 @@ const dotenv = require('dotenv');
 const pool = require('./db.js');
 const { getCityToPLZ, getRegionalKey } = require('./general_utils.js');
 const { getJSONContent, writeValueToJSON } = require('./json_utils.js');
+import testRouter from './router/testRouter.js'
+
 
 dotenv.config();
 
@@ -32,7 +34,6 @@ app.get('/test', async (req, res) => {
 
 // Route zum initialen Annehmen der Postleitzahl und automatischen Ermitteln der Stadt und des Regionalschlüssels
 // Request Body: JSON Objekt mit "plz"-Field, also z.B.: { "plz" : "12345" }
-
 app.post('/setup/plz', async (req, res) => {
   
   if (plz !== -1) {
@@ -67,7 +68,6 @@ app.post('/setup/plz', async (req, res) => {
   regionalKey = getRegionalKey(city);
   writeValueToJSON("./config.json", "regionalKey", regionalKey);
 });
-
 
 // Abfrage der NINA-Warndaten zur Stadt auf Kreisebene
 app.get('/call/nina', async (req, res) => {
@@ -110,8 +110,6 @@ app.get('/call/nina', async (req, res) => {
   }
 });
 
-
-
 app.listen(port, '0.0.0.0', () => {
   console.log("----------- Serverstart -----------")
   console.log(`Server läuft auf http://0.0.0.0:${port}`);
@@ -128,6 +126,4 @@ app.listen(port, '0.0.0.0', () => {
   console.log("-----------------------------------")
 });
 
-app.get('/test', async (req, res) => {
-  res.json({ status: "ok" });
-});
+app.use('/test/', testRouter)
