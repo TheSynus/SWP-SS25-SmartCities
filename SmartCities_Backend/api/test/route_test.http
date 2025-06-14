@@ -1,6 +1,6 @@
 // File zum Testen der erstellten Routen
 
-POST http://localhost:3000/setup/plz
+POST http://localhost:3001/setup/plz
 Content-Type: application/json
 
 {
@@ -10,6 +10,13 @@ Content-Type: application/json
 //Trennzeichen zwischen verschiedenen Request-Tests:
 ###
 
-GET http://localhost:3000/call/nina
+GET http://localhost:3001/call/nina
 
 ###
+
+POST http://localhost:3001/setup/regionalKey
+Content-Type: application/json
+
+{
+  "regionalKey": "010560050050"
+}
