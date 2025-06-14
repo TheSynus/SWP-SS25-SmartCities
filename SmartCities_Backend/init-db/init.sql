@@ -20,20 +20,20 @@ CREATE TABLE calendar_entries (
     is_all_day BOOLEAN DEFAULT FALSE
 );
 
--- images
 CREATE TABLE images (
     id SERIAL PRIMARY KEY,
     file_name VARCHAR(255) NOT NULL,
-    file_path TEXT NOT NULL
+    file_data BYTEA NOT NULL,
+    mime_type VARCHAR(100) NOT NULL,
+    additional_info TEXT
 );
 
 -- events
 CREATE TABLE events (
     id SERIAL PRIMARY KEY,
     title VARCHAR(200) NOT NULL,
-    calendar_entry_id INTEGER UNIQUE REFERENCES calendar_entries(id) ON DELETE CASCADE,
     location VARCHAR(255),
-    start_time TIMESTAMP NOT NULL,
+    start_time TIMESTAMP,
     end_time TIMESTAMP,
     category VARCHAR(100),
     tags TEXT[],

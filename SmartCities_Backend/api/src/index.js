@@ -4,12 +4,20 @@ const pool = require('./db.js');
 const { getCityToPLZ, getRegionalKey } = require('./general_utils.js');
 const { getJSONContent, writeValueToJSON } = require('./json_utils.js');
 const testRouter = require('./router/testRouter.js');
-
-
-dotenv.config();
+const imagesRouter = require('./router/imagesRouter.js');
+const eventsRouter = require('./router/eventsRouter.js');
+const cors = require('cors');
 
 const app = express();
 const port = process.env.PORT || 3001;
+
+app.use(cors({
+  origin: 'http://localhost:8000',
+}));
+
+app.use(express.json());
+
+dotenv.config();
 
 app.use(express.json());
 
@@ -140,6 +148,8 @@ app.get('/call/nina', async (req, res) => {
 });
 
 app.use('/test/', testRouter)
+app.use('/images/', imagesRouter)
+app.use('/events/', eventsRouter)
 
 app.listen(port, '0.0.0.0', () => {
   console.log("----------- Serverstart -----------")
