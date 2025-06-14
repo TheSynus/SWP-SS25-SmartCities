@@ -29,7 +29,6 @@ document.addEventListener('DOMContentLoaded', function () {
     // Daten zusammenstellen
     const data = {
         title: title,
-        calendar_entry_id: calendar_entry_id,
         category: category,
         tags: tags,
         additional_info: additional_info

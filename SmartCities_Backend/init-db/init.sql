@@ -20,6 +20,7 @@ CREATE TABLE calendar_entries (
     is_all_day BOOLEAN DEFAULT FALSE
 );
 
+-- images
 CREATE TABLE images (
     id SERIAL PRIMARY KEY,
     file_name VARCHAR(255) NOT NULL,
