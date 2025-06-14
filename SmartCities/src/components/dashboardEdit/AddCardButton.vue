@@ -1,7 +1,11 @@
 <script setup lang="ts"></script>
 
 <template>
-  <div class="grid justify-center border rounded-md hover:bg-gray-500 max-w-sm">
+  <div
+    data-modal-target="static-modal"
+    data-modal-toggle="static-modal"
+    class="grid justify-center border rounded-md hover:bg-gray-500 max-w-sm"
+  >
     <svg
       class="w-6 h-6 text-gray-800 dark:text-white"
       aria-hidden="true"
