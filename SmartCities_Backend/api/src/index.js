@@ -3,7 +3,7 @@ const dotenv = require('dotenv');
 const pool = require('./db.js');
 const { getCityToPLZ, getRegionalKey } = require('./general_utils.js');
 const { getJSONContent, writeValueToJSON } = require('./json_utils.js');
-import testRouter from './router/testRouter.js'
+const testRouter = require('./router/testRouter.js');
 
 
 dotenv.config();
@@ -139,6 +139,8 @@ app.get('/call/nina', async (req, res) => {
   }
 });
 
+app.use('/test/', testRouter)
+
 app.listen(port, '0.0.0.0', () => {
   console.log("----------- Serverstart -----------")
   console.log(`Server läuft auf http://0.0.0.0:${port}`);
@@ -155,4 +157,3 @@ app.listen(port, '0.0.0.0', () => {
   console.log("-----------------------------------")
 });
 
-app.use('/test/', testRouter)

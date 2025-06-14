@@ -3,14 +3,11 @@ FROM node:20-alpine
 WORKDIR /app
 
 COPY package*.json ./
-
 RUN npm install
 
-COPY . .
+COPY src ./src 
+COPY config.json ./
 
-EXPOSE 3001
+EXPOSE 3000
 
-HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:3001/ || exit 1
-
-CMD ["node", "src/index.js"] 
+CMD ["node", "src/index.js"]
