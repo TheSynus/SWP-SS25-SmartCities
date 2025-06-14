@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router()
 
+// So würden die Routen aussehen
 router.get('/test', async (req, res) => {
   try {
     result = "test"
