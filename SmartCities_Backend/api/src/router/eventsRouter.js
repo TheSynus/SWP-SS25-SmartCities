@@ -4,7 +4,7 @@ const pool = require('../db.js');
 const router = express.Router();
 
 router.post('/add_event', async (req, res) => {
-  const { title, calendar_entry_id, category, tags, additional_info } = req.body;
+  const { title, category, tags, additional_info } = req.body;
   console.log("DAS SOLLTE IN DIE DB" + JSON.stringify(req.body))
 
 //  if (!title || !calendar_entry_id) {

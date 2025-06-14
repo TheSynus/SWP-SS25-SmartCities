@@ -14,39 +14,15 @@
         <input name="password" type="password" placeholder="Neues Passwort" class="w-full border p-3 rounded-lg focus:ring-2 focus:ring-blue-500 transition" required>
         <input name="plz" placeholder="Postleitzahl" class="w-full border p-3 rounded-lg focus:ring-2 focus:ring-blue-500 transition" required pattern="\d{5}">
         <input name="city" placeholder="Stadt" class="w-full border p-3 rounded-lg focus:ring-2 focus:ring-blue-500 transition" required>
+        <!-- Wir fügen hier das Feld für den Regionalschlüssel hinzu, das wir im Backend erwarten -->
+        <input name="regional_key" placeholder="Regionalschlüssel" class="w-full border p-3 rounded-lg focus:ring-2 focus:ring-blue-500 transition" required>
 
         <button type="submit" class="w-full bg-blue-600 text-white px-4 py-3 rounded-lg font-bold hover:bg-blue-700 transition">Speichern und weiter</button>
         <div id="setupMessage" class="mt-2 text-center text-red-500 font-medium"></div>
     </form>
 </div>
 
-<script>
-    document.getElementById('setupForm').onsubmit = async function(e) {
-        e.preventDefault();
-        const formData = new FormData(document.getElementById('setupForm'));
-        const setupMessage = document.getElementById('setupMessage');
-        setupMessage.textContent = 'Speichere...';
 
-        const res = await fetch('http://localhost:5000/complete_setup', {
-            method: 'POST',
-            body: formData,
-            credentials: 'include' // Wichtig, um die Login-Session zu senden
-        });
-        const data = await res.json();
-
-        if (res.ok && data.status === 'success') {
-            setupMessage.textContent = 'Profil aktualisiert! Du wirst weitergeleitet.';
-            setupMessage.className = 'mt-2 text-center text-green-500 font-medium';
-
-            // Leite zur Hauptseite weiter
-            setTimeout(() => {
-                window.location.href = '/dashboard.html'; // Beispiel-URL
-            }, 1500);
-        } else {
-            setupMessage.textContent = data.message || 'Speichern fehlgeschlagen!';
-            setupMessage.className = 'mt-2 text-center text-red-500 font-medium';
-        }
-    };
-</script>
+<script src="handler/setup.js" defer></script>
 </body>
 </html>
