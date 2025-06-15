@@ -3,6 +3,7 @@ import type { Card } from '@/models/card'
 import AddCardButton from './dashboardEdit/AddCardButton.vue'
 import DefaultCard from './DefaultCard.vue'
 import { ref, watch } from 'vue'
+import CardGraphColumn from './CardGraphColumn.vue';
 
 const props = defineProps<{
   cards: Array<Card>
@@ -140,10 +141,12 @@ const getCardClasses = (index: number) => {
             @drop="handleDrop($event, index)"
             class="flex-1"
           >
-            <DefaultCard
+            <DefaultCard v-if="card.type !== 'graph'"
               :heading="card.name"
               :class="{ 'pointer-events-none': props.showAddButtons }"
             />
+            <!-- Testweise immer Säulen-->
+             <CardGraphColumn v-else />
           </div>
 
           <!-- Mülltonne Button -->
