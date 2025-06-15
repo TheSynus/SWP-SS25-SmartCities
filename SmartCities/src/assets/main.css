@@ -1,7 +1,7 @@
 @import './base.css';
 @import "tailwindcss";
 
-
+@plugin 'tailwind-scrollbar';
 @import "flowbite/src/themes/default";
 @plugin "flowbite/plugin";
 @source "../../node_modules/flowbite";

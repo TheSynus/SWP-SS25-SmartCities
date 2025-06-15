@@ -25,6 +25,22 @@ services:
     volumes:
       - pgadmin_data:/var/lib/pgadmin
 
+  api:
+    build: ./api
+    container_name: node_api
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=webportal
+      - DB_USER=admin
+      - DB_PASSWORD=Admin!1234
+      - PORT=3000
+    depends_on:
+      - postgres
+
   web:
     image: nginx:alpine
     container_name: nginx_web
@@ -33,21 +49,6 @@ services:
       - "8000:80"
     volumes:
       - ./website:/usr/share/nginx/html:ro
-
-  api:
-    build: ./api
-    container_name: flask_api
-    restart: unless-stopped
-    ports:
-      - "5000:5000"
-    environment:
-      - DB_HOST=postgres
-      - DB_PORT=5432
-      - DB_NAME=webportal
-      - DB_USER=admin
-      - DB_PASSWORD=Admin!1234
-    depends_on:
-      - postgres
 
 volumes:
   postgres_data:
