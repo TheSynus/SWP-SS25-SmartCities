@@ -1,6 +1,17 @@
 <script setup lang="ts">
 import AddDefaultCard from './AddDefaultCard.vue';
 import AddGraphCard from './AddGraphCard.vue';
+
+// Event definieren, das nach außen weitergegeben wird
+const emit = defineEmits<{
+  cardSelected: [cardData: { id: number, name: string, type: string}]
+}>()
+
+// Handler für das Event von AddDefaultCard
+const handleCardSelected = (cardData: { id: number, name: string, type: string}) => {
+  emit('cardSelected', cardData)
+}
+
 </script>
 
 <template>
@@ -80,7 +91,7 @@ import AddGraphCard from './AddGraphCard.vue';
             role="tabpanel"
             aria-labelledby="profile-tab"
           >
-            <AddDefaultCard/>
+            <AddDefaultCard @card-selected="handleCardSelected"/>
           </div>
           <div
             class="hidden p-4 rounded-lg"

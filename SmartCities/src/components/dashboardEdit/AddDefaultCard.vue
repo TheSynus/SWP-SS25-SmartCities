@@ -3,14 +3,23 @@ import DefaultCard from '../DefaultCard.vue'
 import { ref } from 'vue';
 
 const cards = ref([
-  { id: 1, name: 'Wetter' },
-  { id: 2, name: 'Nina' },
-  { id: 3, name: 'Luftqualität' },
-  { id: 4, name: 'Wasserstand' },
-  { id: 5, name: 'Pollen' },
-  { id: 6, name: 'Windgeschwindigkeit' },
-  { id: 7, name: 'Bildkachel' },
+  { id: 1, name: 'Wetter', type: 'weather' },
+  { id: 2, name: 'Nina', type: 'nina' },
+  { id: 3, name: 'Luftqualität', type: 'air' },
+  { id: 4, name: 'Wasserstand', type: 'water' },
+  { id: 5, name: 'Pollen', type: 'pollen' },
+  { id: 6, name: 'Windgeschwindigkeit', type: 'wind' }
 ])
+
+// Event definieren
+const emit = defineEmits<{
+  cardSelected: [cardData: { id: number, name: string, type: string}]
+}>()
+
+// Handler für Kartenauswahl
+const handleCardSelect = (cardData: { id: number, name: string, type: string}) => {
+  emit('cardSelected', cardData)
+}
 </script>
 
 <template>
@@ -19,6 +28,7 @@ const cards = ref([
       v-for="card in cards"
       :key="card.id"
       :heading="card.name"
+      @click="handleCardSelect(card)"
     />
   </div>
 </template>

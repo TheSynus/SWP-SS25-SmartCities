@@ -1,12 +1,9 @@
 <script setup lang="ts">
+import type { Card } from '@/models/card';
 import AddCardButton from './dashboardEdit/AddCardButton.vue'
 import DefaultCard from './DefaultCard.vue'
 import { ref, watch } from 'vue'
 
-interface Card {
-  id: number
-  name: string
-}
 
 const props = defineProps<{
   cards: Array<Card>
