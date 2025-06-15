@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import type { Card } from '@/models/card';
+import type { Card } from '@/models/card'
 import AddCardButton from './dashboardEdit/AddCardButton.vue'
 import DefaultCard from './DefaultCard.vue'
 import { ref, watch } from 'vue'
-
 
 const props = defineProps<{
   cards: Array<Card>
@@ -12,6 +11,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   updateCards: [cards: Array<Card>]
+  addCard: [index: number]
 }>()
 
 // Lokale Kopie der Cards für Drag & Drop
@@ -84,6 +84,10 @@ const handleDrop = (event: DragEvent, dropIndex: number) => {
   draggedOverIndex.value = null
 }
 
+const addButtonClicked = (index: number) => {
+  emit('addCard', index)
+}
+
 // Computed für CSS-Klassen
 const getCardClasses = (index: number) => {
   const baseClasses = props.showAddButtons ? 'cursor-move transition-all duration-200' : ''
@@ -102,18 +106,17 @@ const getCardClasses = (index: number) => {
       v-if="props.showAddButtons && localCards.length === 0"
       class="flex justify-center items-center min-h-[200px]"
     >
-      <AddCardButton />
+      <AddCardButton @click="addButtonClicked(0)" />
     </li>
 
     <!-- Normale Liste wenn Cards vorhanden -->
     <template v-if="localCards.length > 0">
-      <!-- Button oben -->
-      <li v-if="props.showAddButtons">
-        <AddCardButton />
-      </li>
-
       <!-- Cards mit Buttons dazwischen - DRAGGABLE! -->
       <template v-for="(card, index) in localCards" :key="card.id">
+        <!-- Button über den Karten -->
+        <li v-if="props.showAddButtons">
+          <AddCardButton @click="addButtonClicked(index)" />
+        </li>
         <li
           :class="getCardClasses(index)"
           :draggable="props.showAddButtons"
@@ -128,16 +131,11 @@ const getCardClasses = (index: number) => {
             :class="{ 'pointer-events-none': props.showAddButtons }"
           />
         </li>
-
-        <!-- Button zwischen den Karten (nicht nach der letzten) -->
-        <li v-if="props.showAddButtons && index < localCards.length - 1">
-          <AddCardButton />
-        </li>
       </template>
 
       <!-- Button unten -->
       <li v-if="props.showAddButtons">
-        <AddCardButton />
+        <AddCardButton @click="addButtonClicked(localCards.length)" />
       </li>
     </template>
   </ul>

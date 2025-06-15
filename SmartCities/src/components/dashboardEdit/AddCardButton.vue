@@ -1,9 +1,18 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+// Event definieren
+const emit = defineEmits<{
+  click: []
+}>()
+
+// Click Handler
+const handleClick = () => {
+  emit('click')
+}
+</script>
 
 <template>
   <div
-    data-modal-target="static-modal"
-    data-modal-toggle="static-modal"
+    @click="handleClick"
     class="grid justify-center border rounded-md hover:bg-gray-500 w-sm cursor-pointer"
   >
     <svg
