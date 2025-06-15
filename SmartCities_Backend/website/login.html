@@ -6,101 +6,32 @@
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 flex items-center justify-center min-h-screen">
-    <div class="bg-white p-8 rounded shadow-md w-full max-w-md">
-        <div class="flex justify-center mb-6">
-            <button id="showLogin" class="px-4 py-2 bg-blue-500 text-white rounded-l">Login</button>
-            <button id="showRegister" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-r">Registrieren</button>
-        </div>
-
-        <!-- Login Form -->
-        <form id="loginForm" class="space-y-4">
-            <h2 class="text-2xl font-bold mb-2 text-center">Login</h2>
-            <input name="username" placeholder="Benutzername" class="w-full border p-2" required>
-            <input name="password" type="password" placeholder="Passwort" class="w-full border p-2" required>
-            <button type="submit" class="w-full bg-blue-500 text-white px-4 py-2 rounded">Login</button>
-            <div id="loginMessage" class="mt-2 text-center text-red-500"></div>
-        </form>
-
-        <!-- Register Form -->
-        <form id="registerForm" class="space-y-4 hidden">
-            <h2 class="text-2xl font-bold mb-2 text-center">Registrieren</h2>
-            <input name="username" placeholder="Benutzername" class="w-full border p-2" required>
-            <input name="email" type="email" placeholder="E-Mail" class="w-full border p-2" required>
-            <input name="password" type="password" placeholder="Passwort" class="w-full border p-2" required>
-            <select name="role" class="w-full border p-2">
-                <option value="user">User</option>
-                <option value="admin">Admin</option>
-            </select>
-            <button type="submit" class="w-full bg-green-500 text-white px-4 py-2 rounded">Registrieren</button>
-            <div id="registerMessage" class="mt-2 text-center text-red-500"></div>
-        </form>
+<div class="bg-white p-8 rounded shadow-md w-full max-w-md">
+    <div class="flex justify-center mb-6">
+        <button id="showLogin" class="px-4 py-2 bg-blue-500 text-white rounded-l">Login</button>
+        <button id="showRegister" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-r">Registrieren</button>
     </div>
 
-    <script>
-    // Toggle forms
-    const loginForm = document.getElementById('loginForm');
-    const registerForm = document.getElementById('registerForm');
-    const showLogin = document.getElementById('showLogin');
-    const showRegister = document.getElementById('showRegister');
+    <!-- Login Form -->
+    <form id="loginForm" class="space-y-4">
+        <h2 class="text-2xl font-bold mb-2 text-center">Login</h2>
+        <input name="username" placeholder="Benutzername" class="w-full border p-2" required>
+        <input name="password" type="password" placeholder="Passwort" class="w-full border p-2" required>
+        <button type="submit" class="w-full bg-blue-500 text-white px-4 py-2 rounded">Login</button>
+        <div id="loginMessage" class="mt-2 text-center text-red-500"></div>
+    </form>
 
-    showLogin.onclick = () => {
-        loginForm.classList.remove('hidden');
-        registerForm.classList.add('hidden');
-        showLogin.classList.add('bg-blue-500', 'text-white');
-        showLogin.classList.remove('bg-gray-200', 'text-gray-700');
-        showRegister.classList.remove('bg-blue-500', 'text-white');
-        showRegister.classList.add('bg-gray-200', 'text-gray-700');
-    };
-    showRegister.onclick = () => {
-        loginForm.classList.add('hidden');
-        registerForm.classList.remove('hidden');
-        showRegister.classList.add('bg-blue-500', 'text-white');
-        showRegister.classList.remove('bg-gray-200', 'text-gray-700');
-        showLogin.classList.remove('bg-blue-500', 'text-white');
-        showLogin.classList.add('bg-gray-200', 'text-gray-700');
-    };
+    <!-- Register Form -->
+    <form id="registerForm" class="space-y-4 hidden">
+        <h2 class="text-2xl font-bold mb-2 text-center">Registrieren</h2>
+        <input name="username" placeholder="Benutzername" class="w-full border p-2" required>
+        <input name="email" type="email" placeholder="E-Mail" class="w-full border p-2" required>
+        <input name="password" type="password" placeholder="Passwort" class="w-full border p-2" required>
+        <button type="submit" class="w-full bg-green-500 text-white px-4 py-2 rounded">Registrieren</button>
+        <div id="registerMessage" class="mt-2 text-center text-red-500"></div>
+    </form>
+</div>
 
-    // Login handler
-    loginForm.onsubmit = async function(e) {
-        e.preventDefault();
-        const formData = new FormData(loginForm);
-        const res = await fetch('http://localhost:5000/login', {
-            method: 'POST',
-            body: formData,
-            credentials: 'include'
-        });
-        const data = await res.json();
-        if (data.status === 'success') {
-            document.getElementById('loginMessage').textContent = 'Login erfolgreich!';
-            // Redirect or show main page
-            setTimeout(() => {
-                window.location.href = '/'; // Change to your main page
-            }, 1000);
-        } else {
-            document.getElementById('loginMessage').textContent = data.message || 'Login fehlgeschlagen!';
-        }
-    };
-
-    // Register handler
-    registerForm.onsubmit = async function(e) {
-        e.preventDefault();
-        const formData = new FormData(registerForm);
-        const res = await fetch('http://localhost:5000/register', {
-            method: 'POST',
-            body: formData,
-            credentials: 'include'
-        });
-        const data = await res.json();
-        if (data.status === 'success') {
-            document.getElementById('registerMessage').textContent = 'Registrierung erfolgreich! Du kannst dich jetzt einloggen.';
-            setTimeout(() => {
-                showLogin.click();
-                document.getElementById('registerMessage').textContent = '';
-            }, 1500);
-        } else {
-            document.getElementById('registerMessage').textContent = data.message || 'Registrierung fehlgeschlagen!';
-        }
-    };
-    </script>
+<script src="/handler/login.js" defer></script>
 </body>
 </html>

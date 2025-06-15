@@ -30,14 +30,14 @@ services:
     container_name: node_api
     restart: unless-stopped
     ports:
-      - "3001:3001"
+      - "3000:3000"
     environment:
       - DB_HOST=postgres
       - DB_PORT=5432
       - DB_NAME=webportal
       - DB_USER=admin
       - DB_PASSWORD=Admin!1234
-      - PORT=3001
+      - PORT=3000
     depends_on:
       - postgres
 
