@@ -1,6 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import DashboardEditView from '../views/DashboardEditView.vue'
+import CalendarEditView from '../views/CalendarEditView.vue'
+import CalendarView from '../views/CalendarEditView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -17,8 +19,19 @@ const router = createRouter({
       path: '/',
       name: 'home',
       component: HomeView,
+    },
+    {
+      path: '/calendar',
+      name: 'calender',
+      component: CalendarEditView,
+    }
+    ,
+      {
+      path: '/calendar2',
+      name: 'calender2',
+      component: CalendarView,
     }
   ],
 })
 
-export default router
+export default router  
