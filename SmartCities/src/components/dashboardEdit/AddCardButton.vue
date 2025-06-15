@@ -1,17 +1,26 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+// Event definieren
+const emit = defineEmits<{
+  click: []
+}>()
+
+// Click Handler
+const handleClick = () => {
+  emit('click')
+}
+</script>
 
 <template>
-  <div
-    data-modal-target="static-modal"
-    data-modal-toggle="static-modal"
-    class="grid justify-center border rounded-md hover:bg-gray-500 w-sm cursor-pointer"
+  <button
+    @click="handleClick"
+    class="flex items-center justify-center p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200"
+    type="button"
+    title="Karte hinzufügen"
   >
     <svg
-      class="w-6 h-6 text-gray-800 dark:text-white"
+      class="w-6 h-6"
       aria-hidden="true"
       xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
       fill="none"
       viewBox="0 0 24 24"
     >
@@ -20,8 +29,8 @@
         stroke-linecap="round"
         stroke-linejoin="round"
         stroke-width="2"
-        d="M5 12h14m-7 7V5"
+        d="M5 12h14m-7-7v14"
       />
     </svg>
-  </div>
+  </button>
 </template>

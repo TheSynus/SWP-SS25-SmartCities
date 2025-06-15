@@ -1,6 +1,28 @@
 <script setup lang="ts">
-import AddDefaultCard from './AddDefaultCard.vue';
-import AddGraphCard from './AddGraphCard.vue';
+import { onMounted } from 'vue';
+import AddDefaultCard from './AddDefaultCard.vue'
+import AddGraphCard from './AddGraphCard.vue'
+import { initFlowbite } from 'flowbite';
+
+// Event definieren, das nach außen weitergegeben wird
+const emit = defineEmits<{
+  cardSelected: [cardData: { id: number; name: string; type: string }],
+  closeClicked: []
+}>()
+
+// Handler für das Event von AddDefaultCard
+const handleCardSelected = (cardData: { id: number; name: string; type: string }) => {
+  emit('cardSelected', cardData)
+}
+
+const handeCloseClicked = () => {
+  emit('closeClicked')
+}
+
+onMounted(() => {
+  initFlowbite();
+})
+
 </script>
 
 <template>
@@ -15,8 +37,8 @@ import AddGraphCard from './AddGraphCard.vue';
         <h3 class="text-xl font-semibold text-gray-900 dark:text-white">Kachel hinzufügen</h3>
         <button
           type="button"
+          @click="handeCloseClicked"
           class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
-          data-modal-hide="static-modal"
         >
           <svg
             class="w-3 h-3"
@@ -80,7 +102,7 @@ import AddGraphCard from './AddGraphCard.vue';
             role="tabpanel"
             aria-labelledby="profile-tab"
           >
-            <AddDefaultCard/>
+            <AddDefaultCard @card-selected="handleCardSelected" />
           </div>
           <div
             class="hidden p-4 rounded-lg"
@@ -88,7 +110,7 @@ import AddGraphCard from './AddGraphCard.vue';
             role="tabpanel"
             aria-labelledby="dashboard-tab"
           >
-           <AddGraphCard/>
+            <AddGraphCard />
           </div>
         </div>
       </div>
