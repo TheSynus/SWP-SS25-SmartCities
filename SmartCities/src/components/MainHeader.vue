@@ -7,7 +7,7 @@
         <div class="flex items-center space-x-4">
           <div class="flex-shrink-0">
             <h1 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
-              App Name
+              Smart Cities
             </h1>
           </div>
         </div>
@@ -22,18 +22,11 @@
             Dashboard
           </router-link>
           <router-link 
-            to="/karte" 
+            to="/map" 
             class="text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400 px-3 py-2 text-sm font-medium transition-colors"
             active-class="text-blue-600 dark:text-blue-400"
           >
             Karte
-          </router-link>
-          <router-link 
-            to="/einstellungen" 
-            class="text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400 px-3 py-2 text-sm font-medium transition-colors"
-            active-class="text-blue-600 dark:text-blue-400"
-          >
-            Einstellungen
           </router-link>
         </nav>
 
@@ -94,21 +87,14 @@
             Dashboard
           </router-link>
           <router-link 
-            to="/karte" 
+            to="/map" 
             class="text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400 px-3 py-2 text-base font-medium rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
             active-class="text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20"
             @click="closeMobileMenu"
           >
             Karte
           </router-link>
-          <router-link 
-            to="/einstellungen" 
-            class="text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400 px-3 py-2 text-base font-medium rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            active-class="text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20"
-            @click="closeMobileMenu"
-          >
-            Einstellungen
-          </router-link>
+         
         </nav>
       </div>
     </div>

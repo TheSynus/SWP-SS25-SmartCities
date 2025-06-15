@@ -1,0 +1,68 @@
+<!-- SearchHeader.vue -->
+<!-- Level 2, Rechter Unterbaum - Props empfangen statt eigene API-Calls -->
+
+<template>
+  <div class="flex-none p-3 sm:p-4 lg:p-6 border-b border-gray-200 dark:border-gray-700">
+    <!-- Search & Filter -->
+    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
+      <input
+        :value="query"
+        @input="handleInput"
+        type="text"
+        placeholder="Suche..."
+        class="flex-grow p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white text-sm"
+      />
+      <div class="flex gap-2">
+        <FilterSection
+          :categories="categories"
+          :selected-categories="selectedCategories"
+          @update:selected="handleFilterUpdate"
+        />
+        <ActionsButton
+          ref="actionsBtn"
+          @new-marker="emit('new-marker')"
+          @category-editor="emit('category-editor')"
+        />
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref } from 'vue'
+import FilterSection from './FilterSection.vue'
+import ActionsButton from './ActionsButton.vue'
+
+const props = defineProps({
+  query: {
+    type: String,
+    default: ''
+  },
+  categories: {
+    type: Array,
+    default: () => []
+  },
+  selectedCategories: {
+    type: Array,
+    default: () => []
+  }
+})
+
+const emit = defineEmits([
+  'search',
+  'filter-update',
+  'new-marker',
+  'category-editor'
+])
+
+const actionsBtn = ref(null)
+
+// Event Handlers
+function handleInput(event) {
+  emit('search', event.target.value)
+}
+
+function handleFilterUpdate(updatedCategories) {
+  emit('filter-update', updatedCategories)
+}
+</script>
