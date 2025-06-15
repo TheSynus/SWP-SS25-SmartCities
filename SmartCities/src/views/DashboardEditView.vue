@@ -4,74 +4,47 @@ import ModalEdit from '../components/dashboardEdit/ModalEdit.vue'
 import DashboardContent from '@/components/DashboardContent.vue'
 import 'flowbite'
 import { ref } from 'vue'
-import { onMounted } from 'vue'
 import { Card } from '@/models/card'
+import { cards, useCardStore } from '@/composables/dashboard/useCardStore'
 
-const cardStorageKey = 'cards'
 let addIndex = 0
-
-const cards = ref([] as Card[])
 const isModalVisible = ref(false)
 
-const handleCardOrderChange = (updateCards: Card[]) => {
-  console.log('UpdatedCards', updateCards)
+// Store verwenden - cards ist jetzt reaktiv!
+const { addCard, deleteCard, reorderCards } = useCardStore()
 
-  // Indizes basierend auf Array-Position setzen
-  updateCards.forEach((card, index) => {
-    card.index = index
-  })
-
-  // Cards ref mit den aktualisierten Karten überschreiben
-  cards.value = updateCards
-
-  // In localStorage speichern
-  localStorage.setItem(cardStorageKey, JSON.stringify(updateCards))
+const handleAddCardClick = (index: number) => {
+  console.log('AddCard', index)
+  addIndex = index
+  showModal()
 }
 
 const handleDefaultCardAdd = (cardData: { id: number; name: string; type: string }) => {
   console.log('Default Card Added', cardData)
 
-  // Alle Karten mit Index >= addIndex um 1 erhöhen
-  cards.value.forEach((card) => {
-    if (card.index >= addIndex) {
-      card.index += 1
-    }
-  })
-
-  // Neue Karte erstellen
-  const newCard = new Card(cardData.id, cardData.name, cardData.type, addIndex)
-
-  // Karte hinzufügen und sortieren
-  cards.value.push(newCard)
-  cards.value.sort((a, b) => a.index - b.index)
-
-  // In localStorage speichern
-  localStorage.setItem(cardStorageKey, JSON.stringify(cards.value))
+  // Store Aufruf - cards wird automatisch aktualisiert
+  addCard(cardData, addIndex)
 
   hideModal()
 }
 
-const handleAddCardClick = (index: number) => {
-  console.log('AddCard', index)
+const handleGraphCardAdd = (graphId: number) => {
+  console.log('Graph Card Added', graphId)
 
-  addIndex = index
+  const cardData = { id: 9, name: 'Test', type: 'graph' }
 
-  showModal()
+  addCard(cardData, addIndex, graphId)
+
+  hideModal()
 }
 
 const handleDeleteCard = (id: number) => {
-  // Karte mit der ID entfernen
-  const existing = cards.value.filter((card) => card.id !== id)
+  deleteCard(id)
+}
 
-  for (let i = 0; i < existing.length; i++) {
-    const element = existing[i]
-    element.index = i
-  }
-
-  // Speichern
-  localStorage.setItem(cardStorageKey, JSON.stringify(existing))
-
-  cards.value = existing
+const handleCardOrderChange = (updateCards: Card[]) => {
+  console.log('UpdatedCards', updateCards)
+  reorderCards(updateCards)
 }
 
 const showModal = () => {
@@ -81,18 +54,10 @@ const showModal = () => {
 const hideModal = () => {
   isModalVisible.value = false
 }
-
-onMounted(async () => {
-  // Cards abrufen
-  const safedCards = localStorage.getItem(cardStorageKey)
-  if (safedCards) {
-    cards.value = JSON.parse(safedCards)
-  }
-})
 </script>
 
 <template>
-  <div class="grid grid-cols-2 overflow-hidden h-screen pt-20 items-center">
+  <div class="grid grid-cols-2 overflow-hidden h-screen pt-20 items-center justify-center">
     <!-- Scrollable Left Column -->
     <div class="flex justify-center overflow-y-scroll h-full custom-scrollbar items-center">
       <DashboardContent
@@ -113,9 +78,8 @@ onMounted(async () => {
   <div
     v-if="isModalVisible"
     tabindex="-1"
-    aria-hidden="true"
     class="overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 flex justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full"
   >
-    <ModalEdit @card-selected="handleDefaultCardAdd" @close-clicked="hideModal" />
+    <ModalEdit @card-selected="handleDefaultCardAdd" @close-clicked="hideModal" @graph-selected="handleGraphCardAdd" />
   </div>
 </template>

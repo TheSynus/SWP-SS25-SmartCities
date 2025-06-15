@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import ApexCharts from 'apexcharts'
-import { onMounted } from 'vue'
+import { onMounted, ref, onUnmounted } from 'vue'
+
+// Template ref für das Chart-Element
+const chartRef = ref<HTMLDivElement | null>(null)
+let chart: ApexCharts | null = null
 
 const options = {
   colors: ["#1A56DB"],
@@ -91,10 +95,17 @@ const options = {
 }
 
 onMounted(() => {
-  const chartElement = document.getElementById('column-chart')
-  if (chartElement && typeof ApexCharts !== 'undefined') {
-    const chart = new ApexCharts(chartElement, options)
+  // Verwende die Template Ref anstatt getElementById
+  if (chartRef.value && typeof ApexCharts !== 'undefined') {
+    chart = new ApexCharts(chartRef.value, options)
     chart.render()
+  }
+})
+
+// Cleanup beim Unmount
+onUnmounted(() => {
+  if (chart) {
+    chart.destroy()
   }
 })
 </script>
@@ -106,6 +117,7 @@ onMounted(() => {
         <h5 class="leading-none text-3xl font-bold text-gray-900 dark:text-white pb-2">Säulendiagramm</h5>
       </div>
     </div>
-    <div id="column-chart"></div>
+    <!-- Template ref anstatt ID -->
+    <div ref="chartRef"></div>
   </div>
 </template>

@@ -8,6 +8,7 @@ import { initFlowbite } from 'flowbite';
 const emit = defineEmits<{
   cardSelected: [cardData: { id: number; name: string; type: string }],
   closeClicked: []
+  graphSelected: [graphId: number]
 }>()
 
 // Handler für das Event von AddDefaultCard
@@ -17,6 +18,10 @@ const handleCardSelected = (cardData: { id: number; name: string; type: string }
 
 const handeCloseClicked = () => {
   emit('closeClicked')
+}
+
+const handleGraphSelected = (graphId: number) => {
+  emit('graphSelected', graphId)
 }
 
 onMounted(() => {
@@ -110,7 +115,7 @@ onMounted(() => {
             role="tabpanel"
             aria-labelledby="dashboard-tab"
           >
-            <AddGraphCard />
+            <AddGraphCard @graph-added="handleGraphSelected"/>
           </div>
         </div>
       </div>
