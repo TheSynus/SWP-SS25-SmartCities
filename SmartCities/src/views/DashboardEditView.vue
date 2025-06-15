@@ -14,7 +14,7 @@ const cards = ref([] as Card[])
 const isModalVisible = ref(false)
 
 const handleCardOrderChange = (updateCards: Card[]) => {
-  console.log('UpdatedCards', updateCards);
+  console.log('UpdatedCards', updateCards)
 
   // Indizes basierend auf Array-Position setzen
   updateCards.forEach((card, index) => {
@@ -28,11 +28,11 @@ const handleCardOrderChange = (updateCards: Card[]) => {
   localStorage.setItem(cardStorageKey, JSON.stringify(updateCards))
 }
 
-const handleDefaultCardAdd = (cardData: { id: number, name: string, type: string}) => {
-  console.log('Default Card Added', cardData);
+const handleDefaultCardAdd = (cardData: { id: number; name: string; type: string }) => {
+  console.log('Default Card Added', cardData)
 
   // Alle Karten mit Index >= addIndex um 1 erhöhen
-  cards.value.forEach(card => {
+  cards.value.forEach((card) => {
     if (card.index >= addIndex) {
       card.index += 1
     }
@@ -52,11 +52,26 @@ const handleDefaultCardAdd = (cardData: { id: number, name: string, type: string
 }
 
 const handleAddCardClick = (index: number) => {
-  console.log('AddCard', index);
+  console.log('AddCard', index)
 
   addIndex = index
 
-  showModal();
+  showModal()
+}
+
+const handleDeleteCard = (id: number) => {
+  // Karte mit der ID entfernen
+  const existing = cards.value.filter((card) => card.id !== id)
+
+  for (let i = 0; i < existing.length; i++) {
+    const element = existing[i]
+    element.index = i
+  }
+
+  // Speichern
+  localStorage.setItem(cardStorageKey, JSON.stringify(existing))
+
+  cards.value = existing
 }
 
 const showModal = () => {
@@ -68,7 +83,6 @@ const hideModal = () => {
 }
 
 onMounted(async () => {
-
   // Cards abrufen
   const safedCards = localStorage.getItem(cardStorageKey)
   if (safedCards) {
@@ -81,7 +95,13 @@ onMounted(async () => {
   <div class="grid grid-cols-2 overflow-hidden h-screen pt-20 items-center">
     <!-- Scrollable Left Column -->
     <div class="flex justify-center overflow-y-scroll h-full custom-scrollbar items-center">
-      <DashboardContent :cards="cards" :showAddButtons="true" @updateCards="handleCardOrderChange" @add-card="handleAddCardClick" />
+      <DashboardContent
+        :cards="cards"
+        :showAddButtons="true"
+        @updateCards="handleCardOrderChange"
+        @add-card="handleAddCardClick"
+        @delete-card="handleDeleteCard"
+      />
     </div>
 
     <!-- Right Column -->
@@ -91,11 +111,11 @@ onMounted(async () => {
   </div>
 
   <div
-    v-show="isModalVisible"
+    v-if="isModalVisible"
     tabindex="-1"
     aria-hidden="true"
     class="overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 flex justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full"
   >
-    <ModalEdit @card-selected="handleDefaultCardAdd" @close-clicked="hideModal"/>
+    <ModalEdit @card-selected="handleDefaultCardAdd" @close-clicked="hideModal" />
   </div>
 </template>

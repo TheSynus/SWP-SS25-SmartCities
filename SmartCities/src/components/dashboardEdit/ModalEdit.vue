@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import { onMounted } from 'vue';
 import AddDefaultCard from './AddDefaultCard.vue'
 import AddGraphCard from './AddGraphCard.vue'
+import { initFlowbite } from 'flowbite';
 
 // Event definieren, das nach außen weitergegeben wird
 const emit = defineEmits<{
@@ -16,6 +18,10 @@ const handleCardSelected = (cardData: { id: number; name: string; type: string }
 const handeCloseClicked = () => {
   emit('closeClicked')
 }
+
+onMounted(() => {
+  initFlowbite();
+})
 
 </script>
 

@@ -31,7 +31,6 @@ const handleCardSelect = (cardData: { id: number; name: string; type: string }) 
 
 // Prüfen ob Karte bereits existiert
 const isCardDisabled = (cardId: number) => {
-  console.log('isCarddisabeld', cardId)
   return existingCards.some((existingCard) => existingCard.id === cardId)
 }
 
