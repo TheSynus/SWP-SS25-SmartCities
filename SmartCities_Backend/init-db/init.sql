@@ -47,3 +47,18 @@ CREATE TABLE events (
     category VARCHAR(100),
     additional_info TEXT
 );
+
+-- graphs
+CREATE TABLE graphs(
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(255),
+    type VARCHAR(100)
+);
+
+-- graphs_data
+CREATE TABLE graphs_data(
+    id SERIAL PRIMARY KEY,
+    graph_id INTEGER REFERENCES graphs(id) ON DELETE SET NULL
+    x_comp VARCHAR(100),
+    y_comp VARCHAR(100)
+);

@@ -7,13 +7,6 @@ router.post('/add_event', async (req, res) => {
   const { title, category, tags, additional_info } = req.body;
   console.log("DAS SOLLTE IN DIE DB" + JSON.stringify(req.body))
 
-//  if (!title || !calendar_entry_id) {
-//    return res.status(400).json({ status: 'error', message: 'Titel und Kalender-ID sind erforderlich.' });
-//  }
-//  if (isNaN(calendar_entry_id)) {
-//    return res.status(400).json({ status: 'error', message: 'Kalender-ID muss eine Zahl sein.' });
-//  }
-
   let tagsArray = null;
   if (tags && tags.trim() !== '') {
     tagsArray = tags.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0);
@@ -24,6 +17,18 @@ router.post('/add_event', async (req, res) => {
       `INSERT INTO events (title, category, tags, additional_info)
        VALUES ($1, $2, $3, $4)`,
       [title, category || null, tagsArray, additional_info || null]
+    );
+    res.json({ status: 'success', message: 'Event gespeichert.' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ status: 'error', message: 'DB error' });
+  }
+});
+
+router.get('/select_events', async (req, res) => {
+  try {
+    await pool.query(
+      'SELECT * FROM events'  
     );
     res.json({ status: 'success', message: 'Event gespeichert.' });
   } catch (err) {
