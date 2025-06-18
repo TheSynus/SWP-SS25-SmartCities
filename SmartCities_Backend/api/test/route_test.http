@@ -11,7 +11,11 @@ Content-Type: application/json
 ###
 
 //GET http://localhost:3001/call/nina
-GET http://localhost:3001/nina/call/nina
+GET http://localhost:3001/nina/call
+
+###
+
+GET http://localhost:3001/nina/test
 
 ###
 

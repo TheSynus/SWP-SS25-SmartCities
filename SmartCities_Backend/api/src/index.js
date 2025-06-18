@@ -41,7 +41,7 @@ const configValues = {
 
 app.use('/test/', testRouter);
 app.use('/setup/', setupRouter(configValues, { getCityToPLZ, getRegionalKey, writeValueToJSON }));
-app.use('/nina/', ninaRouter);
+app.use('/nina/', ninaRouter(configValues, { getJSONContent }));
 
 app.listen(port, '0.0.0.0', () => {
   console.log("----------- Serverstart -----------")
