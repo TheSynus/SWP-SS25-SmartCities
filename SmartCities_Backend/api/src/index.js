@@ -9,6 +9,7 @@ const setupRouter = require('./router/setupRouter.js');
 const ninaRouter = require('./router/ninaRouter.js');
 const imagesRouter = require('./router/imagesRouter.js');
 const eventsRouter = require('./router/eventsRouter.js');
+const weatherRouter = require('./router/weatherRouter.js');
 
 dotenv.config();
 
@@ -44,6 +45,7 @@ const configValues = {
 app.use('/test/', testRouter);
 app.use('/setup/', setupRouter(configValues, { getCityToPLZ, getRegionalKey, writeValueToJSON }));
 app.use('/nina/', ninaRouter(configValues, { getJSONContent }));
+app.use('/weather/', weatherRouter(configValues, {}));
 
 app.listen(port, '0.0.0.0', () => {
   console.log("----------- Serverstart -----------")

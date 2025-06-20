@@ -35,3 +35,7 @@ Content-Type: application/json
   "lat": 53.58,
   "lon": 9.70
 }
+
+###
+
+GET http://localhost:3001/weather/call

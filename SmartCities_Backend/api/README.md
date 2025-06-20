@@ -27,6 +27,9 @@ Routen zum initialen Setzen von für den Serverbetrieb benötigten Variablenwert
 Aufbau des JSON-Request-Bodies: `{ "plz" : "12345" }`, plz-Wert muss aus 5 Ziffern bestehen
 * **/setup/regionalkey:** POST-Request zum initialen Setzen des Regionalschlüssels auf den Regionalschlüssel der Gemeinde.\
 Aufbau des JSON-Request-Bodies: `{ "regionalKey": "010560050050" }`, regionalKey-Wert muss aus 12 Ziffern bestehen
+* **/setup/geo-coords:** POST-Request zum initialen Setzen von Geokoordinaten der Gemeinde.\
+Aufbau des JSON-Request-Bodies: `{ "lat": 53.58, "lon": 9.70 }`, Abtrennung der Koordinaten mit einem Punkt.\
+Erhalt der Geokoortinaten z.B. einfach durch Google-Maps möglich.
 
 ### /nina/...
 Routen zum Abfragen von NINA-Warndaten für den Kreis der Gemeinde über den Regionalschlüssel
@@ -60,4 +63,32 @@ Aufbau des JSON-Response-Bodies:
     "severity": "Minor"
   }
 ]
+```
+
+### /weather/...
+Routen zum Abfragen des aktuellen Wetters
+* **/weather/call** GET-Request zum Abfragen des aktuellen Wetters und der stündlichen Prognose für die nächsten 24 Stunden.\
+Aufbau des JSON-Response-Bodies:
+```
+  [
+    {
+      "temp": Temperatur in Grad Celsius,
+      "temp_feels_like": Gefühlte Temperatur in Grad Celsius,
+      "wind_speed": Windgeschwindigkeit in m/s,
+      "wind_deg": Windrichtung in Grad,
+      "sky": aktuelle Wetterlage (Clouds, Rain, Snow, ...),
+      "weather_icon": Code für das OpenWeather-Icon zum Wetter: https://openweathermap.org/weather-conditions#How-to-get-icon-URL,
+      "timestamp": Zeitpunkt für die Wettervorhersage
+    },
+    {
+      "temp": 294.15,
+      "temp_feels_like": 293.77,
+      "wind_speed": 2.78,
+      "wind_deg": 315,
+      "sky": "Clouds",
+      "weather_icon": "02d",
+      "timestamp": "2025-06-20 18:00:00"
+    },
+    ...
+  ]
 ```
