@@ -63,11 +63,21 @@ module.exports = (configValues, utils) => {
             const forecastList = forecast.list;
         
             const curr_time = new Date().toLocaleString();
+            
+            // Zeug für 3fache Verwendung der Forecastwerte - kann raus, wenn stündliche Forecats vorhanden sind und nicht mehr nur alle 3
+            // Nimmt die ersten 12 Einträge der Originalen Liste (sonst ist Liste viel zu lang), wiederholt diesen jeweils 3 mal
+            const trimmedForecastList = forecastList.slice(0, 12).flatMap(item => [item, item, item]);
+            
+            
+            // console.log("Forecast: ", forecastList.length);
+            // console.log("Trimemd: ", trimmedForecastList.length);
+            // console.log(trimmedForecastList)
 
             //TODO: Werte bei Forecast jeweils dreimal verwenden!
             const weather = [
                 extractRelaventData(currentWeather),
-                ...forecastList.slice(0,23).map(extractRelaventData)
+                //...forecastList.slice(0,23).map(extractRelaventData)
+                ...trimmedForecastList.slice(0,23).map(extractRelaventData)
             ]
             
             //console.log(weather);

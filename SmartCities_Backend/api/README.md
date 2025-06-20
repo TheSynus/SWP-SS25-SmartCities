@@ -68,6 +68,7 @@ Aufbau des JSON-Response-Bodies:
 ### /weather/...
 Routen zum Abfragen des aktuellen Wetters
 * **/weather/call** GET-Request zum Abfragen des aktuellen Wetters und der stündlichen Prognose für die nächsten 24 Stunden.\
+Aufgrund des API-Keys (Gratisversion) nur Vorhersagen für jeweils 3 Stunden Intervalle, daher Timestamps in 3 Stunden Rahmen.\
 Aufbau des JSON-Response-Bodies:
 ```
   [
@@ -78,16 +79,16 @@ Aufbau des JSON-Response-Bodies:
       "wind_deg": Windrichtung in Grad,
       "sky": aktuelle Wetterlage (Clouds, Rain, Snow, ...),
       "weather_icon": Code für das OpenWeather-Icon zum Wetter: https://openweathermap.org/weather-conditions#How-to-get-icon-URL,
-      "timestamp": Zeitpunkt für die Wettervorhersage
+      "timestamp": Zeitpunkt für die Wettervorhersage - 1. = aktuelle Uhrzeit, 2-4 = nächste 3 Stunden
     },
     {
-      "temp": 294.15,
-      "temp_feels_like": 293.77,
-      "wind_speed": 2.78,
-      "wind_deg": 315,
-      "sky": "Clouds",
-      "weather_icon": "02d",
-      "timestamp": "2025-06-20 18:00:00"
+      "temp": 18.74000000000001,
+      "temp_feels_like": 18.390000000000043,
+      "wind_speed": 1.9,
+      "wind_deg": 336,
+      "sky": "Clear",
+      "weather_icon": "01n",
+      "timestamp": "2025-06-20 21:00:00"
     },
     ...
   ]
