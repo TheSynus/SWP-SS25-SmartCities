@@ -25,3 +25,13 @@ Content-Type: application/json
 {
   "regionalKey": "010560050050"
 }
+
+###
+
+POST http://localhost:3001/setup/geo-coords
+Content-Type: application/json
+
+{
+  "lat": 53.58,
+  "lon": 9.70
+}

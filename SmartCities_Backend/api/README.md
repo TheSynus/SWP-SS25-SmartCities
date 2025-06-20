@@ -14,6 +14,8 @@ Die config.json sollte initial vor der Konfiguration des Server so aussehen, dam
         "plz":-1,
         "cityName":"",
         "regionalKey":-1
+        "latitude": -1,
+        "longitude": -1
     } 
 ```    
 

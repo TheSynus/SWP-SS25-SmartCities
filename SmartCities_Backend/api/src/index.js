@@ -37,6 +37,8 @@ const configValues = {
   plz: null,
   city: null,
   regionalKey: null,
+  latitude: null,
+  longitude: null,
 };
 
 app.use('/test/', testRouter);
@@ -56,5 +58,9 @@ app.listen(port, '0.0.0.0', () => {
   console.log("City name from Config:", configValues.city);
   configValues.regionalKey = configJsonContent.regionalKey;
   console.log("Regional key from Config:", configValues.regionalKey);
+  configValues.latitude = configJsonContent.latitude;
+  console.log("Latitude from Config:", configValues.latitude);
+  configValues.longitude = configJsonContent.longitude;
+  console.log("Longitude from Config:", configValues.longitude);
   console.log("-----------------------------------")
 });
