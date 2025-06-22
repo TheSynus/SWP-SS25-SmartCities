@@ -11,6 +11,8 @@ const imagesRouter = require('./router/imagesRouter.js');
 const eventsRouter = require('./router/eventsRouter.js');
 const weatherRouter = require('./router/weatherRouter.js');
 const categoryRouter = require('./router/categoryRouter.js');
+const appointmentRouter = require('./router/appointmentRouter.js');
+
 
 dotenv.config();
 
@@ -29,6 +31,7 @@ app.use('/test/', testRouter)
 app.use('/images/', imagesRouter)
 app.use('/events/', eventsRouter)
 app.use('/category', categoryRouter);
+app.use('/appointment', appointmentRouter);
 
 // Variablen:
 //let plz = null; 

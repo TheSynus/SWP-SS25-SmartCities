@@ -31,7 +31,7 @@ router.get('/', async (req, res) => {
         const allCategories = await pool.query("SELECT * FROM category ORDER BY title ASC");
 
         res.status(200).json(allCategories.rows);
-        console.log("categoryRouter good")
+        console.log("categoryRouter good");
     } catch (err) {
         console.error("Fehler beim Abrufen der Kategorien:", err.message);
         res.status(500).json({ error: "Serverfehler beim Abrufen der Kategorien." });
@@ -83,7 +83,6 @@ router.delete('/:id', async (req, res) => {
         res.status(500).json({ error: "Serverfehler beim Löschen der Kategorie." });
     }
 });
-
 
 module.exports = router;
 
