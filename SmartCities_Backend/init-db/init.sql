@@ -9,15 +9,18 @@ CREATE TABLE users (
      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+
+-- Datentyp für vordefinierte Kategorien Bezeichnungen
+CREATE TYPE category_type AS ENUM ('Verwaltung', 'Freizeit', 'Stadtservice', 'Sonstiges');
+
 -- category
 CREATE TABLE category (
     id SERIAL PRIMARY KEY,
-    label VARCHAR(200) NOT NULL
+    label category_type NOT NULL,
+    color VARCHAR(7) DEFAULT '#808080'
 );
 
 -- calendar_entries
-CREATE TYPE recurrence_type AS ENUM ('none', 'daily', 'weekly', 'monthly', 'yearly');
-
 CREATE TABLE calendar_entries (
     id SERIAL PRIMARY KEY,
     title VARCHAR(200) NOT NULL,
@@ -26,6 +29,21 @@ CREATE TABLE calendar_entries (
     location VARCHAR(255),
     category_id INTEGER REFERENCES category(id) ON DELETE SET NULL,
     recurrence recurrence_type NOT NULL DEFAULT 'none'
+);
+
+-- Datentyp für Wiederholungs-Regel in Termin-Einträgen
+CREATE TYPE recurrence_type AS ENUM ('none', 'daily', 'weekly', 'monthly', 'yearly');
+
+-- Termine
+CREATE TABLE appointments (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(200) NOT NULL,
+    start_time TIMESTAMP NOT NULL,
+    end_time TIMESTAMP NOT NULL,
+    location VARCHAR(255),
+    category_id INTEGER REFERENCES category(id) ON DELETE SET NULL,
+    recurrence recurrence_type NOT NULL DEFAULT 'none',
+    description TEXT
 );
 
 -- images
@@ -61,4 +79,17 @@ CREATE TABLE graphs_data(
     graph_id INTEGER REFERENCES graphs(id) ON DELETE SET NULL
     x_comp VARCHAR(100),
     y_comp VARCHAR(100)
+);
+
+-- Datentyp für Karten-Typen
+CREATE TYPE card_type AS ENUM ('weather', 'nina', 'line', 'bar');
+
+-- cards
+CREATE TABLE card (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    position INTEGER NOT NULL,
+    type card_type NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
