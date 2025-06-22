@@ -44,7 +44,6 @@ CREATE TABLE images (
     additional_info TEXT
 );
 
-
 -- graphs
 CREATE TABLE graphs(
     id SERIAL PRIMARY KEY,
@@ -61,7 +60,7 @@ CREATE TABLE graphs_data(
 );
 
 -- Datentyp für Karten-Typen
-CREATE TYPE card_type AS ENUM ('weather', 'nina', 'line', 'bar');
+CREATE TYPE card_type AS ENUM ('weather', 'nina', 'line', 'bar', 'column', 'pie');
 
 -- cards
 CREATE TABLE card (
