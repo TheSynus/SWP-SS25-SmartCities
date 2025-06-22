@@ -31,8 +31,8 @@ require('dotenv').config();
 app.use('/test/', testRouter)
 app.use('/images/', imagesRouter)
 app.use('/events/', eventsRouter)
-app.use('/category', categoryRouter);
-app.use('/appointment', appointmentRouter);
+app.use('/categorys', categoryRouter);
+app.use('/appointments', appointmentRouter);
 app.use('/cards', cardsRouter)
 app.use('/graphs', graphsRouter);
 
