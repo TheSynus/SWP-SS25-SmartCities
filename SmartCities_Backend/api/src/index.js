@@ -10,6 +10,7 @@ const ninaRouter = require('./router/ninaRouter.js');
 const imagesRouter = require('./router/imagesRouter.js');
 const eventsRouter = require('./router/eventsRouter.js');
 const weatherRouter = require('./router/weatherRouter.js');
+const categoryRouter = require('./router/categoryRouter.js');
 
 dotenv.config();
 
@@ -27,6 +28,7 @@ require('dotenv').config();
 app.use('/test/', testRouter)
 app.use('/images/', imagesRouter)
 app.use('/events/', eventsRouter)
+app.use('/category', categoryRouter);
 
 // Variablen:
 //let plz = null; 

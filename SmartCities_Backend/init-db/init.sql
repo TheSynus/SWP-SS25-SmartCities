@@ -10,13 +10,10 @@ CREATE TABLE users (
 );
 
 
--- Datentyp für vordefinierte Kategorien Bezeichnungen
-CREATE TYPE category_type AS ENUM ('Verwaltung', 'Freizeit', 'Stadtservice', 'Sonstiges');
-
 -- category
 CREATE TABLE category (
     id SERIAL PRIMARY KEY,
-    label category_type NOT NULL,
+    title VARCHAR(200) NOT NULL,
     color VARCHAR(7) DEFAULT '#808080'
 );
 
