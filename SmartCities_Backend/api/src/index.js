@@ -12,7 +12,8 @@ const eventsRouter = require('./router/eventsRouter.js');
 const weatherRouter = require('./router/weatherRouter.js');
 const categoryRouter = require('./router/categoryRouter.js');
 const appointmentRouter = require('./router/appointmentRouter.js');
-
+const cardsRouter = require('./router/cardsRouter.js');
+const graphsRouter = require('./router/graphsRouter.js');
 
 dotenv.config();
 
@@ -32,6 +33,8 @@ app.use('/images/', imagesRouter)
 app.use('/events/', eventsRouter)
 app.use('/category', categoryRouter);
 app.use('/appointment', appointmentRouter);
+app.use('/cards', cardsRouter)
+app.use('/graphs', graphsRouter);
 
 // Variablen:
 //let plz = null; 
