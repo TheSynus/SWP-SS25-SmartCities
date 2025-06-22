@@ -57,7 +57,7 @@ CREATE TABLE graphs_data(
 );
 
 -- Datentyp für Karten-Typen
-CREATE TYPE card_type AS ENUM ('weather', 'nina', 'line', 'bar', 'column', 'pie');
+CREATE TYPE card_type AS ENUM ('weather', 'nina', 'line', 'bar', 'column', 'pie', 'calender');
 
 -- cards
 CREATE TABLE card (
@@ -65,6 +65,32 @@ CREATE TABLE card (
     title VARCHAR(255) NOT NULL,
     position INTEGER NOT NULL,
     type card_type NOT NULL,
+    graph_id INTEGER REFERENCES graphs(id) ON DELETE SET NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+INSERT INTO category (title, color) VALUES
+('Verwaltung', '#FF5733'),
+('Freizeit', '#33C1FF'),
+('Stadtservice', '#28A745'),
+('Sonstiges', '#FFC300');
+
+INSERT INTO appointments (title, start_time, end_time, location, category_id, recurrence, description) VALUES
+('Stadtfest', '2025-06-24 10:00:00', '2025-06-24 22:00:00', 'Rathausplatz', 2, 'none', 'Stadtfest, für die ganze Familie.'),
+('Wochenmarkt', '2025-06-25 07:00:00', '2025-06-25 13:30:00', 'Marktplatz', 3, 'weekly', 'Lokale Anbieter, bieten ihre Waren an.'),
+('Kirchen Geburtstag', '2025-06-27 10:00:00', '2025-06-28 18:00:00', 'Kirche', 4, 'yearly', 'Alte Kirche wird noch älter.');
+
+INSERT INTO graphs (title, type) VALUES
+('Verkehrsaufkommen der letzten 4 Wochen', 'line');
+
+INSERT INTO graphs_data (graph_id, x_comp, y_comp) VALUES
+(1, '1', '11259'),
+(1, '2', '15269'),
+(1, '3', '42015'),
+(1, '4', '32145');
+
+INSERT INTO card (title, position, type, graph_id) VALUES
+('Wetter', 1, 'weather', NULL),
+('Verkehr-Graph', 2, 'line', 1),
+('Kalender', 3, 'calender', NULL);
