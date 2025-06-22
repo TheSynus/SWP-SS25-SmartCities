@@ -20,17 +20,6 @@ CREATE TABLE category (
     color VARCHAR(7) DEFAULT '#808080'
 );
 
--- calendar_entries
-CREATE TABLE calendar_entries (
-    id SERIAL PRIMARY KEY,
-    title VARCHAR(200) NOT NULL,
-    start_time TIMESTAMP NOT NULL,
-    description TEXT,
-    location VARCHAR(255),
-    category_id INTEGER REFERENCES category(id) ON DELETE SET NULL,
-    recurrence recurrence_type NOT NULL DEFAULT 'none'
-);
-
 -- Datentyp für Wiederholungs-Regel in Termin-Einträgen
 CREATE TYPE recurrence_type AS ENUM ('none', 'daily', 'weekly', 'monthly', 'yearly');
 
@@ -55,16 +44,6 @@ CREATE TABLE images (
     additional_info TEXT
 );
 
--- events
-CREATE TABLE events (
-    id SERIAL PRIMARY KEY,
-    title VARCHAR(200) NOT NULL,
-    location VARCHAR(255),
-    start_time TIMESTAMP,
-    end_time TIMESTAMP,
-    category VARCHAR(100),
-    additional_info TEXT
-);
 
 -- graphs
 CREATE TABLE graphs(
