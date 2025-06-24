@@ -1,75 +1,109 @@
 import { ref } from 'vue'
 import { Card } from '@/models/card'
+import axios from 'axios'
 
 export const cards = ref<Card[]>([])
 
 export function useCardStore() {
   // const storageKey = 'cards'
 
-  const getCards = () => {
-    return cards.value
-  }
+  const getCards = async () => {
+    try {
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/cards`)
 
-const addCard = (cardData: { id: number; name: string; type: string }, addIndex: number, graphId?: number) => {
-    // Alle Karten mit Index >= addIndex um 1 erhöhen
-    cards.value.forEach((card) => {
-      if (card.index >= addIndex) {
-        card.index += 1
-      }
-    })
+      console.log('Cards', response.data)
 
-    // Neue Karte erstellen
-    const newCard = new Card(cardData.id, cardData.name, cardData.type, addIndex, graphId)
-
-    // Karte hinzufügen und sortieren
-    cards.value.push(newCard)
-    cards.value.sort((a, b) => a.index - b.index)
-
-    // In localStorage speichern
-    // localStorage.setItem(storageKey, JSON.stringify(cards.value))
-
-    console.log('NewCards', cards.value)
-
-    return cards.value
-  }
-
-  const deleteCard = (id: number) => {
-    // Karte mit der ID entfernen
-    const existing = cards.value.filter((card) => card.id !== id)
-
-    // Indizes neu setzen
-    for (let i = 0; i < existing.length; i++) {
-      existing[i].index = i
+      cards.value = response.data
+    } catch (error) {
+      console.error('Fehler beim Abrufen der Cards:', error)
+      throw error
     }
+  }
 
-    // Reaktive Referenz aktualisieren
-    cards.value = existing
+  const addCard = async (
+    title: string,
+    type: string,
+    position: number,
+    graph_id: number | null,
+  ) => {
+    try {
+      const response = await axios.post<Card>(`${import.meta.env.VITE_API_URL}/cards`, {
+        title,
+        type,
+        position,
+        graph_id,
+      })
 
-    // Speichern
-    // localStorage.setItem(storageKey, JSON.stringify(cards.value))
+      const newCard = response.data
 
-    return cards.value
+      const cardsCopy = cards.value.slice(0)
+
+      cardsCopy.forEach((card) => {
+        if (card.position >= newCard.position) {
+          card.position++
+          updateCard(card)
+        }
+      })
+
+      cardsCopy.push(newCard)
+      cardsCopy.sort((a, b) => a.position - b.position)
+
+      cards.value = cardsCopy
+    } catch (error) {
+      console.error('Fehler beim Speichern der Card:', error)
+      throw error
+    }
+  }
+
+  const deleteCard = async (id: number) => {
+    try {
+      await axios.delete(`${import.meta.env.VITE_API_URL}/cards/${id}`)
+
+      // Card aus lokaler Liste entfernen
+      const existing = cards.value.filter((card) => card.id !== id)
+      for (let i = 0; i < existing.length; i++) {
+        const card = existing[i]
+        card.position = i
+        updateCard(card)
+      }
+      cards.value = existing
+    } catch (error) {
+      console.error('Fehler beim Löschen der Card:', error)
+      throw error
+    }
   }
 
   const reorderCards = (updateCards: Card[]) => {
     // Indizes basierend auf Array-Position setzen
     updateCards.forEach((card, index) => {
-      card.index = index
+      card.position = index
     })
 
     // Reaktive Referenz aktualisieren
     cards.value = updateCards
 
-    // In localStorage speichern
-    // localStorage.setItem(storageKey, JSON.stringify(cards.value))
-
     return cards.value
+  }
+
+  const updateCard = async (card: Card) => {
+    try {
+      const response = await axios.put(`${import.meta.env.VITE_API_URL}/cards/${card.id}`, {
+        title: card.title,
+        position: card.position,
+        type: card.type,
+        graph_id: card.graph_id,
+      })
+      return response.data
+    } catch (error) {
+      console.error('Fehler beim Aktualisieren der Card:', error)
+      throw error
+    }
   }
 
   return {
     getCards,
     addCard,
     deleteCard,
-    reorderCards
+    reorderCards,
   }
 }

@@ -5,31 +5,31 @@ import { cards } from '@/composables/dashboard/useCardStore'
 
 
 const aviableCards = ref([
-  { id: 1, name: 'Wetter', type: 'weather' },
-  { id: 2, name: 'Nina', type: 'nina' },
-  { id: 3, name: 'Luftqualität', type: 'air' },
-  { id: 4, name: 'Wasserstand', type: 'water' },
-  { id: 5, name: 'Pollen', type: 'pollen' },
-  { id: 6, name: 'Windgeschwindigkeit', type: 'wind' },
+  { id: 1, title: 'Wetter', type: 'weather', enabled: true },
+  { id: 2, title: 'Nina', type: 'nina', enabled: true },
+  { id: 3, title: 'Luftqualität', type: 'air', enabled: false },
+  { id: 4, title: 'Wasserstand', type: 'water', enabled: false },
+  { id: 5, title: 'Pollen', type: 'pollen', enabled: false },
+  { id: 6, title: 'Windgeschwindigkeit', type: 'wind', enabled: false },
 ])
 
 
 // Event definieren
 const emit = defineEmits<{
-  cardSelected: [cardData: { id: number; name: string; type: string }]
+  cardSelected: [cardData: { id: number; title: string; type: string }]
 }>()
 
 // Handler für Kartenauswahl
-const handleCardSelect = (cardData: { id: number; name: string; type: string }) => {
+const handleCardSelect = (cardData: { id: number; title: string; type: string }) => {
   // Nur emittieren wenn Karte nicht disabled ist
-  if (!isCardDisabled(cardData.id)) {
+  if (!isCardDisabled(cardData.type)) {
     emit('cardSelected', cardData)
   }
 }
 
 // Prüfen ob Karte bereits existiert
-const isCardDisabled = (cardId: number) => {
-  return cards.value.some((existingCard) => existingCard.id === cardId)
+const isCardDisabled = (type: string) => {
+  return  cards.value.some((existingCard) => existingCard.type === type)
 }
 
 </script>
@@ -39,8 +39,8 @@ const isCardDisabled = (cardId: number) => {
     <DefaultCard
       v-for="card in aviableCards"
       :key="card.id"
-      :heading="card.name"
-      :disabled="isCardDisabled(card.id)"
+      :heading="card.title"
+      :disabled="!card.enabled || isCardDisabled(card.type)"
       @click="handleCardSelect(card)"
     />
   </div>

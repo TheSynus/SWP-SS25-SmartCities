@@ -142,7 +142,7 @@ const getCardClasses = (index: number) => {
             class="flex-1"
           >
             <DefaultCard v-if="card.type !== 'graph'"
-              :heading="card.name"
+              :heading="card.title"
               :class="{ 'pointer-events-none': props.showAddButtons }"
             />
             <!-- Testweise immer Säulen-->

@@ -1,18 +1,18 @@
 export class Card {
   public id: number;
-  public name: string;
+  public title: string;
   public type: string;
-  public index: number;
-  public graphId?: number;
+  public position: number;
+  public graph_id?: number;
 
   /**
    *
    */
-  constructor(id: number, name: string, type: string, index: number, chartId?: number) {
+  constructor(id: number, title: string, type: string, position: number, chartId?: number) {
     this.id = id;
-    this.name = name;
+    this.title = title;
     this.type = type;
-    this.index = index;
-    this.graphId = chartId
+    this.position = position;
+    this.graph_id = chartId
   }
 }

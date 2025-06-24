@@ -6,13 +6,13 @@ import { initFlowbite } from 'flowbite';
 
 // Event definieren, das nach außen weitergegeben wird
 const emit = defineEmits<{
-  cardSelected: [cardData: { id: number; name: string; type: string }],
+  cardSelected: [cardData: { id: number; title: string; type: string }],
   closeClicked: []
   graphSelected: [graphId: number]
 }>()
 
 // Handler für das Event von AddDefaultCard
-const handleCardSelected = (cardData: { id: number; name: string; type: string }) => {
+const handleCardSelected = (cardData: { id: number; title: string; type: string }) => {
   emit('cardSelected', cardData)
 }
 
