@@ -77,6 +77,7 @@ export function useCardStore() {
     // Indizes basierend auf Array-Position setzen
     updateCards.forEach((card, index) => {
       card.position = index
+      updateCard(card)
     })
 
     // Reaktive Referenz aktualisieren
@@ -93,7 +94,6 @@ export function useCardStore() {
         type: card.type,
         graph_id: card.graph_id,
       })
-      return response.data
     } catch (error) {
       console.error('Fehler beim Aktualisieren der Card:', error)
       throw error
