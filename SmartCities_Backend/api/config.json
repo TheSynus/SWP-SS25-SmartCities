@@ -3,5 +3,6 @@
   "cityName": "Wedel, Stadt",
   "regionalKey": "010560050050",
   "latitude": 53.58,
-  "longitude": 9.70
+  "longitude": 9.70,
+  "apikey": "2ef3ace9279a436c93592343250309"
 }
