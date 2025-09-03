@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import WeatherWidget from './WeatherWidget.vue'
+
 interface Props {
   heading: string
   disabled?: boolean
@@ -22,10 +24,8 @@ const props = withDefaults(defineProps<Props>(), {
       <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
         {{ props.heading }}
       </h5>
-      <p class="font-normal text-gray-700 dark:text-gray-400">
-        Here are the biggest enterprise technology acquisitions of 2021 so far, in reverse
-        chronological order.
-      </p>
+      
+      <WeatherWidget />
 
       <!-- Disabled Meldung -->
       <div v-if="props.disabled" class="mt-4 pt-3 border-t border-gray-300 dark:border-gray-600">

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { Card } from '@/models/card'
 import DashboardContent from '../DashboardContent.vue'
+import BottomNavigation from '../BottomNavigation.vue'
 import { ref, onMounted } from 'vue'
 
 interface Props {
@@ -10,6 +11,14 @@ interface Props {
 const props = defineProps<Props>()
 
 const scrollContainer = ref<HTMLElement>()
+
+const activeTab = ref('home')
+
+const handleTabChange = (tabName: string) => {
+  activeTab.value = tabName
+  // Add any additional logic for tab switching
+  console.log('Tab changed to:', tabName)
+}
 
 onMounted(() => {
   const container = scrollContainer.value
@@ -83,6 +92,12 @@ onMounted(() => {
         <div class="transform scale-75 origin-top-left w-[363px] h-[763px] p-4">
           <DashboardContent :cards="props.cards" :show-add-buttons="false" />
         </div>
+          <!-- Bottom Navigation Component -->
+      <BottomNavigation 
+        position="absolute" 
+        :active-tab="activeTab"
+        @tab-change="handleTabChange"
+      />
       </div>
     </div>
   </div>
