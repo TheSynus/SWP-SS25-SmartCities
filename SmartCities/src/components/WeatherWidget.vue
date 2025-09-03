@@ -44,7 +44,7 @@ async function fetchWeather() {
   }
 }
 
-onMounted(fetchWeather)
+onMounted(fetchWeather())
 </script>
 
 <template>
