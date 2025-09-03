@@ -1,8 +1,9 @@
+<!-- WeatherWidget.vue -->
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import axios from 'axios'
 
-interface CurrentWeather {
+type CurrentWeather = {
   temp: number
   temp_feels_like: number
   wind_speed: number
@@ -12,171 +13,117 @@ interface CurrentWeather {
   timestamp: string
 }
 
-interface HourForecast {
-  time: string            // ISO-like "YYYY-MM-DD HH:mm"
+type HourItem = {
+  time: string        // "YYYY-MM-DD HH:mm"
   temp_c: number
-  wind_ms: number
-  wind_deg: number
-  chance_of_rain: number
   sky: string
   weather_icon: string
 }
 
-interface DaySummary {
-  date: string            // "YYYY-MM-DD"
-  maxtemp_c: number
-  mintemp_c: number
-  avgtemp_c: number
-  chance_of_rain: number
-  sky: string
-  weather_icon: string
+type TodayHiLo = {
+  high_c?: number
+  low_c?: number
 }
 
-interface ForecastDay {
-  date: string
-  day: DaySummary
-  hours: HourForecast[]
-}
 
-interface WeatherPayload {
+type Payload = {
   current: CurrentWeather
-  forecast: ForecastDay[]
+  today: TodayHiLo
+  next12: HourItem[]
 }
 
 const isLoading = ref(true)
 const error = ref<string | null>(null)
-const data = ref<WeatherPayload | null>(null)
-const expandedDay = ref<string | null>(null)
+const data = ref<Payload | null>(null)
 
 async function fetchWeather() {
   isLoading.value = true
   error.value = null
-
   try {
-    console.log('[WeatherWidget] Starte Wetter-Abfrage...')
-    const { data: payload } = await axios.get<WeatherPayload>(
+    const { data: payload } = await axios.get<Payload>(
       `${import.meta.env.VITE_API_URL}/weather/call`
     )
-
-    if (!payload || !payload.current || !Array.isArray(payload.forecast)) {
-      throw new Error('Ungültige Wetterdaten empfangen')
-    }
-
     data.value = payload
-    console.log('[WeatherWidget] Wetterdaten empfangen:', payload)
-  } catch (err: any) {
-    console.error('[WeatherWidget] Fehler beim Laden:', err)
-    error.value = err?.message ?? 'Unbekannter Fehler'
+  } catch (e: any) {
+    error.value = e?.message ?? 'Unbekannter Fehler'
   } finally {
     isLoading.value = false
   }
 }
 
-function formatDay(dateStr: string) {
-  const d = new Date(dateStr)
-  return d.toLocaleDateString('de-DE', {
-    weekday: 'short',
-    day: '2-digit',
-    month: '2-digit'
-  })
-}
-
 function formatTime(ts: string) {
-  // ts ist "YYYY-MM-DD HH:mm"
+  // "YYYY-MM-DD HH:mm" -> "HH Uhr"
   const d = new Date(ts.replace(' ', 'T'))
-  return d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
-}
-
-function toggleHours(date: string) {
-  expandedDay.value = expandedDay.value === date ? null : date
+  return d.toLocaleTimeString('de-DE', { hour: '2-digit' }).replace(':00', '')
 }
 
 onMounted(fetchWeather)
 </script>
 
 <template>
-  <div>
-    <div v-if="isLoading" class="text-gray-500 dark:text-gray-400">
-      Lade Wetterdaten...
-    </div>
-
-    <div v-else-if="error" class="text-red-500 dark:text-red-400">
-      Fehler: {{ error }}
-    </div>
-
-    <div v-else-if="data" class="space-y-4">
-      <!-- Aktuell -->
-      <div class="flex flex-col items-start space-y-2">
-        <div class="flex items-center space-x-4">
-          <img
-            :src="data.current.weather_icon"
-            :alt="data.current.sky"
-            class="w-12 h-12"
-          />
-          <div>
-            <p class="text-xl font-semibold text-gray-900 dark:text-white">
-              {{ data.current.temp.toFixed(1) }}°C
-            </p>
-            <p class="text-sm text-gray-700 dark:text-gray-400 capitalize">
-              {{ data.current.sky }}
-            </p>
-          </div>
-        </div>
-        <div class="text-sm text-gray-600 dark:text-gray-400">
-          Gefühlte Temperatur: {{ data.current.temp_feels_like.toFixed(1) }}°C<br />
-          Wind: {{ data.current.wind_speed.toFixed(1) }} m/s ({{ data.current.wind_deg }}°)
-        </div>
-        <div class="text-xs text-gray-400 mt-2">
-          Stand: {{ new Date(data.current.timestamp).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) }}
+  <!-- Kachel: volle Breite des Containers, keine Überläufe -->
+  <section class="w-full max-w-full ">
+    <!-- Header -->
+    <div class="flex items-start justify-between">
+      <div>
+        <div class="mt-0.5 text-6xl font-bold leading-none">
+          <span v-if="data">{{ Math.round(data.current.temp) }}</span>
+          <span class="align-top text-3xl">°</span>
         </div>
       </div>
 
-      <!-- 3-Tage-Übersicht -->
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div class="flex flex-col items-end gap-1">
+        <img
+          v-if="data"
+          :src="data.current.weather_icon"
+          :alt="data.current.sky"
+          class="w-12 h-12"
+        />
+        <div class="text-xs opacity-80">
+          H: {{ data?.today.high_c?.toFixed(0) ?? '-' }}°
+          &nbsp;&nbsp; T: {{ data?.today.low_c?.toFixed(0) ?? '-' }}°
+        </div>
+      </div>
+    </div>
+
+    <!-- Forecast: horizontales Scrollen; kompaktere Items -->
+    <div class="mt-4 -mx-1"> <!-- negative Margin = randloser Scroll innerhalb der Kachel -->
+      <div
+        class="flex overflow-x-auto gap-3 snap-x snap-mandatory pb-1 px-1"
+        style="-webkit-overflow-scrolling: touch;"
+      >
         <div
-          v-for="d in data.forecast"
-          :key="d.date"
-          class="rounded-xl border border-gray-200 dark:border-gray-800 p-3 hover:shadow-sm transition"
+          v-for="h in data?.next12 || []"
+          :key="h.time"
+          class="basis-1/6 shrink-0 grow-0 snap-start px-2 py-3 text-center"
         >
-          <div class="flex items-center justify-between">
-            <div class="text-sm font-medium text-gray-800 dark:text-gray-200">
-              {{ formatDay(d.date) }}
-            </div>
-            <img :src="d.day.weather_icon" :alt="d.day.sky" class="w-10 h-10" />
-          </div>
-          <div class="mt-2 text-sm text-gray-700 dark:text-gray-300">
-            <div class="flex items-baseline space-x-2">
-              <span class="text-lg font-semibold">{{ d.day.maxtemp_c.toFixed(1) }}°</span>
-              <span class="opacity-70">/ {{ d.day.mintemp_c.toFixed(1) }}°</span>
-            </div>
-            <div class="capitalize">{{ d.day.sky }}</div>
-            <div class="opacity-80">Regenrisiko: {{ d.day.chance_of_rain }}%</div>
-          </div>
-          <button
-            class="mt-3 text-xs underline text-blue-600 dark:text-blue-400"
-            @click="toggleHours(d.date)"
-          >
-            {{ expandedDay === d.date ? 'Stunden verbergen' : 'Stunden anzeigen' }}
-          </button>
-
-          <div v-if="expandedDay === d.date" class="mt-3 space-y-2 max-h-64 overflow-auto pr-1">
-            <div
-              v-for="h in d.hours"
-              :key="h.time"
-              class="flex items-center justify-between text-xs border-b border-gray-100 dark:border-gray-800 pb-2"
-            >
-              <div class="w-14 shrink-0">{{ formatTime(h.time) }}</div>
-              <div class="flex items-center space-x-2 grow px-2">
-                <img :src="h.weather_icon" :alt="h.sky" class="w-6 h-6" />
-                <span class="capitalize truncate">{{ h.sky }}</span>
-              </div>
-              <div class="w-12 text-right">{{ h.temp_c.toFixed(0) }}°C</div>
-              <div class="w-16 text-right">{{ h.wind_ms.toFixed(1) }} m/s</div>
-              <div class="w-10 text-right">{{ h.chance_of_rain }}%</div>
-            </div>
-          </div>
+          <img :src="h.weather_icon" :alt="h.sky" class="mx-auto w-7 h-7 mb-1.5" />
+          <div class="text-base font-semibold">{{ Math.round(h.temp_c) }}°</div>
+          <div class="text-xs opacity-80 mt-0.5">{{ formatTime(h.time) }}</div>
         </div>
       </div>
     </div>
-  </div>
+
+    <!-- Footer -->
+    <div class="mt-3 text-[11px] opacity-70">
+      Stand: {{ data?.current.timestamp
+        ? new Date(data.current.timestamp.replace(' ', 'T')).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' } ) + ' Uhr'
+        : '-' }}
+    </div>
+
+    <div v-if="isLoading" class="mt-2 text-xs text-gray-300">Lade Wetterdaten…</div>
+    <div v-if="error" class="mt-2 text-xs text-red-300">Fehler: {{ error }}</div>
+  </section>
 </template>
+
+
+<style scoped>
+/* Optional: schönerer Scrollbar-Look (nur Webkit-Browser) */
+div::-webkit-scrollbar {
+  height: 8px;
+}
+div::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.2);
+  border-radius: 8px;
+}
+</style>

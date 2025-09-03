@@ -1,13 +1,16 @@
+// weather.route.js
 const express = require('express');
 const cron = require('node-cron');
-const fetch = (...args) => import('node-fetch').then(({default: f}) => f(...args)); // falls node<18
+const fetch = (...args) => import('node-fetch').then(({ default: f }) => f(...args)); // falls node<18
 
 module.exports = (configValues, utils) => {
   const router = express.Router();
   let initial = true;
 
-  // Cache-Objekt für { current, forecast }
+  // Cache der letzten erfolgreichen Antwort
   let cache = null;
+
+  // ---- Helpers --------------------------------------------------------------
 
   function normalizeIcon(url) {
     if (!url) return undefined;
@@ -19,18 +22,10 @@ module.exports = (configValues, utils) => {
     return n / 3.6;
   }
 
-  function formatLocalDateTime(dt) {
-    // Erwartet "DD.MM.YYYY, HH:MM:SS" von toLocaleString()
-    if (typeof dt !== 'string') return new Date().toISOString().slice(0, 16).replace('T', ' ');
-    const [datePart, timePart] = dt.split(', ');
-    const [day, month, year] = datePart.split('.');
-    return `${year}-${month}-${day} ${timePart?.slice(0,5) ?? '00:00'}`;
-  }
-
-  // Aktuell-Werte abbilden (WeatherAPI current)
-  function mapCurrent(entry) {
-    const curr = entry.current || {};
-    const loc = entry.location || {};
+  // Mapping für "current"
+  function mapCurrent(raw) {
+    const curr = raw.current || {};
+    const loc = raw.location || {};
     return {
       temp: curr.temp_c,
       temp_feels_like: curr.feelslike_c,
@@ -38,54 +33,81 @@ module.exports = (configValues, utils) => {
       wind_deg: curr.wind_degree,
       sky: curr.condition?.text,
       weather_icon: normalizeIcon(curr.condition?.icon),
-      timestamp: loc.localtime ?? curr.last_updated ?? formatLocalDateTime(new Date().toLocaleString('de-DE'))
+      timestamp: loc.localtime ?? curr.last_updated,
     };
   }
 
-  // Tageszusammenfassung
-  function mapDaySummary(fd) {
-    const d = fd?.day || {};
-    return {
-      date: fd?.date,
-      maxtemp_c: d.maxtemp_c,
-      mintemp_c: d.mintemp_c,
-      avgtemp_c: d.avgtemp_c,
-      chance_of_rain: Number(d.daily_chance_of_rain ?? 0),
-      sky: d.condition?.text,
-      weather_icon: normalizeIcon(d.condition?.icon),
-    };
+  // Tages-High/Low aus forecastday[0]
+  function mapTodayHiLo(raw) {
+    const d = raw?.forecast?.forecastday?.[0]?.day;
+    return d
+      ? {
+          high_c: d.maxtemp_c,
+          low_c: d.mintemp_c,
+        }
+      : { high_c: undefined, low_c: undefined };
   }
 
-  // Stundenwerte minimal abbilden
+  // Kompakte Stunden-Mapping
   function mapHour(h) {
     return {
       time: h.time, // "YYYY-MM-DD HH:mm"
       temp_c: h.temp_c,
-      wind_ms: toMS(h.wind_kph),
-      wind_deg: h.wind_degree,
-      chance_of_rain: Number(h.chance_of_rain ?? 0),
       sky: h.condition?.text,
       weather_icon: normalizeIcon(h.condition?.icon),
     };
   }
 
-  function mapForecast(entry) {
-    const list = entry?.forecast?.forecastday || [];
-    return list.map(fd => ({
-      date: fd.date,
-      day: mapDaySummary(fd),
-      hours: Array.isArray(fd.hour) ? fd.hour.map(mapHour) : []
-    }));
+  // ---- Forecast Builder -----------------------------------------------------
+  // Nächste 12 Stunden ab der **nächsten vollen Stunde**; falls Tag 1 nicht reicht, mit Tag 2 fortsetzen
+  function buildNext12Hours(raw) {
+    const loc = raw.location;
+    const localStr = loc?.localtime; // "YYYY-MM-DD HH:mm"
+    const now = localStr ? new Date(localStr.replace(' ', 'T')) : new Date();
+
+    // Auf die nächste volle Stunde runden (strict future):
+    // 13:07 -> 14:00, 14:00 -> 15:00, 23:59 -> 00:00 (nächster Tag)
+    const nextHour = new Date(now);
+    nextHour.setMinutes(0, 0, 0);
+    nextHour.setHours(nextHour.getHours() + 1);
+
+    const days = raw?.forecast?.forecastday || [];
+    if (days.length === 0) return [];
+
+    // Stunden des ersten Tages
+    const h0 = Array.isArray(days[0].hour) ? days[0].hour : [];
+    // Stunden des zweiten Tages (falls vorhanden)
+    const h1 = Array.isArray(days[1]?.hour) ? days[1].hour : [];
+
+    const all = [...h0, ...h1];
+
+    // Index der ersten Stunde >= nächster voller Stunde
+    const idx = all.findIndex((h) => {
+      const t = new Date(h.time.replace(' ', 'T'));
+      return t.getTime() >= nextHour.getTime();
+    });
+
+    const start = idx >= 0 ? idx : 0;
+    const slice = all.slice(start, start + 12).map(mapHour);
+
+    // Fallback: wenn aus irgendeinem Grund <12, NICHT mit Vergangenheit auffüllen
+    // (Anforderung: Nur echte Zukunftsstunden anzeigen)
+    return slice;
   }
 
+  // ---- Fetcher --------------------------------------------------------------
   async function fetchAndUpdateWeatherData(lat, lon, apiKey) {
     try {
-      // q kann "lat,lon" oder Ortsname sein
-      const q = (typeof lat === 'number' && typeof lon === 'number')
-        ? `${lat},${lon}`
-        : (configValues.city || 'Wedel');
-      // Forecast 3 Tage, Luftqualität/Alerts aus
-      const url = `http://api.weatherapi.com/v1/forecast.json?key=${apiKey}&q=Wedel&days=3&aqi=no&alerts=no`;
+      // q kann "lat,lon" sein; ansonsten fallback auf Stadt aus config
+      const q =
+        typeof lat === 'number' && typeof lon === 'number'
+          ? `${lat},${lon}`
+          : configValues?.city || 'Wedel';
+
+      // Forecast mit 2 Tagen, damit "nächste 12 Stunden" sicher abgedeckt sind.
+      const url = `http://api.weatherapi.com/v1/forecast.json?key=${apiKey}&q=${encodeURIComponent(
+        q
+      )}&days=2&aqi=no&alerts=no`;
 
       const response = await fetch(url);
       if (!response.ok) {
@@ -95,40 +117,49 @@ module.exports = (configValues, utils) => {
       const raw = await response.json();
 
       cache = {
+        location: {
+          name: raw?.location?.name,
+          region: raw?.location?.region,
+          country: raw?.location?.country,
+          lat: raw?.location?.lat,
+          lon: raw?.location?.lon,
+          tz_id: raw?.location?.tz_id,
+          localtime: raw?.location?.localtime,
+        },
         current: mapCurrent(raw),
-        forecast: mapForecast(raw),
+        today: mapTodayHiLo(raw),
+        next12: buildNext12Hours(raw),
       };
 
-      console.log('[WeatherAPI] Forecast aktualisiert (3 Tage).');
+      console.log('[WeatherAPI] Daten aktualisiert: current + next12h.');
     } catch (e) {
       console.error('[WeatherAPI] Fehler beim Abrufen:', e.message);
     }
   }
 
+  // ---- Route ---------------------------------------------------------------
   router.get('/call', async (req, res) => {
-    const apiKey = configValues?.apiKey;
-    console.log(configValues)
-    if (!apiKey) {//TODO
-     return res.status(500).send({ error: 'WEATHER_API_KEY fehlt' });
+    // API-Key: bevorzugt aus configValues.apiKey, sonst ENV
+    const apiKey = configValues?.apiKey || process.env.WEATHER_API_KEY;
+    if (!apiKey) {
+      return res.status(500).send({ error: 'WEATHER_API_KEY fehlt' });
     }
 
-    console.log(apiKey)
     const lat = configValues?.latitude;
     const lon = configValues?.longitude;
 
-    // Beim ersten Aufruf initial laden und Cron starten
+    // Initialer Abruf & Cronjob
     if (initial) {
       await fetchAndUpdateWeatherData(lat, lon, apiKey);
-      // Jede volle Stunde neu abfragen
       cron.schedule('0 * * * *', () => {
-        console.log('[WeatherAPI] Stündliche Aktualisierung...');
+        console.log('[WeatherAPI] Stündliche Aktualisierung…');
         fetchAndUpdateWeatherData(lat, lon, apiKey);
       });
       initial = false;
-      console.log('[WeatherAPI] Initialer Aufruf – Forecast wird abgerufen.');
+      console.log('[WeatherAPI] Initialer Aufruf – Daten werden abgerufen.');
     }
 
-    // Falls noch kein Cache (z. B. Fehler vorher), trotzdem versuchen
+    // Falls Cache leer (z. B. Fehler vorher), nochmal versuchen
     if (!cache) {
       await fetchAndUpdateWeatherData(lat, lon, apiKey);
     }
@@ -137,7 +168,7 @@ module.exports = (configValues, utils) => {
       return res.status(502).send({ error: 'Keine Wetterdaten verfügbar' });
     }
 
-    res.send(cache);
+    return res.send(cache);
   });
 
   return router;
