@@ -61,7 +61,6 @@ onMounted(fetchWeather)
 </script>
 
 <template>
-  <!-- Kachel: volle Breite des Containers, keine Überläufe -->
   <section class="w-full max-w-full ">
     <!-- Header -->
     <div class="flex items-start justify-between">

@@ -10,7 +10,7 @@ const aviableCards = ref([
   { id: 3, title: 'Luftqualität', type: 'air', enabled: false },
   { id: 4, title: 'Wasserstand', type: 'water', enabled: false },
   { id: 5, title: 'Pollen', type: 'pollen', enabled: false },
-  { id: 6, title: 'Windgeschwindigkeit', type: 'wind', enabled: false },
+  { id: 6, title: 'Windgeschwindigkeit', type: 'wind', enabled: true },
 ])
 
 
