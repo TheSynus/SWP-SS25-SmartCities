@@ -93,3 +93,13 @@ Aufbau des JSON-Response-Bodies:
     ...
   ]
 ```
+
+### Datenbank-Routen
+Routen zur Interaktion mit der zugrundeliegenden Datenbank, stellen grundlegende CRUD-Operationen zur Verfügung.
+* **/appointments**
+* **/cards** 
+* **/categorys**
+* **/events**
+* **/graphs**
+* **/images**
+
