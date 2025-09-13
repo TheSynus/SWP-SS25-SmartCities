@@ -23,6 +23,7 @@ const emit = defineEmits<{
 const handleCardSelect = (cardData: { id: number; title: string; type: string }) => {
   // Nur emittieren wenn Karte nicht disabled ist
   if (!isCardDisabled(cardData.type)) {
+    console.log('type: ' + cardData.type)
     emit('cardSelected', cardData)
   }
 }

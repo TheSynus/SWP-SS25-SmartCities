@@ -2,6 +2,7 @@
 import WeatherWidget from './WeatherWidget.vue';
 import WindWidget from './WindWidget.vue';
 
+
 interface Props {
   heading: string
   disabled?: boolean
@@ -22,7 +23,11 @@ const props = withDefaults(defineProps<Props>(), {
         'opacity-50 cursor-not-allowed hover:bg-white dark:hover:bg-gray-800': props.disabled
       }"
     >
-      <WindWidget></WindWidget>
+    <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
+        {{ props.heading }}
+      </h5>
+
+      <WeatherWidget></WeatherWidget>
 
       <!-- Disabled Meldung -->
       <div v-if="props.disabled" class="mt-4 pt-3 border-t border-gray-300 dark:border-gray-600">
