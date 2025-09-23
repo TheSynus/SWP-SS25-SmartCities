@@ -1,13 +1,13 @@
-import { Graph } from "@/models/graph"
-import { ref } from "vue"
+import { Graph, GraphData, type GraphDTO, type GraphResultDTO } from '@/models/graph'
+import axios from 'axios'
+import { ref } from 'vue'
 
 // Globale reaktive Referenz für alle Graphen
 export const graphs = ref<Graph[]>([])
 
 export function useGraphStore() {
-
   // CSV-Datei parsen und validieren
-  const parseCsvFile = async (file: File): Promise<{ x: string[], y: string[] }> => {
+  const parseCsvFile = async (file: File): Promise<GraphData[]> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader()
 
@@ -30,7 +30,7 @@ export function useGraphStore() {
   }
 
   // CSV-Text parsen
-  const parseCsvText = (csvText: string): { x: string[], y: string[] } => {
+  const parseCsvText = (csvText: string): GraphData[] => {
     const lines = csvText.trim().split('\n')
 
     if (lines.length < 2) {
@@ -38,60 +38,83 @@ export function useGraphStore() {
     }
 
     // Header parsen (erste Zeile)
-    const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''))
+    const headers = lines[0].split(';').map((h) => h.trim().replace(/"/g, ''))
 
     if (headers.length < 2) {
       throw new Error('CSV muss mindestens 2 Spalten haben (X und Y)')
     }
 
-    const xData: string[] = []
-    const yData: string[] = []
+    const data: GraphData[] = []
 
     // Datenzeilen parsen (ab zweite Zeile)
     for (let i = 1; i < lines.length; i++) {
-      const values = lines[i].split(',').map(v => v.trim().replace(/"/g, ''))
+      const values = lines[i].split(';').map((v) => v.trim().replace(/"/g, ''))
 
       if (values.length >= 2 && values[0] && values[1]) {
-        xData.push(values[0])
-        yData.push(values[1])
+        data.push(new GraphData(values[0], values[1]))
       }
     }
 
-    if (xData.length === 0) {
+    if (data.length === 0) {
       throw new Error('Keine gültigen Datenzeilen gefunden')
     }
 
-    return { x: xData, y: yData }
+    return data
   }
 
   // Neuen Graph erstellen
-  const createGraph = async (file: File, type: string): Promise<number> => {
+  const createGraph = async (file: File, type: string): Promise<Graph> => {
     try {
       // CSV parsen
-      const { x, y } = await parseCsvFile(file)
+      const data = await parseCsvFile(file)
 
-      // Neue Graph-ID generieren
-      const graphId = graphs.value.length > 0
-        ? Math.max(...graphs.value.map(g => g.graph_id)) + 1
-        : 1
+      // Graph Objekt in DB speichern
+      const graphResponse = await axios.post<GraphDTO>(`${import.meta.env.VITE_API_URL}/graphs`, {
+        title: 'Test',
+        type: type,
+      })
 
-      // Graph erstellen
-      const newGraph = new Graph(graphId, type, x, y)
+      if (graphResponse.data && graphResponse.data.id) {
+        // Daten in DB speichern
+        // TODO: Schleife in Backend
+        for (const dat of data) {
+          await axios.post(`${import.meta.env.VITE_API_URL}/graphs/${graphResponse.data.id}/data`, {
+            x_comp: dat.x,
+            y_comp: dat.y,
+          })
+        }
 
-      // Zu Liste hinzufügen
-      graphs.value.push(newGraph)
+        const newGraph = new Graph(graphResponse.data.id, type, data)
 
-      return newGraph.graph_id
+        // Zu Liste hinzufügen
+        graphs.value.push(newGraph)
 
+        return newGraph
+      } else {
+        throw new Error('Speichern des Graphen nicht möglich')
+      }
     } catch (error) {
       console.error('Fehler beim Erstellen des Graphen:', error)
       throw error
     }
   }
 
+  // Daten für Graphen holen
+  const getDataForGraph = async (graphId: number): Promise<GraphData[]> => {
+    const result = await axios.get<GraphResultDTO>(
+      `${import.meta.env.VITE_API_URL}/graphs/${graphId}`,
+    )
+
+    const retVal = result.data.data_points.map((dat) => {
+      return new GraphData(dat.x_comp, dat.y_comp)
+    })
+
+    return retVal
+  }
+
   // Graph löschen
   const deleteGraph = (graphId: number): boolean => {
-    const index = graphs.value.findIndex(g => g.graph_id === graphId)
+    const index = graphs.value.findIndex((g) => g.graph_id === graphId)
     if (index !== -1) {
       graphs.value.splice(index, 1)
       return true
@@ -101,16 +124,16 @@ export function useGraphStore() {
 
   // Graph nach ID finden
   const getGraphById = (graphId: number): Graph | undefined => {
-    return graphs.value.find(g => g.graph_id === graphId)
+    return graphs.value.find((g) => g.graph_id === graphId)
   }
 
   // Alle Graphen nach Typ filtern
   const getGraphsByType = (type: string): Graph[] => {
-    return graphs.value.filter(g => g.type === type)
+    return graphs.value.filter((g) => g.type === type)
   }
 
   // CSV-Datei validieren (ohne zu parsen)
-  const validateCsvFile = (file: File): { valid: boolean, error?: string } => {
+  const validateCsvFile = (file: File): { valid: boolean; error?: string } => {
     // Dateityp prüfen
     if (!file.name.toLowerCase().endsWith('.csv') && file.type !== 'text/csv') {
       return { valid: false, error: 'Bitte wählen Sie eine CSV-Datei aus' }
@@ -124,13 +147,13 @@ export function useGraphStore() {
     return { valid: true }
   }
 
-
   return {
     createGraph,
     deleteGraph,
     getGraphById,
     getGraphsByType,
     parseCsvFile,
-    validateCsvFile
+    validateCsvFile,
+    getDataForGraph,
   }
 }

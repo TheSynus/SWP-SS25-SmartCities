@@ -3,7 +3,9 @@ import type { Card } from '@/models/card'
 import AddCardButton from './dashboardEdit/AddCardButton.vue'
 import DefaultCard from './DefaultCard.vue'
 import { ref, watch } from 'vue'
-import CardGraphColumn from './CardGraphColumn.vue';
+import CardGraphColumn from './CardGraphColumn.vue'
+import NinaCard from './cards/NinaCard.vue'
+import CardGraphLine from './CardGraphLine.vue'
 
 const props = defineProps<{
   cards: Array<Card>
@@ -40,14 +42,19 @@ const handleDragStart = (event: DragEvent, card: Card) => {
   event.dataTransfer!.effectAllowed = 'move'
   event.dataTransfer!.setData('text/html', '')
 
-  // Visual feedback
-  const target = event.target as HTMLElement
-  target.style.opacity = '0.5'
+  // Visual feedback für die ganze Card
+  const cardElement = (event.target as HTMLElement).closest('.card-container') as HTMLElement
+  if (cardElement) {
+    cardElement.style.opacity = '0.5'
+  }
 }
 
 const handleDragEnd = (event: DragEvent) => {
-  const target = event.target as HTMLElement
-  target.style.opacity = '1'
+  // Visual feedback zurücksetzen
+  const cardElement = (event.target as HTMLElement).closest('.card-container') as HTMLElement
+  if (cardElement) {
+    cardElement.style.opacity = '1'
+  }
 
   draggedItem.value = null
   draggedOverIndex.value = null
@@ -96,13 +103,19 @@ const handleDeleteCard = (id: number) => {
 }
 
 // Computed für CSS-Klassen
-const getCardClasses = (index: number) => {
-  const baseClasses = props.showAddButtons ? 'cursor-move transition-all duration-200' : ''
+const getCardContainerClasses = (index: number) => {
+  const baseClasses = 'transition-all duration-200'
   const dragOverClasses =
     draggedOverIndex.value === index
       ? 'bg-blue-50 border rounded-lg border-blue-300 border-dashed'
       : ''
   return `${baseClasses} ${dragOverClasses}`.trim()
+}
+
+const getDragHandleClasses = () => {
+  return props.showAddButtons
+    ? 'cursor-move bg-gray-50 hover:bg-gray-100 border-b border-gray-200 p-2 rounded-t-lg transition-colors duration-150'
+    : 'hidden'
 }
 </script>
 
@@ -127,26 +140,46 @@ const getCardClasses = (index: number) => {
         <div class="flex-shrink-0 w-10 h-10"></div>
       </li>
 
-      <!-- Cards mit Buttons dazwischen - DRAGGABLE! -->
+      <!-- Cards mit Buttons dazwischen - DRAGGABLE via Handle! -->
       <template v-for="(card, index) in localCards" :key="card.id">
         <li class="flex items-center" :class="{ 'gap-4': props.showAddButtons }">
-          <!-- Card Container -->
+          <!-- Card Container mit separatem Drag Handle -->
           <div
-            :class="getCardClasses(index)"
-            :draggable="props.showAddButtons"
-            @dragstart="handleDragStart($event, card)"
-            @dragend="handleDragEnd"
+            :class="getCardContainerClasses(index)"
             @dragover="handleDragOver($event, index)"
             @dragleave="handleDragLeave"
             @drop="handleDrop($event, index)"
-            class="flex-1"
+            class="flex-1 card-container"
           >
-            <DefaultCard v-if="card.type !== 'graph'"
-              :heading="card.title"
-              :class="{ 'pointer-events-none': props.showAddButtons }"
-            />
-            <!-- Testweise immer Säulen-->
-             <CardGraphColumn v-else />
+            <!-- Drag Handle - nur sichtbar im Edit Mode -->
+            <div
+              v-if="props.showAddButtons"
+              :class="getDragHandleClasses()"
+              :draggable="true"
+              @dragstart="handleDragStart($event, card)"
+              @dragend="handleDragEnd"
+              class="flex items-center justify-center"
+            >
+              <svg class="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
+                <path
+                  d="M9 3h2v2H9V3zm0 4h2v2H9V7zm0 4h2v2H9v-2zm0 4h2v2H9v-2zm0 4h2v2H9v-2zm4-16h2v2h-2V3zm0 4h2v2h-2V7zm0 4h2v2h-2v-2zm0 4h2v2h-2v-2zm0 4h2v2h-2v-2z"
+                />
+              </svg>
+              <span class="ml-2 text-sm text-gray-500 font-medium">Zum Verschieben ziehen</span>
+            </div>
+
+            <!-- Card Content - normal interaktiv -->
+            <div
+              :class="{
+                'rounded-t-none': props.showAddButtons,
+                'rounded-lg': !props.showAddButtons,
+              }"
+            >
+              <NinaCard v-if="card.type === 'nina'" :heading="card.title" />
+              <CardGraphColumn v-else-if="card.type === 'column'" :graph_id="card.graph_id" />
+              <CardGraphLine v-else-if="card.type === 'line'" :graph_id="card.graph_id" />
+              <DefaultCard v-else :heading="card.title"></DefaultCard>
+            </div>
           </div>
 
           <!-- Mülltonne Button -->

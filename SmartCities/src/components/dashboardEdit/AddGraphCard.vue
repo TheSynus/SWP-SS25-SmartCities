@@ -6,6 +6,7 @@ import CardGraphBar from '../CardGraphBar.vue'
 import CardGraphPie from '../CardGraphPie.vue'
 import { Info } from 'lucide-vue-next'
 import { useGraphStore, graphs } from '@/composables/dashboard/useGraphStore'
+import type { Graph } from '@/models/graph'
 
 const { createGraph } = useGraphStore()
 
@@ -15,7 +16,7 @@ const fileInputRef = ref<HTMLInputElement | null>(null)
 
 // Event definieren
 const emit = defineEmits<{
-  graphAdded: [graphId: number]
+  graphAdded: [graph: Graph]
 }>()
 
 // Funktion für Graph-Auswahl
@@ -80,10 +81,10 @@ const handleFileSelect = async (event: Event) => {
     <!-- Graph Grid -->
     <div class="grid grid-cols-2 place-items-center gap-y-4">
       <div class="h-80 cursor-pointer" @click="selectGraph('line')">
-        <CardGraphLine />
+        <CardGraphLine :graph_id="undefined"/>
       </div>
       <div class="h-80 cursor-pointer" @click="selectGraph('column')">
-        <CardGraphColumn />
+        <CardGraphColumn :graph_id="undefined" />
       </div>
       <div class="h-80 cursor-pointer" @click="selectGraph('bar')">
         <CardGraphBar />

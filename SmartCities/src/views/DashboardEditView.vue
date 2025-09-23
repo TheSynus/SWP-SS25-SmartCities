@@ -6,6 +6,7 @@ import 'flowbite'
 import { onMounted, ref } from 'vue'
 import { Card } from '@/models/card'
 import { cards, useCardStore } from '@/composables/dashboard/useCardStore'
+import type { Graph } from '@/models/graph'
 
 let addIndex = 0
 const isModalVisible = ref(false)
@@ -28,10 +29,10 @@ const handleDefaultCardAdd = (cardData: { id: number; title: string; type: strin
   hideModal()
 }
 
-const handleGraphCardAdd = (graphId: number) => {
-  console.log('Graph Card Added', graphId)
+const handleGraphCardAdd = (graph: Graph) => {
+  console.log('Graph Card Added', graph)
 
-  // addCard(cardData, addIndex, graphId)
+  addCard("Test Graph", graph.type, addIndex, graph.graph_id)
 
   hideModal()
 }

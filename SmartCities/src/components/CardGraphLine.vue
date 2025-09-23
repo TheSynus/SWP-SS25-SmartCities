@@ -1,6 +1,15 @@
 <script setup lang="ts">
+import { useGraphStore } from '@/composables/dashboard/useGraphStore'
 import ApexCharts from 'apexcharts'
-import { onMounted } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
+
+const props = defineProps<{
+  graph_id: number | undefined
+}>()
+
+// Template ref für das Chart-Element
+const chartRef = ref<HTMLDivElement | null>(null)
+let chart: ApexCharts | null = null
 
 const options = {
   chart: {
@@ -48,15 +57,9 @@ const options = {
       top: 0,
     },
   },
-  series: [
-    {
-      name: 'New users',
-      data: [6500, 6418, 6456, 6526, 6356, 6456],
-      color: '#1A56DB',
-    },
-  ],
+  series: [] as unknown[],
   xaxis: {
-    categories: ['01', '02', '03', '04', '05', '06'],
+    categories: [] as unknown[],
     labels: {
       show: true,
       style: {
@@ -74,17 +77,51 @@ const options = {
     show: true,
     labels: {
       style: {
-        colors: '#FFFFFF'
+        colors: '#FFFFFF',
       },
     },
   },
 }
 
+const { getDataForGraph } = useGraphStore()
+
 onMounted(() => {
-  const chartElement = document.getElementById('area-chart')
-  if (chartElement && typeof ApexCharts !== 'undefined') {
-    const chart = new ApexCharts(chartElement, options)
-    chart.render()
+  // Verwende die Template Ref anstatt getElementById
+  if (chartRef.value && typeof ApexCharts !== 'undefined') {
+    if (props.graph_id !== undefined) {
+      // Graph Id gefüllt -> Daten müssen geholt werden
+      getDataForGraph(props.graph_id).then((res) => {
+        options.series.push({
+          name: 'New users',
+          data: res.map((dat) => dat.y),
+          color: '#1A56DB',
+        })
+
+        options.xaxis.categories = res.map((dat) => dat.x)
+
+        chart = new ApexCharts(chartRef.value, options)
+        chart.render()
+      })
+    } else {
+      // Beispieldaten
+      options.series.push({
+        name: 'New users',
+        data: [6500, 6418, 6456, 6526, 6356, 6456],
+        color: '#1A56DB',
+      })
+
+      options.xaxis.categories = ['01', '02', '03', '04', '05', '06']
+
+      chart = new ApexCharts(chartRef.value, options)
+      chart.render()
+    }
+  }
+})
+
+// Cleanup beim Unmount
+onUnmounted(() => {
+  if (chart) {
+    chart.destroy()
   }
 })
 </script>
@@ -98,6 +135,6 @@ onMounted(() => {
         </h5>
       </div>
     </div>
-    <div id="area-chart"></div>
+    <div ref="chartRef"></div>
   </div>
 </template>

@@ -33,23 +33,21 @@ export function useCardStore() {
         position,
         graph_id,
       })
-      
-      console.log('jsfnijnas')
-    
+
       const newCard = response.data
-      
+
       const cardsCopy = cards.value.slice(0)
-      
+
       cardsCopy.forEach((card) => {
         if (card.position >= newCard.position) {
           card.position++
           updateCard(card)
         }
       })
-      
+
       cardsCopy.push(newCard)
       cardsCopy.sort((a, b) => a.position - b.position)
-      
+
       cards.value = cardsCopy
     } catch (error) {
       console.error('Fehler beim Speichern der Card:', error)
@@ -90,7 +88,7 @@ export function useCardStore() {
 
   const updateCard = async (card: Card) => {
     try {
-      const response = await axios.put(`${import.meta.env.VITE_API_URL}/cards/${card.id}`, {
+      await axios.put(`${import.meta.env.VITE_API_URL}/cards/${card.id}`, {
         title: card.title,
         position: card.position,
         type: card.type,
