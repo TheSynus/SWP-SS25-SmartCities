@@ -6,6 +6,7 @@ import { ref, watch } from 'vue'
 import CardGraphColumn from './CardGraphColumn.vue'
 import NinaCard from './cards/NinaCard.vue'
 import CardGraphLine from './CardGraphLine.vue'
+import WeatherCard from './WeatherCard.vue'
 
 const props = defineProps<{
   cards: Array<Card>
@@ -109,7 +110,8 @@ const getCardContainerClasses = (index: number) => {
     draggedOverIndex.value === index
       ? 'bg-blue-50 border rounded-lg border-blue-300 border-dashed'
       : ''
-  return `${baseClasses} ${dragOverClasses}`.trim()
+  const fullWidthClass = props.showAddButtons ? '' : 'w-full'
+  return `${baseClasses} ${dragOverClasses} ${fullWidthClass}`.trim()
 }
 
 const getDragHandleClasses = () => {
@@ -178,6 +180,7 @@ const getDragHandleClasses = () => {
               <NinaCard v-if="card.type === 'nina'" :heading="card.title" />
               <CardGraphColumn v-else-if="card.type === 'column'" :graph_id="card.graph_id" />
               <CardGraphLine v-else-if="card.type === 'line'" :graph_id="card.graph_id" />
+              <WeatherCard v-else-if="card.type === 'weather'" :heading="card.title"></WeatherCard>
               <DefaultCard v-else :heading="card.title"></DefaultCard>
             </div>
           </div>
