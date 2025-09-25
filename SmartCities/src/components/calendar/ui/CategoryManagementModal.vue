@@ -149,7 +149,7 @@ function handleBackdropClick(event: Event) {
     >
       <div
         v-if="isVisible"
-        class="fixed top-0 left-0 right-0 z-50 flex items-center justify-center w-full h-full bg-black/50 backdrop-blur-sm"
+        class="fixed top-0 left-0 right-0 z-2000 flex items-center justify-center w-full h-full bg-black/50 backdrop-blur-sm"
         @click="handleBackdropClick"
       >
         <Transition
@@ -162,7 +162,7 @@ function handleBackdropClick(event: Event) {
         >
           <div
             v-if="isVisible"
-            class="relative p-6 w-full max-w-4xl bg-[#0B1739] rounded-lg shadow border border-white/10 text-white"
+            class="relative p-6 w-full max-w-4xl bg-[#0B1739] rounded-lg shadow border border-white/10 text-white z-[2001]"
             @click.stop
           >
             <h3 class="mb-6 text-xl font-semibold">Kategorien bearbeiten</h3>

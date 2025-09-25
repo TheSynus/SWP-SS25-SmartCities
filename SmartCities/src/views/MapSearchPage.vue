@@ -5,6 +5,9 @@
     <!-- Main Content Container -->
     <div class="h-[calc(100vh-3.5rem)] sm:h-[calc(100vh-4rem)] lg:h-[calc(100vh-4.5rem)] flex flex-col lg:flex-row">
      
+
+    
+
       <!-- Map Section -->
       <MapSection
         :show="!showNewMarkerModal"
@@ -43,7 +46,15 @@
       @close="closeNewMarkerModal"
       @submit="handleNewMarker"
     />
-    
+
+    <!-- Category Editor Modal -->
+    <CategoryEditorModal
+      :isVisible="showCategoryEditor"
+      :categories="categories"
+      :selectedCategory="selectedCategory"
+      @close="closeCategoryEditor"
+    />
+
     <!-- Success Toast -->
     <SuccessToast
       :show="showSuccessToast"
@@ -58,6 +69,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import MapSection from '../components/map/MapSection.vue'
 import SidebarSection from '../components/map/SidebarSection.vue'
 import NewMarkerModal from '../components/map/modal/MarkerModal.vue'
+import CategoryEditorModal from '../components/calendar/ui/CategoryManagementModal.vue';
 import SuccessToast from '../components/map/SuccessToast.vue'
 import { useCategories } from '../composables/map/useCategories'
 import { useMarkers } from '../composables/map/useMarkers'
@@ -70,6 +82,7 @@ const { createMarker } = useMarkers()
 const { loading: markersLoading, error: markersError, fetchMarkers } = useMarkerAPI()
 const { showSuccessToast, successMessage, showToast, closeSuccessToast } = useToast()
 
+
 // Reactive state
 const query = ref('')
 const searchResults = ref([])
@@ -78,6 +91,8 @@ const selectedCategories = ref([])
 const selectedMarker = ref(null)
 const selectedMapCoordinates = ref(null)
 const showNewMarkerModal = ref(false)
+const showCategoryEditor = ref(false)
+const selectedCategory = ref(null)
 
 // Sort options (können später als Props oder aus Settings kommen)
 const sortBy = ref('date')
@@ -117,6 +132,7 @@ async function loadMarkers() {
     totalResults.value = 0
   }
 }
+
 
 // Event handlers
 function handleSearch(searchQuery) {
@@ -177,11 +193,15 @@ function closeNewMarkerModal() {
 }
 
 function openCategoryEditor() {
-  console.log('Kategorien bearbeiten...')
-  // router.push('/kategorien') oder showCategoryModal.value = true
+  showCategoryEditor.value = true
+}
+
+function closeCategoryEditor () {
+  showCategoryEditor.value = false
 }
 
 async function handleNewMarker(markerData) {
+
   try {
     const markerWithCoordinates = {
       ...markerData,
@@ -224,7 +244,7 @@ watch(categories, (newCategories) => {
   if (newCategories.length > 0 && selectedCategories.value.length === 0) {
     selectedCategories.value = newCategories.map(cat => ({
       ...cat,
-      active: true // Standardmäßig alle aktiv
+      active: true
     }))
   }
 }, { immediate: true })

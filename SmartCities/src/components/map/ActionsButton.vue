@@ -72,7 +72,6 @@ function handleCategoryEditor() {
   emit('category-editor')
 }
 
-// Close dropdown when clicking outside
 function handleClickOutside(event) {
   if (actionsBtn.value && !actionsBtn.value.contains(event.target)) {
     closeDropdown()
