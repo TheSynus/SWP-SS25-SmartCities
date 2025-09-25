@@ -1,9 +1,6 @@
-const { readFileSync } = require('fs');
-
-const { getJSONContent } = require('./json_utils.js');
-
 // Verschiedene Funktionen zum Verwenden in den Routen
 
+// Bestimmung von Stadt zugehörig zu gegebener PLZ mithilfe von OpenPLZApi
 async function getCityToPLZ(postalCode, page = 1, pageSize = 10) {
     const url = `https://openplzapi.org/de/Localities?postalCode=${postalCode}&page=${page}&pageSize=${pageSize}`;
     
@@ -25,27 +22,10 @@ async function getCityToPLZ(postalCode, page = 1, pageSize = 10) {
         }
     } catch (error) {
         console.error('Error fetching localities:', error);
-        throw error; // Fehler erneut werfen, um ihn in der 
+        throw error; 
     }
 }
 
-// Fileoperationen für das JSON File mit den Regionalschlüsslen
-function getRegionalKey(cityName) {
-
-    // Öffnen der JSON Datei mit der Zuordnung der Regionalschlüsseln zu Städten
-    const pathToFile = './regional_keys.json';
-    const jsonData = getJSONContent(pathToFile);
-
-    // Aus den Daten die gesuchte Stadt herausfiltern
-    let cityCode = null;
-    for (const entry of jsonData.daten) {
-        if (entry[1] === cityName) {
-            cityCode = entry[0];
-            console.log("Found regional key: \"",cityCode, "\" to city: \"", cityName, "\"");
-        }
-    }
-    return cityCode;
-}
 
 // Exportieren der Funktionen zum nutzen in anderen Dateien
-module.exports = { getCityToPLZ, getRegionalKey };
+module.exports = { getCityToPLZ };

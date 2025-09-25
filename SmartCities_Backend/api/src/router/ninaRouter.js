@@ -45,9 +45,13 @@ module.exports = (configValues, utils) => {
     }
   });
   
+  // Test-Route für Nina-Endpunkt 
+  // stellt statische Warndaten bereit, falls aktuell keine echten Warnungen vorliegen
   router.get('/test', async(req, res) => {
+    // Lädt Testdaten aus nina_test.json
     let warnData = getJSONContent("./test/nina_test.json");
     
+    //Formatieren & zurückgeben
     warnData = warnData.map(m => {
           return {
             url:"https://warnung.bund.de/meldungen/" + m.id,
@@ -60,6 +64,6 @@ module.exports = (configValues, utils) => {
     res.send(warnData);
   });
 
-  //module.exports = router;
+  
   return router;
 }

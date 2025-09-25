@@ -15,7 +15,6 @@ module.exports = (configValues, utils) => {
         const [day, month, year] = datePart.split(".");
 
         // Baue neues Datum im Format YYYY-MM-DD zusammen
-        //TODO: 6 = 06 lol kein bock mehr
         const formattedDate = `${year}-${month}-${day}`;
 
         // Kombiniere mit der Zeit
@@ -69,18 +68,13 @@ module.exports = (configValues, utils) => {
             const trimmedForecastList = forecastList.slice(0, 12).flatMap(item => [item, item, item]);
             
             
-            // console.log("Forecast: ", forecastList.length);
-            // console.log("Trimemd: ", trimmedForecastList.length);
-            // console.log(trimmedForecastList)
 
-            //TODO: Werte bei Forecast jeweils dreimal verwenden!
             const weather = [
                 extractRelaventData(currentWeather),
-                //...forecastList.slice(0,23).map(extractRelaventData)
-                ...trimmedForecastList.slice(0,23).map(extractRelaventData)
+                //...forecastList.slice(0,23).map(extractRelaventData) // Zeile für einfache Verwendung der Daten
+                ...trimmedForecastList.slice(0,23).map(extractRelaventData) // Zeile für dreifache Verwendung der Daten
             ]
             
-            //console.log(weather);
             tempWeather = weather;
             console.log("Aktuelle Wetterdaten von OpenWeather abgefragt.")
         } catch (e) {
@@ -89,13 +83,13 @@ module.exports = (configValues, utils) => {
     }
 
     
-
+    // Abfrage der Wetterdaten
     router.get('/call', async (req, res) => {
         const apiKey = process.env.WEATHER_API_KEY;
         const lat = configValues.latitude;
         const lon = configValues.longitude;
         
-        //Bei ersten Aufruf nach Serverstart: erstmalig alles Zeug fetchen & zwischenspeichern & Cronjonb starten
+        //Bei ersten Aufruf nach Serverstart: erstmalig Wetterdaten abfragen, Zwischenspeichern und Cronjonb für automatisierte Abfrage starten
         if (initial) {
             await fetchAndUpdateWeatherData(lat, lon, apiKey);
             // Jede volle Stunde ausführen (Minute 0 jeder Stunde)
