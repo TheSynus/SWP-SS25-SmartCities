@@ -118,6 +118,9 @@ function selectCategoryForEdit(category: Category) {
 
 function handleSave() {
   if (!canSave.value) return
+  
+  console.log("Neue Kategoire:" + editingCategory.value.name + "\nIsNew:" +isCreatingNewCategory.value )
+  
   emit('save', { ...editingCategory.value }, isCreatingNewCategory.value)
 }
 
@@ -181,7 +184,8 @@ function handleBackdropClick(event: Event) {
                   </button>
                 </div>
                 
-                <div class="space-y-2 overflow-y-auto max-h-80">
+                <div class="space-y-2 overflow-y-auto max-h-80 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-white/5 hover:scrollbar-thumb-white/30"
+                >
                   <div
                     v-for="category in categories"
                     :key="category.id"

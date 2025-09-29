@@ -49,23 +49,8 @@ const props = withDefaults(defineProps<Props>(), {
       action: 'categories',
       description: 'Kategorien verwalten und bearbeiten',
       shortcut: 'Ctrl+K'
-    },
-    {
-      id: 'export',
-      label: 'Exportieren',
-      icon: '📤',
-      action: 'export',
-      description: 'Termine exportieren',
-      disabled: false
-    },
-    {
-      id: 'settings',
-      label: 'Einstellungen',
-      icon: '⚙️',
-      action: 'settings',
-      description: 'Kalender-Einstellungen',
-      disabled: false
     }
+  
   ]
 })
 

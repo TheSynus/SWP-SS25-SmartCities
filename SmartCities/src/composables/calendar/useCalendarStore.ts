@@ -19,6 +19,8 @@ export interface Category {
   color: string
 }
 
+
+
 export interface FilterForm {
   date: string
   category: string
@@ -30,6 +32,7 @@ export function useCalendarStore() {
   // State
   const currentDate = ref(new Date())
   const selectedDate = ref<string | null>(null)
+  const searchQuery = ref<string | null>(null) 
   const selectedEvent = ref<Event | null>(null)
   const selectedCategory = ref<Category | null>(null)
   const isCreatingNewCategory = ref(false)
@@ -141,27 +144,27 @@ export function useCalendarStore() {
     )
   })
 
-  const filteredEvents = computed(() => {
+  let filteredEvents = computed(() => {
     let filtered = events.value
+    console.log("filteredEvents!--")
 
     // Calendar Date Filter (has priority)
     if (selectedDate.value) {
       const expandedEvents = getExpandedEvents()
       filtered = expandedEvents.filter((event) => event.date.startsWith(selectedDate.value!))
-    } else {
-      // Apply normal filters only if no calendar date selected
+    }
 
       // Search Text Filter
-      if (filterForm.value.searchText.trim()) {
+    if (filterForm.value.searchText.trim()) {
         const searchLower = filterForm.value.searchText.toLowerCase()
         filtered = filtered.filter(
           (event) =>
             event.title.toLowerCase().includes(searchLower) ||
-            event.location.toLowerCase().includes(searchLower),
+            event.category.toLowerCase().includes(searchLower),
         )
-      }
+    }
 
-      // Date Filter
+        // Date Filter
       if (filterForm.value.date) {
         filtered = filtered.filter((event) => event.date.startsWith(filterForm.value.date))
       }
@@ -176,10 +179,11 @@ export function useCalendarStore() {
         const locationLower = filterForm.value.location.toLowerCase()
         filtered = filtered.filter((event) => event.location.toLowerCase().includes(locationLower))
       }
-    }
+
 
     // Sort by date ascending
     return filtered.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+
   })
 
   const todayStr = new Date().toLocaleDateString('sv-SE')
@@ -425,11 +429,12 @@ export function useCalendarStore() {
       endDate: '',
     }
   }
+  
 
   function saveNewEvent(eventData?: any) {
     // Verwende entweder die übergebenen Daten oder die lokalen newEvent Daten
     const dataToSave = eventData || newEvent.value
-    
+    console.log("Titel:"+ dataToSave.title)//Debug
     if (!dataToSave.title?.trim()) {
       console.error('Cannot save event: Title is required')
       alert('Bitte geben Sie einen Titel für den Termin ein.')
@@ -517,12 +522,13 @@ export function useCalendarStore() {
     }
   }
 
-  function saveCategoryChanges() {
+  function saveCategoryChanges(categoryData: any, isCreatingNewCategory:boolean) {
     // Check if name already exists
+    console.log(isCreatingNewCategory)
     const nameExists = categories.value.some(
       (cat) =>
-        cat.name.toLowerCase() === editingCategory.value.name.toLowerCase() &&
-        cat.id !== editingCategory.value.id,
+        cat.name.toLowerCase() === categoryData.name.toLowerCase() &&
+        cat.id !== categoryData.id,
     )
 
     if (nameExists) {
@@ -530,23 +536,23 @@ export function useCalendarStore() {
       return
     }
 
-    if (isCreatingNewCategory.value) {
+    if (isCreatingNewCategory) {
       // Create new category
       const newId = Math.max(...categories.value.map((cat) => cat.id)) + 1
       const newCategory = {
         id: newId,
-        name: editingCategory.value.name,
-        color: editingCategory.value.color,
+        name: categoryData.name,
+        color: categoryData.color,
       }
       categories.value.push(newCategory)
-    } else if (editingCategory.value.id) {
+    } else if (categoryData.id) {
       // Edit existing category
-      const index = categories.value.findIndex((cat) => cat.id === editingCategory.value.id)
-      if (index !== -1 && editingCategory.value.id !== null) {
+      const index = categories.value.findIndex((cat) => cat.id === categoryData.id)
+      if (index !== -1 && categoryData.id !== null) {
         categories.value[index] = {
-          id: editingCategory.value.id,
-          name: editingCategory.value.name,
-          color: editingCategory.value.color,
+          id: categoryData.id,
+          name: categoryData.name,
+          color: categoryData.color,
         }
       }
     }
@@ -591,6 +597,40 @@ export function useCalendarStore() {
     isCreatingNewCategory.value = false
     editingCategory.value = { id: null, name: '', color: '' }
   }
+
+
+
+  function setSearchQuery(query: string){
+  console.log("CalendarStore: Query gestzet:" + searchQuery)
+   searchQuery.value = query
+   filterForm.value = {
+      date: '',
+      category: '',
+      location: '',
+      searchText: query,
+    }
+  }
+
+
+  function updateFilterForm(newForm: FilterForm){
+    filterForm.value = newForm
+  }
+
+
+  function importEvents(list: Event[]) {
+    // Optional: Kategorie-Handling – unbekannte auf "Sonstiges" mappen
+    const known = new Set(categories.value.map(c => c.name.toLowerCase()))
+    const safe = list.map(ev => ({
+      ...ev,
+      category: known.has(ev.category?.toLowerCase?.() ?? '')
+        ? ev.category
+        : 'Sonstiges'
+    }))
+
+    events.value.push(...safe)
+    // falls du Filter/Computed neu berechnen musst: trigger ggf. Recompute
+  }
+
 
   return {
     // State
@@ -646,6 +686,9 @@ export function useCalendarStore() {
     deleteCategory,
     confirmDeleteCategory,
     cancelCategoryEdit,
-    getEventsForDay
+    getEventsForDay,
+    setSearchQuery,
+    updateFilterForm,
+    importEvents//TODO NEU
   }
 }

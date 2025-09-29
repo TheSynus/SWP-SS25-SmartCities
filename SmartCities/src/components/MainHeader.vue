@@ -28,6 +28,14 @@
           >
             Karte
           </router-link>
+
+           <router-link 
+            to="/calendar" 
+            class="text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400 px-3 py-2 text-sm font-medium transition-colors"
+            active-class="text-blue-600 dark:text-blue-400"
+          >
+            Kalender
+          </router-link>
         </nav>
 
         <!-- Right side items -->
@@ -94,6 +102,16 @@
           >
             Karte
           </router-link>
+
+          <router-link 
+            to="/calendar" 
+            class="text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400 px-3 py-2 text-base font-medium rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            active-class="text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20"
+            @click="closeMobileMenu"
+          >
+            Kalender
+          </router-link>
+         
          
         </nav>
       </div>

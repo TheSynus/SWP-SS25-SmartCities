@@ -63,7 +63,9 @@ function handleNextMonth() {
 
 function handleSelectDate(dayNumber: number) {
   emit('select-date', dayNumber)
+  console.log("DEBUG: CalendarView")
 }
+
 </script>
 
 <template>

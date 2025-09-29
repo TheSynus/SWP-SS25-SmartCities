@@ -3,6 +3,7 @@
 <script setup lang="ts">
 import { Filter, Plus } from 'lucide-vue-next'
 
+
 // Types
 interface Event {
   id: string | number
@@ -75,7 +76,11 @@ const emit = defineEmits<{
 // Methods
 function updateSearchText(value: string) {
   const updatedForm = { ...props.filterForm, searchText: value }
-  emit('update:filterForm', updatedForm)
+  emit('update:filterForm', updatedForm) 
+  console.log(updatedForm) 
+  //TODO
+  //emit('date-click', dayNumber, events)
+   //const events = props.getEventsForDay(dayNumber)
 }
 
 function updateFilterForm(updates: Partial<FilterForm>) {
@@ -168,7 +173,7 @@ function formatDateForDisplay(dateString: string): string {
           :value="props.filterForm?.searchText || ''"
           @input="updateSearchText(($event.target as HTMLInputElement).value)"
           type="text"
-          placeholder="Suche nach Ort oder Ereignis"
+          placeholder="Suche nach Kategorie/Ort"
           class="form-input flex-1 bg-white/10 border border-white/20 text-white placeholder-gray-300 rounded-lg text-sm"
         />
         
@@ -315,7 +320,7 @@ function formatDateForDisplay(dateString: string): string {
     </div>
 
     <!-- Scrollable Event List -->
-    <div class="flex-1 overflow-y-auto">
+    <div class="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-white/5 hover:scrollbar-thumb-white/30">
       <ul class="space-y-3 text-base" v-if="props.filteredEvents && props.filteredEvents.length > 0">
         <li
           v-for="event in props.filteredEvents"

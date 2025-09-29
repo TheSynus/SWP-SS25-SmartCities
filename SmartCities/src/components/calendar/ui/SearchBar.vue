@@ -12,7 +12,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  placeholder: 'Suche nach Ort oder Ereignis',
+  placeholder: 'Schwant',
   disabled: false,
   class: ''
 })

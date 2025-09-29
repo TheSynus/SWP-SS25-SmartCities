@@ -1,7 +1,7 @@
 // === VOLLSTÄNDIGE APP.VUE BEISPIEL ===
 // App.vue
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted } from 'vue'
+import { ref,computed, onMounted, onUnmounted } from 'vue'
 import { useCalendarStore } from '../composables/calendar/useCalendarStore.ts'
 import { useModalStore } from '../composables/calendar/useModalStore.ts'
 
@@ -12,6 +12,7 @@ import EventEditModal from '../components/calendar/ui/EventEditModal.vue'
 import EventCreateModal from '../components/calendar/ui/EventCreateModal.vue'
 import CategoryManagementModal from '../components/calendar/ui/CategoryManagementModal.vue'
 import ConfirmationModal from '../components/calendar/ui/ConfirmationModal.vue'
+import { convertToObject } from 'typescript'
 
 // Stores initialisieren
 const calendarStore = useCalendarStore()
@@ -34,9 +35,30 @@ function handleClickOutside(event: Event) {
   }
 }
 
-// Event Handlers für EventSidebar
+//  Handlers für EventSidebar
+export interface CalendarEvent
+{
+  id: string | number
+  title: string
+  date: string
+  category: string
+  repeat: string
+  location: string
+  description: string
+  endDate: string
+}
+
+
 function handleFilterFormUpdate(newFilterForm: any) {
-  calendarStore.filterForm = newFilterForm
+  console.log("CalendarEditView:" + newFilterForm.searchText)
+  calendarStore.updateFilterForm(newFilterForm)
+
+  //calendarStore.setSearchQuery(newFilterForm.searchText)
+
+  //calendarStore.updateFilterForm(newFilterForm)
+
+
+ 
 }
 
 function handleShowFiltersUpdate(show: boolean) {
@@ -62,28 +84,30 @@ function handleOpenCategories() {
   modalStore.openCategoriesPopup()
 }
 
-function handleImportClick() {
-  console.log('Import clicked')
-}
+
 
 // Wrapper for select-date event from CalendarView
 function handleSelectDate(dayNumber: number) {
+  console.log("DEBUG: CalendarEditView:" + dayNumber)
   calendarStore.selectDate(dayNumber)
 }
 
 // Event Handlers für Modals
 function handleNewEventSave(eventData: any) {
-  calendarStore.saveNewEvent()
+  calendarStore.saveNewEvent(eventData)//TODO
   modalStore.closeNewEventPopup()
 }
 
 function handleEventEditSave(eventData: any) {
-  calendarStore.saveEvent()
+  calendarStore.saveEvent(eventData)
   modalStore.closeEditPopup()
 }
 
+
 function handleCategorySave(categoryData: any, isNew: boolean) {
-  calendarStore.saveCategoryChanges()
+
+  console.log("Kategorie anlegen:"+ categoryData.name + "\nisNew:" + isNew)//TODO Debug
+  calendarStore.saveCategoryChanges(categoryData,isNew) //TODO
   modalStore.closeCategoriesPopup()
 }
 
@@ -117,6 +141,81 @@ onMounted(() => {
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
 })
+
+
+//TODO Dateiarbeit:
+
+// ⬇️ NEU: versteckter File-Input
+const fileInputRef = ref<HTMLInputElement | null>(null)
+
+function handleImportClick() {
+  // öffnet den nativen Datei-Dialog
+  fileInputRef.value?.click()
+}
+
+function handleFileChange(e: Event) {
+  const input = e.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file) return
+
+  const reader = new FileReader()
+  reader.onload = () => {
+    try {
+      const text = String(reader.result ?? '')
+      const json = JSON.parse(text)
+
+      const list = Array.isArray(json) ? json : [json]
+      const normalized: CalendarEvent[] = []
+
+      for (let i = 0; i < list.length; i++) {
+        const raw = list[i]
+
+        // Optional: Fremdkeys mappen (falls aus anderem Export)
+        const dateRaw = raw.date ?? raw.start ?? raw.startDate
+        const endRaw  = raw.endDate ?? raw.end ?? raw.finish
+
+        const item: CalendarEvent = {
+          id: raw.id ?? `${Date.now()}-${i}`,
+          title: String(raw.title ?? '').trim(),
+          date: normalizeDate(String(dateRaw ?? '')),
+          endDate: endRaw ? normalizeDate(String(endRaw)) : '',
+          category: String(raw.category ?? 'Sonstiges'),
+          repeat: String(raw.repeat ?? 'Keine'),
+          location: String(raw.location ?? ''),
+          description: String(raw.description ?? ''),
+        }
+
+        // minimale Validierung
+        if (!item.title || !item.date) continue
+        normalized.push(item)
+      }
+
+      if (!normalized.length) {
+        alert('Keine gültigen Events gefunden.')
+        return
+      }
+
+      // Du kannst hier auch Duplikate per ID filtern, falls gewünscht
+      calendarStore.importEvents(normalized) 
+      alert(`${normalized.length} Termin(e) importiert.`)
+    } catch (err) {
+      console.error(err)
+      alert('Ungültige JSON-Datei.')
+    } finally {
+      // Input zurücksetzen, damit dieselbe Datei erneut wählbar ist
+      if (fileInputRef.value) fileInputRef.value.value = ''
+    }
+  }
+  reader.readAsText(file, 'utf-8')
+}
+
+// Hilfsfunktion: "2025-09-24T09:53" → "2025-09-24T09:53:00"
+function normalizeDate(s: string) {
+  if (!s) return ''
+  return s.length === 16 ? `${s}:00` : s
+}
+
+
 </script>
 
 <template>
@@ -143,7 +242,7 @@ onUnmounted(() => {
         :show-filters="modalStore.showFilters.value"
         :show-popup="modalStore.showPopup.value"
         :get-category-color="calendarStore.getCategoryColor"
-        @update:filter-form="handleFilterFormUpdate"
+        @update:filterForm="handleFilterFormUpdate"
         @update:show-filters="handleShowFiltersUpdate"
         @update:show-popup="handleShowPopupUpdate"
         @toggle-filters="modalStore.toggleFilters"
@@ -173,6 +272,7 @@ onUnmounted(() => {
         @previous-month="calendarStore.previousMonth"
         @next-month="calendarStore.nextMonth"
       />
+
     </main>
 
     <!-- Modals -->
@@ -224,5 +324,13 @@ onUnmounted(() => {
       @confirm="confirmCategoryDelete"
       @cancel="modalStore.cancelDeleteCategory"
     />
+    <input
+      ref="fileInputRef"
+      type="file"
+      accept="application/json,.json"
+      class="hidden"
+      @change="handleFileChange"
+    />
   </div>
+  
 </template>

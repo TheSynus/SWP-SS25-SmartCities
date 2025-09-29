@@ -72,6 +72,7 @@ function handleDateClick(dayNumber: number) {
   const events = props.getEventsForDay(dayNumber)
   emit('date-select', dayNumber)
   emit('date-click', dayNumber, events)
+  console.log("DATE SELECTED: CalendarGrid")
 }
 
 function handleKeydown(event: KeyboardEvent, dayNumber: number) {
