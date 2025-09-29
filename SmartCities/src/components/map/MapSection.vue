@@ -1,6 +1,3 @@
-<!-- MapSection.vue -->
-<!-- Level 1, Linker Unterbaum - Props von Wurzel empfangen -->
-
 <template>
   <div 
     v-show="show" 

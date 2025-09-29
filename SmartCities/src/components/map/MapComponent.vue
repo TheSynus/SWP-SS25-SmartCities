@@ -1,5 +1,3 @@
-<!-- MapComponent.vue -->
-<!-- Level2, Linker Unterbaum -->
 <template>
   <div class="h-full flex flex-col p-2">
     <div class="flex-1 bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 dark:bg-gray-800 dark:border-gray-700">
@@ -198,7 +196,7 @@ const handlePopupPositioning = () => {
   }
 };
 
-// Update only the visual appearance of existing markers (no position changes)
+// Update only the visual appearance of existing markers
 const updateMarkerAppearance = () => {
   if (!map.value || !markersLayer.value || !isInitialized.value) return;
 
@@ -211,10 +209,7 @@ const updateMarkerAppearance = () => {
       const isSelected = props.selectedMarker?.id === marker.id;
       const newIcon = createColoredIcon(category?.color || '#3388ff', isSelected);
       
-      // Store if popup was open before icon change
       const wasPopupOpen = leafletMarker.isPopupOpen();
-      
-      // Only update icon, not position
       leafletMarker.setIcon(newIcon);
       
       // Update popup content
@@ -235,10 +230,7 @@ const updateMarkerAppearance = () => {
       
       // Restore popup state if it was open and marker is selected
       if (wasPopupOpen && isSelected) {
-        // Small delay to ensure icon is updated first
-        setTimeout(() => {
-          leafletMarker.openPopup();
-        }, 10);
+        leafletMarker.openPopup(); 
       }
     });
   } catch (error) {
@@ -246,14 +238,14 @@ const updateMarkerAppearance = () => {
   }
 };
 
-// Add new markers that don't exist yet
+
 const addNewMarkers = () => {
   if (!map.value || !markersLayer.value || !isInitialized.value) return;
 
   try {
     props.markers.forEach(marker => {
       if (!marker.coordinates?.lat || !marker.coordinates?.lng) return;
-      if (leafletMarkers.value.has(marker.id)) return; // Skip existing markers
+      if (leafletMarkers.value.has(marker.id)) return; 
 
       const category = getCategoryById(marker.categoryId);
       const isSelected = props.selectedMarker?.id === marker.id;
@@ -263,7 +255,6 @@ const addNewMarkers = () => {
         icon: markerIcon
       });
 
-      // Create popup with better positioning options
       const popup = L.popup({
         maxWidth: 300,
         className: 'custom-popup',
@@ -278,7 +269,6 @@ const addNewMarkers = () => {
       leafletMarker.bindPopup(popup);
       leafletMarker.getPopup().setContent(createPopupContent(marker));
 
-      // Handle popup events
       leafletMarker.on('popupopen', () => {
         currentOpenPopup.value = leafletMarker;
       });
@@ -306,7 +296,6 @@ const addNewMarkers = () => {
   }
 };
 
-// Remove markers that no longer exist in props
 const removeObsoleteMarkers = () => {
   if (!markersLayer.value || !isInitialized.value) return;
 
@@ -315,7 +304,7 @@ const removeObsoleteMarkers = () => {
     
     leafletMarkers.value.forEach((leafletMarker, markerId) => {
       if (!currentMarkerIds.has(markerId)) {
-        // Clear current popup reference if this marker is being removed
+
         if (currentOpenPopup.value === leafletMarker) {
           currentOpenPopup.value = null;
         }
@@ -328,7 +317,6 @@ const removeObsoleteMarkers = () => {
   }
 };
 
-// Update markers that have changed positions
 const updateChangedPositions = () => {
   if (!map.value || !markersLayer.value || !isInitialized.value) return;
 
@@ -343,21 +331,17 @@ const updateChangedPositions = () => {
       const newLat = marker.coordinates.lat;
       const newLng = marker.coordinates.lng;
 
-      // Only update position if coordinates have actually changed
+
       if (Math.abs(currentLatLng.lat - newLat) > 0.000001 || 
           Math.abs(currentLatLng.lng - newLng) > 0.000001) {
         
-        // Check if popup was open before position change
         const wasPopupOpen = leafletMarker.isPopupOpen();
         
         leafletMarker.setLatLng([newLat, newLng]);
         
-        // If popup was open, ensure it stays open and positioned correctly
+
         if (wasPopupOpen) {
-          // Small delay to ensure position is updated first
-          setTimeout(() => {
-            leafletMarker.openPopup();
-          }, 10);
+          leafletMarker.openPopup();
         }
       }
     });
@@ -366,7 +350,6 @@ const updateChangedPositions = () => {
   }
 };
 
-// Main update function - processes markers efficiently
 const updateMapMarkers = () => {
   if (!map.value || !markersLayer.value || !isInitialized.value) return;
 
@@ -376,17 +359,15 @@ const updateMapMarkers = () => {
   updateMarkerAppearance();
 };
 
-// Initial marker setup (only called once on map initialization)
+
 const initializeMarkers = () => {
   if (!map.value || !markersLayer.value) return;
 
   try {
-    // Clear everything first
     markersLayer.value.clearLayers();
     leafletMarkers.value.clear();
     currentOpenPopup.value = null;
 
-    // Add all markers
     props.markers.forEach(marker => {
       if (!marker.coordinates?.lat || !marker.coordinates?.lng) return;
 
@@ -398,7 +379,6 @@ const initializeMarkers = () => {
         icon: markerIcon
       });
 
-      // Create popup with better positioning options
       const popup = L.popup({
         maxWidth: 300,
         className: 'custom-popup',
@@ -413,7 +393,6 @@ const initializeMarkers = () => {
       leafletMarker.bindPopup(popup);
       leafletMarker.getPopup().setContent(createPopupContent(marker));
 
-      // Handle popup events
       leafletMarker.on('popupopen', () => {
         currentOpenPopup.value = leafletMarker;
       });
@@ -437,19 +416,16 @@ const initializeMarkers = () => {
       }
     });
 
-    // Fit bounds only on initial load if requested
+
     if (props.fitBoundsOnLoad && props.markers.length > 0) {
-      // Wait a bit for markers to be rendered
-      setTimeout(() => {
-        fitBoundsToMarkers();
-      }, 100);
+      fitBoundsToMarkers();
     }
   } catch (error) {
     console.error('Error initializing markers:', error);
   }
 };
 
-// Method to manually fit bounds to all markers
+
 const fitBoundsToMarkers = () => {
   if (!map.value || !markersLayer.value || !isInitialized.value) return;
   
@@ -465,7 +441,7 @@ const fitBoundsToMarkers = () => {
   }
 };
 
-// Method to center map on specific marker without changing zoom
+
 const centerOnMarker = (marker, zoom = null) => {
   if (!map.value || !isInitialized.value) return;
   
@@ -482,7 +458,7 @@ const centerOnMarker = (marker, zoom = null) => {
   }
 };
 
-// Global function for popup button
+
 window.selectMarker = (markerId) => {
   const marker = props.markers.find(m => m.id === markerId);
   if (marker) {
@@ -490,7 +466,7 @@ window.selectMarker = (markerId) => {
   }
 };
 
-// Initialize map
+
 const initializeMap = () => {
   try {
     const mapContainer = document.getElementById('map');
@@ -499,13 +475,11 @@ const initializeMap = () => {
       return;
     }
 
-    // Prevent multiple initializations
     if (map.value) {
       console.warn('Map already initialized');
       return;
     }
 
-    // Check container dimensions
     const containerRect = mapContainer.getBoundingClientRect();
     if (containerRect.width === 0 || containerRect.height === 0) {
       console.warn('Map container has no dimensions, retrying...');
@@ -514,7 +488,6 @@ const initializeMap = () => {
     }
 
     map.value = L.map('map', {
-      // Add zoom animation options for smoother transitions
       zoomAnimation: true,
       zoomAnimationThreshold: 4,
       fadeAnimation: true,
@@ -526,10 +499,8 @@ const initializeMap = () => {
       attribution: attribution
     }).addTo(map.value);
 
-    // Create markers layer
     markersLayer.value = L.layerGroup().addTo(map.value);
     
-    // Add map click event
     map.value.on('click', (e) => {
       emit('map-click', {
         latitude: e.latlng.lat,
@@ -538,16 +509,14 @@ const initializeMap = () => {
       });
     });
 
-    // Handle zoom events to fix popup positioning
+
     map.value.on('zoomstart', () => {
-      // Close popup during zoom to prevent positioning issues
       if (currentOpenPopup.value && currentOpenPopup.value.isPopupOpen()) {
         map.value.closePopup();
       }
     });
 
     map.value.on('zoomend', () => {
-      // Reopen popup after zoom is complete
       if (currentOpenPopup.value) {
         setTimeout(() => {
           currentOpenPopup.value.openPopup();
@@ -555,7 +524,6 @@ const initializeMap = () => {
       }
     });
 
-    // Handle view reset events
     map.value.on('viewreset', () => {
       if (currentOpenPopup.value) {
         setTimeout(() => {
@@ -564,17 +532,11 @@ const initializeMap = () => {
       }
     });
 
-    // Mark as initialized
     isInitialized.value = true;
 
-    // Initialize markers after map is ready
     nextTick(() => {
       initializeMarkers();
     });
-
-    
-
-  
 
   } catch (error) {
     console.error('Error initializing map:', error);
@@ -582,12 +544,11 @@ const initializeMap = () => {
   }
 };
 
-// Watch for markers array changes (add/remove/position changes)
+// Watcher for markers array changes (add/remove/position changes)
 watch(() => props.markers, (newMarkers, oldMarkers) => {
   if (!isInitialized.value) return;
   
   try {
-    // Only update if there are actual changes
     if (JSON.stringify(newMarkers) !== JSON.stringify(oldMarkers)) {
       updateMapMarkers();
     }
@@ -596,7 +557,7 @@ watch(() => props.markers, (newMarkers, oldMarkers) => {
   }
 }, { deep: true });
 
-// Watch for category changes (affects marker colors)
+// Watcher for category changes
 watch(() => props.categories, () => {
   if (!isInitialized.value) return;
   
@@ -607,12 +568,11 @@ watch(() => props.categories, () => {
   }
 }, { deep: true });
 
-// Watch for selected marker changes - only update appearance, no position changes
+// Watcher for selected marker changes
 watch(() => props.selectedMarker, (newSelected, oldSelected) => {
   if (!isInitialized.value) return;
   
   try {
-    // Only update if selection actually changed
     if (newSelected?.id !== oldSelected?.id) {
       updateMarkerAppearance();
     }
@@ -621,7 +581,7 @@ watch(() => props.selectedMarker, (newSelected, oldSelected) => {
   }
 }, { deep: true });
 
-// Mount logic
+
 onMounted(async () => {
   try {
     await nextTick();
@@ -638,25 +598,21 @@ onMounted(async () => {
   }
 });
 
-// Cleanup on unmount
+
 onUnmounted(() => {
   try {
-    // Clean up global function
     if (window.selectMarker) {
       delete window.selectMarker;
     }
-    
-    // Clear markers and popup reference
+
     leafletMarkers.value.clear();
     currentOpenPopup.value = null;
     
-    // Remove map
     if (map.value) {
       map.value.remove();
       map.value = null;
     }
     
-    // Reset state
     markersLayer.value = null;
     isInitialized.value = false;
   } catch (error) {

@@ -1,6 +1,3 @@
-<!-- ResultList.vue - Vereinfacht, empfängt nur Props -->
-<!-- Level 2, Rechter Unterbaum -->
-
 <template>
   <div class="h-full flex flex-col">
     <!-- Results List -->
@@ -90,13 +87,11 @@ const props = defineProps({
 
 const emit = defineEmits(['result-select', 'retry', 'clear-filters'])
 
-// Helper function to get category name
 const getCategoryName = (categoryId) => {
   const category = props.categories.find(cat => cat.id === categoryId)
   return category?.name || 'Unbekannt'
 }
 
-// Empty state configuration
 const emptyStateType = computed(() => {
   if (props.query && props.searchResults.length === 0) return 'no-results'
   return 'no-markers'
@@ -123,7 +118,6 @@ const emptyActionText = computed(() => {
   return 'Markierung hinzufügen'
 })
 
-// Event Handlers
 const handleEmptyAction = () => {
   if (props.query && props.searchResults.length === 0) {
     emit('clear-filters')

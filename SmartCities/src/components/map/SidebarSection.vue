@@ -1,6 +1,3 @@
-<!-- SidebarSection.vue -->
-<!-- Level 1, Rechter Unterbaum - Jetzt als reine Prop-Weiterleitung -->
-
 <template>
   <div
     class="flex-none w-full order-1 lg:order-2"

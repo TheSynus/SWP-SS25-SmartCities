@@ -18,7 +18,6 @@ export function useDropdown() {
 
   // Schließe Dropdown bei Klick außerhalb
   const handleClickOutside = (event) => {
-    // Prüfe ob der Klick außerhalb des Dropdown-Bereichs war
     const dropdownElements = document.querySelectorAll('[data-dropdown]')
     let clickedOutside = true
 

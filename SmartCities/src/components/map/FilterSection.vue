@@ -264,7 +264,6 @@ function getAuthToken() {
 function toggleDropdown() {
   showDropdown.value = !showDropdown.value
   
-  // Lade Kategorien beim ersten Öffnen
   if (showDropdown.value && localCategories.value.length === 0) {
     fetchCategories()
   }
@@ -319,7 +318,6 @@ function handleClickOutside(event) {
 onMounted(() => {
   document.addEventListener('click', handleClickOutside)
   
-  // Falls initial Kategorien übergeben wurden, verwende diese
   if (props.initialCategories.length > 0) {
     localCategories.value = props.initialCategories
   }
@@ -329,7 +327,7 @@ onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
 })
 
-// Expose Funktionen für Parent Component
+// Expose function for parent component
 defineExpose({
   fetchCategories,
   loading,

@@ -55,12 +55,7 @@
       @close="closeCategoryEditor"
     />
 
-    <!-- Success Toast -->
-    <SuccessToast
-      :show="showSuccessToast"
-      :message="successMessage"
-      @close="closeSuccessToast"
-    />
+    
   </div>
 </template>
 
@@ -70,17 +65,17 @@ import MapSection from '../components/map/MapSection.vue'
 import SidebarSection from '../components/map/SidebarSection.vue'
 import NewMarkerModal from '../components/map/modal/MarkerModal.vue'
 import CategoryEditorModal from '../components/calendar/ui/CategoryManagementModal.vue';
-import SuccessToast from '../components/map/SuccessToast.vue'
+
 import { useCategories } from '../composables/map/useCategories'
 import { useMarkers } from '../composables/map/useMarkers'
 import { useMarkerAPI } from '../composables/map/useMarkerAPI'
-import { useToast } from '../composables/map/useToast'
+
 
 // Composables verwenden
 const { categories, loadCategories } = useCategories()
 const { createMarker } = useMarkers()
 const { loading: markersLoading, error: markersError, fetchMarkers } = useMarkerAPI()
-const { showSuccessToast, successMessage, showToast, closeSuccessToast } = useToast()
+
 
 
 // Reactive state
