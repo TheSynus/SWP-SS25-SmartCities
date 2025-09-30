@@ -18,8 +18,8 @@ const graphUploadSchema = {
             items: {
                 type: "object",
                 properties: {
-                    x_comp: { type: "number" },
-                    y_comp: { type: "number" },
+                    x_comp: { type: "string" },
+                    y_comp: { type: "string" },
                 },
                 required: ["x_comp", "y_comp"],
                 additionalProperties: false,

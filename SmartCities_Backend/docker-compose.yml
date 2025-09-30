@@ -9,6 +9,7 @@ services:
       POSTGRES_DB: webportal
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - postgres_run:/var/run/postgresql
       - ./db:/docker-entrypoint-initdb.d
     ports:
       - "5432:5432"
@@ -43,4 +44,5 @@ services:
 
 volumes:
   postgres_data:
+  postgres_run:
   pgadmin_data:
