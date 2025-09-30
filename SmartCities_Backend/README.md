@@ -101,6 +101,10 @@ Routen zur Interaktion mit der zugrundeliegenden Datenbank, stellen grundlegende
 * **/categorys**
 * **/events**
 * **/graphs**
+Testen der Datenbank mit Curl:
+curl.exe -X POST "http://localhost:3000/graphs/uploadJson" -H "Content-Type: application/json" -d "@body.json"
+curl.exe -X POST "http://localhost:3000/graphs/uploadJson" -H "Content-Type: application/json" -d "@badbody.json"
+
 * **/images**
 
 # Visuals 

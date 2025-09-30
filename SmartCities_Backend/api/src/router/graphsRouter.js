@@ -1,8 +1,82 @@
 const express = require('express');
 const pool = require('../db.js');
+const Ajv = require('ajv');
 
 const router = express.Router();
+const ajv = new Ajv();
 
+// JSON-Schema für den Upload
+const graphUploadSchema = {
+    type: "object",
+    properties: {
+        title: { type: "string" },
+        type: { type: "string", enum: ["line", "bar", "pie"] },
+        points: {
+            type: "array",
+            minItems: 1,
+            maxItems: 10000,
+            items: {
+                type: "object",
+                properties: {
+                    x_comp: { type: "number" },
+                    y_comp: { type: "number" },
+                },
+                required: ["x_comp", "y_comp"],
+                additionalProperties: false,
+            },
+        },
+    },
+    required: ["type", "points"],
+    additionalProperties: false,
+}
+
+// AJV Validator erstellen
+const validateGraphUpload = ajv.compile(graphUploadSchema)
+
+router.post("/uploadJson", async (req, res) => {
+    //Validierung der JSON-Daten gegen das erstellte JSON-Schema
+    const valid = validateGraphUpload(req.body)
+
+    //Bei fehlgeschlagener Validierung
+    if (!valid) {
+        return res.status(400).json({
+            status: "error",
+            message: "Ungültige Daten",
+            errors: validateGraphUpload.errors,
+        })
+    }
+
+    const { title, type, points } = req.body
+
+    try {
+        // Erstellen des neuen Graphen
+        const newGraph = await pool.query(
+            "INSERT INTO graphs (title, type) VALUES ($1, $2) RETURNING *",
+            [title || "Unnamed Graph", type]
+        )
+        const graphId = newGraph.rows[0].id
+
+        // Einfügen der Datenpunkte zum neuen Graphen
+        const insertValues = points
+            .map((_, i) => `($1, $${i * 2 + 2}, $${i * 2 + 3})`)
+            .join(",")
+        const params = [graphId, ...points.flatMap(dp => [dp.x_comp, dp.y_comp])]
+
+        await pool.query(
+            `INSERT INTO graphs_data (graph_id, x_comp, y_comp) VALUES ${insertValues}`,
+            params
+        )
+
+        res.status(201).json({
+            status: "success",
+            graph: newGraph.rows[0],
+            points: points.length,
+        })
+    } catch (err) {
+        console.error("Fehler beim UploadJson:", err.message)
+        res.status(500).json({ error: "Serverfehler beim Speichern des Graphen" })
+    }
+})
 
 router.post('/', async (req, res) => {
     const { title, type } = req.body;
