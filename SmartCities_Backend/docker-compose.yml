@@ -9,7 +9,7 @@ services:
       POSTGRES_DB: webportal
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./init-db:/docker-entrypoint-initdb.d
+      - ./db:/docker-entrypoint-initdb.d
     ports:
       - "5432:5432"
 
@@ -40,15 +40,6 @@ services:
       - PORT=3000
     depends_on:
       - postgres
-
-  web:
-    image: nginx:alpine
-    container_name: nginx_web
-    restart: unless-stopped
-    ports:
-      - "8000:80"
-    volumes:
-      - ./website:/usr/share/nginx/html:ro
 
 volumes:
   postgres_data:
