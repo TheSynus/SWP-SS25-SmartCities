@@ -1,6 +1,3 @@
-<!-- SearchHeader.vue -->
-<!-- Level 2, Rechter Unterbaum - Props empfangen statt eigene API-Calls -->
-
 <template>
   <div class="flex-none p-3 sm:p-4 lg:p-6 border-b border-gray-200 dark:border-gray-700">
     <!-- Search & Filter -->
@@ -57,7 +54,6 @@ const emit = defineEmits([
 
 const actionsBtn = ref(null)
 
-// Event Handlers
 function handleInput(event) {
   emit('search', event.target.value)
 }

@@ -43,5 +43,11 @@
     "vite": "^6.3.5",
     "vite-plugin-vue-devtools": "^7.7.2",
     "vue-tsc": "^2.2.8"
+  },
+  "overrides": {
+    "debug": "4.3.4",
+    "strip-ansi": "6.0.1",
+    "ansi-regex": "5.0.1",
+    "string-width": "4.2.3"
   }
 }
