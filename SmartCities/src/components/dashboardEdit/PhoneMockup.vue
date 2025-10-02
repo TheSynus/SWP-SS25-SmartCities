@@ -2,7 +2,9 @@
 import type { Card } from '@/models/card'
 import DashboardContent from '../DashboardContent.vue'
 import BottomNavigation from '../BottomNavigation.vue'
+import MoreContent from '../MoreContent.vue'
 import { ref, onMounted, nextTick } from 'vue' // ⬅️ nextTick hinzufügen
+
 
 interface Props {
   cards: Array<Card>
@@ -95,6 +97,9 @@ onMounted(() => {
         <!-- myCity zeigt Dashboard, andere zeigen nur den Tab-Namen -->
         <div v-if="activeTab === 'myCity'" class="transform scale-75 origin-top-left w-[363px] h-[763px] p-4">
           <DashboardContent :cards="props.cards" :show-add-buttons="false" />
+        </div>
+        <div v-else-if="activeTab === 'more'" class="transform scale-75 origin-top-left w-[363px] h-[763px] p-4">
+          <MoreContent></MoreContent> 
         </div>
         <div v-else class="transform scale-75 origin-top-left w-[363px] h-[763px] p-4">
           {{ activeTab }}
