@@ -2,7 +2,7 @@
 import type { Card } from '@/models/card'
 import DashboardContent from '../DashboardContent.vue'
 import BottomNavigation from '../BottomNavigation.vue'
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, nextTick } from 'vue' // ⬅️ nextTick hinzufügen
 
 interface Props {
   cards: Array<Card>
@@ -11,22 +11,24 @@ interface Props {
 const props = defineProps<Props>()
 
 const scrollContainer = ref<HTMLElement>()
-
-// Tabs: 'myCity' | 'Karte' | 'Kalender' | 'Sonstiges'
-const activeTab = ref<'myCity' | 'map' | 'calendar' | 'more'>('myCity')
-
-const validTabs = new Set(['myCity', 'map', 'calendar', 'more'])
+const activeTab = ref('home')
 
 const handleTabChange = (tabName: string) => {
-  // nur erlaubte Tabs setzen
-  if (validTabs.has(tabName)) {
-    activeTab.value = tabName as typeof activeTab.value
-    console.log('Tab changed to:', tabName)
-  } else {
-    console.warn(`Unbekannter Tab: ${tabName}`)
-  }
-}
+  activeTab.value = tabName
+  console.log('Tab changed to:', tabName)
 
+  // Nach DOM-Update die Scroll-Position zurücksetzen
+  nextTick(() => {
+    const el = scrollContainer.value
+    if (!el) return
+    // zuverlässig nach ganz oben springen
+    if ('scrollTo' in el) {
+      el.scrollTo({ top: 0, behavior: 'auto' })
+    } else {
+      el.scrollTop = 0
+    }
+  })
+}
 
 onMounted(() => {
   const container = scrollContainer.value
@@ -47,7 +49,6 @@ onMounted(() => {
   const handleMouseMove = (e: MouseEvent) => {
     if (!isScrolling) return
     e.preventDefault()
-
     const y = e.clientY
     const deltaY = startY - y
     container.scrollTop = scrollTop + deltaY
@@ -72,7 +73,6 @@ onMounted(() => {
 
   container.style.cursor = 'grab'
 
-  // Cleanup
   return () => {
     container.removeEventListener('mousedown', handleMouseDown)
     container.removeEventListener('mousemove', handleMouseMove)
@@ -86,30 +86,20 @@ onMounted(() => {
   <div
     class="relative mx-auto border-gray-800 dark:border-gray-800 bg-gray-800 border-[14px] rounded-[2.5rem] h-[600px] w-[300px]"
   >
-    <!-- Phone Hardware -->
     <div class="rounded-[2rem] overflow-hidden w-[272px] h-[572px] bg-gray-100 dark:bg-gray-900">
       <div
         ref="scrollContainer"
-        class="w-full h-full overflow-y-auto scrollbar-hide touch-pan-y relative"
+        class="w-full h-full overflow-y-auto scrollbar-hide touch-pan-y"
         style="scrollbar-width: none; -ms-overflow-style: none; -webkit-overflow-scrolling: touch"
       >
-        <!-- Content: myCity zeigt DashboardContent; andere Tabs zeigen Placeholder -->
-        <template v-if="activeTab === 'myCity'">
-          <div class="transform scale-75 origin-top-left w-[363px] h-[763px] p-4">
-            <DashboardContent :cards="props.cards" :show-add-buttons="false" />
-          </div>
+        <!-- myCity zeigt Dashboard, andere zeigen nur den Tab-Namen -->
+        <div v-if="activeTab === 'myCity'" class="transform scale-75 origin-top-left w-[363px] h-[763px] p-4">
+          <DashboardContent :cards="props.cards" :show-add-buttons="false" />
+        </div>
+        <div v-else class="transform scale-75 origin-top-left w-[363px] h-[763px] p-4">
+          {{ activeTab }}
+        </div>
 
-          
-        </template>
-        <template v-else>
-          <div class="w-full h-full flex items-center justify-center">
-            <h2 class="text-2xl font-semibold text-white">
-              {{ activeTab }}
-            </h2>
-          </div>
-        </template>
-
-        <!-- Bottom Navigation Component -->
         <BottomNavigation
           position="absolute"
           :active-tab="activeTab"
