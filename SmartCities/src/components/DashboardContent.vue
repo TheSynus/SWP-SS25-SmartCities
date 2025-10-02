@@ -7,6 +7,7 @@ import CardGraphColumn from './CardGraphColumn.vue'
 import NinaCard from './cards/NinaCard.vue'
 import CardGraphLine from './CardGraphLine.vue'
 import WeatherCard from './WeatherCard.vue'
+import WindCard from './WindCard.vue'
 
 const props = defineProps<{
   cards: Array<Card>
@@ -181,6 +182,7 @@ const getDragHandleClasses = () => {
               <CardGraphColumn v-else-if="card.type === 'column'" :graph_id="card.graph_id" />
               <CardGraphLine v-else-if="card.type === 'line'" :graph_id="card.graph_id" />
               <WeatherCard v-else-if="card.type === 'weather'" :heading="card.title"></WeatherCard>
+              <WindCard v-else-if="card.type === 'wind'" :heading="card.title"></WindCard>
               <DefaultCard v-else :heading="card.title"></DefaultCard>
             </div>
           </div>

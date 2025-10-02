@@ -58,7 +58,6 @@ onMounted(fetchWeather)
       <div class="flex flex-col sm:flex-row items-start justify-between gap-6">
         <!-- Links: Titel + Karten -->
         <div class="flex-1">
-          <div class="text-xl uppercase tracking-wide opacity-80">Wind</div>
   
           <div class="mt-4 flex flex-col gap-3 sm:max-w-xs">
             <!-- Geschwindigkeit -->
