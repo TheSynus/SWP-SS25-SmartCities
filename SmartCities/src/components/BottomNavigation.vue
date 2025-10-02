@@ -25,7 +25,7 @@ const isActive = (tabName: string) => {
 <template>
   <div 
     :class="[
-      'bottom-0 left-0 z-50 w-full h-16 bg-white border-t border-gray-200 dark:bg-gray-700 dark:border-gray-600',
+      'bottom-0 left-0 z-50 w-full h-16 bg-gray-50 border-t border-gray-200 dark:bg-gray-800 dark:border-gray-600',
       position === 'fixed' ? 'fixed' : '',
       position === 'absolute' ? 'absolute' : '',
       position === 'relative' ? 'relative' : ''
@@ -34,7 +34,7 @@ const isActive = (tabName: string) => {
     <div class="grid h-full max-w-lg grid-cols-4 mx-auto font-medium">
       <button 
         type="button" 
-        class="inline-flex flex-col items-center justify-center px-5 hover:bg-gray-50 dark:hover:bg-gray-800 group"
+        class="inline-flex flex-col items-center justify-center px-5 hover:bg-white dark:hover:bg-gray-700 group"
         @click="handleTabClick('myCity')"
       >
         <svg 
@@ -51,13 +51,13 @@ const isActive = (tabName: string) => {
           class="text-sm transition-colors duration-200"
           :class="isActive('myCity') ? 'text-blue-600 dark:text-blue-500' : 'text-gray-500 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-500'"
         >
-          My City
+          Stadt
         </span>
       </button>
       
       <button 
         type="button" 
-        class="inline-flex flex-col items-center justify-center px-5 hover:bg-gray-50 dark:hover:bg-gray-800 group"
+        class="inline-flex flex-col items-center justify-center px-5 hover:bg-white dark:hover:bg-gray-700 group"
         @click="handleTabClick('map')"
       >
         <svg 
@@ -81,7 +81,7 @@ const isActive = (tabName: string) => {
 
       <button 
         type="button" 
-        class="inline-flex flex-col items-center justify-center px-5 hover:bg-gray-50 dark:hover:bg-gray-800 group"
+        class="inline-flex flex-col items-center justify-center px-5 hover:bg-white dark:hover:bg-gray-700 group"
         @click="handleTabClick('calendar')"
       >
         <svg 
@@ -104,7 +104,7 @@ const isActive = (tabName: string) => {
 
       <button 
         type="button" 
-        class="inline-flex flex-col items-center justify-center px-5 hover:bg-gray-50 dark:hover:bg-gray-800 group"
+        class="inline-flex flex-col items-center justify-center px-5 hover:bg-white dark:hover:bg-gray-700 group"
         @click="handleTabClick('more')"
       >
         <svg 
@@ -121,7 +121,7 @@ const isActive = (tabName: string) => {
           class="text-sm transition-colors duration-200"
           :class="isActive('more') ? 'text-blue-600 dark:text-blue-500' : 'text-gray-500 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-500'"
         >
-          Sonstiges
+          mehr
         </span>
       </button>
     </div>
