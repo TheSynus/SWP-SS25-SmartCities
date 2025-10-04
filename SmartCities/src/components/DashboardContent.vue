@@ -8,6 +8,8 @@ import NinaCard from './cards/NinaCard.vue'
 import CardGraphLine from './CardGraphLine.vue'
 import WeatherCard from './WeatherCard.vue'
 import WindCard from './WindCard.vue'
+import CardGraphBar from './CardGraphBar.vue'
+import CardGraphPie from './CardGraphPie.vue'
 
 const props = defineProps<{
   cards: Array<Card>
@@ -181,6 +183,8 @@ const getDragHandleClasses = () => {
               <NinaCard v-if="card.type === 'nina'" :heading="card.title" />
               <CardGraphColumn v-else-if="card.type === 'column'" :graph_id="card.graph_id" />
               <CardGraphLine v-else-if="card.type === 'line'" :graph_id="card.graph_id" />
+              <CardGraphBar v-else-if="card.type === 'bar'" :graph_id="card.graph_id" />
+              <CardGraphPie v-else-if="card.type === 'pie'" :graph_id="card.graph_id" />
               <WeatherCard v-else-if="card.type === 'weather'" :heading="card.title"></WeatherCard>
               <WindCard v-else-if="card.type === 'wind'" :heading="card.title"></WindCard>
               <DefaultCard v-else :heading="card.title"></DefaultCard>

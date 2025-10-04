@@ -1,12 +1,20 @@
 <script setup lang="ts">
+import { useGraphStore } from '@/composables/dashboard/useGraphStore'
 import ApexCharts from 'apexcharts'
-import { onMounted } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
+
+const props = defineProps<{
+  graph_id: number | undefined
+}>()
+
+// Template ref für das Chart-Element
+const chartRef = ref<HTMLDivElement | null>(null)
+let chart: ApexCharts | null = null
 
 const options = {
-  series: [52.8, 26.8, 20.4],
-  colors: ['#1C64F2', '#16BDCA', '#9061F9'],
+  series: [] as number[],
   chart: {
-    height: "100%",
+    height: '100%',
     width: '100%',
     type: 'pie',
   },
@@ -25,7 +33,7 @@ const options = {
       },
     },
   },
-  labels: ['Direct', 'Organic search', 'Referrals'],
+  labels: [] as string[],
   dataLabels: {
     enabled: false,
     style: {
@@ -38,12 +46,12 @@ const options = {
   },
   yaxis: {
     labels: {
-      show: false
+      show: false,
     },
   },
   xaxis: {
     labels: {
-      show: false
+      show: false,
     },
     axisTicks: {
       show: false,
@@ -54,11 +62,36 @@ const options = {
   },
 }
 
+const { getDataForGraph } = useGraphStore()
+
 onMounted(() => {
-  const chartElement = document.getElementById('pie-chart')
-  if (chartElement && typeof ApexCharts !== 'undefined') {
-    const chart = new ApexCharts(chartElement, options)
-    chart.render()
+  // Verwende die Template Ref anstatt getElementById
+  if (chartRef.value && typeof ApexCharts !== 'undefined') {
+    if (props.graph_id !== undefined) {
+      // Graph Id gefüllt -> Daten müssen geholt werden
+      getDataForGraph(props.graph_id).then((res) => {
+        options.series = res.map((dat) => +dat.y_comp)
+
+        options.labels = res.map((dat) => dat.x_comp)
+
+        chart = new ApexCharts(chartRef.value, options)
+        chart.render()
+      })
+    } else {
+      options.series = [52.8, 26.8, 20.4]
+
+      options.labels = ['Direct', 'Organic search', 'Referrals']
+
+      chart = new ApexCharts(chartRef.value, options)
+      chart.render()
+    }
+  }
+})
+
+// Cleanup beim Unmount
+onUnmounted(() => {
+  if (chart) {
+    chart.destroy()
   }
 })
 </script>
@@ -72,6 +105,6 @@ onMounted(() => {
         </h5>
       </div>
     </div>
-    <div id="pie-chart"></div>
+    <div ref="chartRef"></div>
   </div>
 </template>

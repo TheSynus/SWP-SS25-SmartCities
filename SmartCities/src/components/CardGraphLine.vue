@@ -93,11 +93,13 @@ onMounted(() => {
       getDataForGraph(props.graph_id).then((res) => {
         options.series.push({
           name: 'New users',
-          data: res.map((dat) => dat.y),
+          data: res.map((dat) => dat.y_comp),
           color: '#1A56DB',
         })
 
-        options.xaxis.categories = res.map((dat) => dat.x)
+        options.xaxis.categories = res.map((dat) => dat.x_comp)
+
+        options.tooltip.enabled = true;
 
         chart = new ApexCharts(chartRef.value, options)
         chart.render()

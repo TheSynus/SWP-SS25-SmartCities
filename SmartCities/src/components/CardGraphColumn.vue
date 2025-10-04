@@ -94,10 +94,14 @@ onMounted(() => {
       // Graph Id gefüllt -> Daten müssen geholt werden
       getDataForGraph(props.graph_id).then((res) => {
         options.series.push({
-          name: 'Social media',
+          name: 'Data',
           color: '#FDBA8C',
-          data: res,
+          data: res.map((dat) => {
+            return { x: dat.x_comp, y: dat.y_comp }
+          }),
         })
+
+        options.tooltip.enabled = true;
 
         chart = new ApexCharts(chartRef.value, options)
         chart.render()

@@ -14,12 +14,12 @@ export class Graph {
 }
 
 export class GraphData {
-  public x: string
-  public y: string
+  public x_comp: string
+  public y_comp: string
 
   constructor(x: string, y: string) {
-    this.x = x
-    this.y = y
+    this.x_comp = x
+    this.y_comp = y
   }
 }
 
