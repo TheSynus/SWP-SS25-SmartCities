@@ -1,14 +1,14 @@
 const { readFileSync, writeFileSync } = require('fs');
 
+// Auslesen einer JSON-Datei
 function getJSONContent (pathToFile) {
     const options = {encoding: 'utf8'};
     const jsonData = JSON.parse(readFileSync(pathToFile, options));
     return jsonData;
 }
 
+// Schreiben einer Variable mit Wert in eine übergebene JSON-Datei
 function writeValueToJSON (pathToFile, varName, varValue) {
-    //const data[varName] = varValue;
-    //writeFileSync(pathToFile, data);
 
     let data = {};
     data = getJSONContent(pathToFile);

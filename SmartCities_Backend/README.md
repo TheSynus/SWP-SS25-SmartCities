@@ -93,3 +93,134 @@ Aufbau des JSON-Response-Bodies:
     ...
   ]
 ```
+
+### Datenbank-Routen
+Routen zur Interaktion mit der zugrundeliegenden Datenbank, stellen grundlegende CRUD-Operationen zur Verfügung.
+* **/appointments**
+* **/cards** 
+* **/categorys**
+* **/events**
+* **/graphs**
+Testen der Datenbank mit Curl:
+curl.exe -X POST "http://localhost:3000/graphs/uploadJson" -H "Content-Type: application/json" -d "@body.json"
+curl.exe -X POST "http://localhost:3000/graphs/uploadJson" -H "Content-Type: application/json" -d "@badbody.json"
+
+* **/images**
+
+# Visuals 
+Bitte einmal einordnen ob das hier auch rein passt und wenn ja wo
+
+### **Sequenzdiagramm - In DB Schreiben:**
+
+```mermaid
+sequenceDiagram
+
+    participant U as User
+    participant F as useCardStore (Vue Store)
+    participant A as API-Router (cardsRouter.js)
+    participant DB as PostgreSQL (Tabelle card)
+
+    U->>F: Aktion ("Neue Karte hinzufügen")
+    F->>A: HTTP POST /cards <br/> Body: {title, type, position, graph_id}
+
+    A->>DB: SQL INSERT INTO card (...) RETURNING *
+    DB-->>A: Neuer Datensatz (Row)
+
+    A-->>F: JSON Response mit neuer Karte
+    F->>F: Lokalen cards-State updaten & Positionen anpassen
+    F->>U: UI aktualisiert sich automatisch (neue Karte sichtbar)
+```
+
+### **Sequenzdiagramm - Aus DB Lesen:**
+```mermaid
+sequenceDiagram
+
+    participant U as User
+    participant F as useCardStore (Vue Store)
+    participant A as API (cardsRouter.js)
+    participant DB as PostgreSQL (Tabelle card)
+
+    U->>F: Initiales Laden der Seite
+    F->>A: HTTP GET /cards
+
+    A->>DB: SQL SELECT * FROM card ORDER BY position ASC
+    DB-->>A: Ergebnis-Menge (Rows)
+
+    A-->>F: JSON Response mit Kartenliste
+    F->>F: Speichere Karten in reaktivem State (cards.value)
+    F->>U: Vue-Komponenten rendern automatisch neu
+```
+
+### **Datenbankschema:**
+```mermaid
+erDiagram
+    %% Tabellen
+    USERS {
+        int id PK
+        varchar(50) username "UNIQUE NOT NULL"
+        varchar(100) email "UNIQUE NOT NULL"
+        text password_hash "NOT NULL"
+        varchar(20) role "NOT NULL"
+        timestamp created_at "DEFAULT now()"
+        timestamp updated_at "DEFAULT now()"
+    }
+
+    CATEGORY {
+        int id PK
+        varchar(200) title "NOT NULL"
+        varchar(7) color "DEFAULT #808080"
+    }
+
+    APPOINTMENTS {
+        int id PK
+        varchar(200) title "NOT NULL"
+        timestamp start_time "NOT NULL"
+        timestamp end_time "NOT NULL"
+        varchar(255) location
+        int category_id FK
+        recurrence_type recurrence "DEFAULT none"
+        text description
+    }
+
+    IMAGES {
+        int id PK
+        varchar(255) file_name "NOT NULL"
+        bytea file_data "NOT NULL"
+        varchar(100) mime_type "NOT NULL"
+        text additional_info
+    }
+
+    GRAPHS {
+        int id PK
+        varchar(255) title
+        varchar(100) type
+    }
+
+    GRAPHS_DATA {
+        int id PK
+        int graph_id FK
+        varchar(100) x_comp
+        varchar(100) y_comp
+    }
+
+    CARD {
+        int id PK
+        varchar(255) title "NOT NULL"
+        int position "NOT NULL"
+        card_type type "NOT NULL"
+        int graph_id FK
+        timestamp created_at "DEFAULT now()"
+        timestamp updated_at "DEFAULT now()"
+    }
+    
+    %% ENUMs
+    RECURRENCE_TYPE { varchar value PK } 
+    CARD_TYPE { varchar value PK }
+
+    %% Beziehungen
+    CATEGORY ||--o{ APPOINTMENTS : "category_id"
+    GRAPHS ||--o{ GRAPHS_DATA : "graph_id"
+    GRAPHS ||--o{ CARD : "graph_id"
+    APPOINTMENTS }o--|| RECURRENCE_TYPE : "has recurrence"
+    CARD }o--|| CARD_TYPE : "has type"	
+```

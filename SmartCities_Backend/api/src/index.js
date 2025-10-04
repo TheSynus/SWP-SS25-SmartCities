@@ -2,9 +2,8 @@ const cors = require('cors');
 const express = require('express');
 const dotenv = require('dotenv');
 const pool = require('./db.js');
-const { getCityToPLZ, getRegionalKey } = require('./general_utils.js');
+const { getCityToPLZ } = require('./general_utils.js');
 const { getJSONContent, writeValueToJSON } = require('./json_utils.js');
-const testRouter = require('./router/testRouter.js');
 const setupRouter = require('./router/setupRouter.js');
 const ninaRouter = require('./router/ninaRouter.js');
 const imagesRouter = require('./router/imagesRouter.js');
@@ -25,21 +24,8 @@ app.use(cors({
   origin: 'http://localhost:5173',
 }));
 
-// Kann das hier raus?
+
 require('dotenv').config();
-
-app.use('/test/', testRouter)
-app.use('/images/', imagesRouter)
-app.use('/events/', eventsRouter)
-app.use('/categorys', categoryRouter);
-app.use('/appointments', appointmentRouter);
-app.use('/cards', cardsRouter)
-app.use('/graphs', graphsRouter);
-
-// Variablen:
-//let plz = null; 
-//let city = null;
-//let regionalKey = null;
 
 // Speichern der ursprünglichen Variablen in Objekt, um durchreichen, verändern & zurückgeben für Router zu ermöglichen
 const configValues = {
@@ -51,10 +37,17 @@ const configValues = {
   apiKey: null,
 };
 
-app.use('/test/', testRouter);
-app.use('/setup/', setupRouter(configValues, { getCityToPLZ, getRegionalKey, writeValueToJSON }));
+// Verfügbare BackEnd-Routen
+app.use('/images/', imagesRouter)
+app.use('/events/', eventsRouter)
+app.use('/categorys', categoryRouter);
+app.use('/appointments', appointmentRouter);
+app.use('/cards', cardsRouter)
+app.use('/graphs', graphsRouter);
+app.use('/setup/', setupRouter(configValues, { getCityToPLZ, writeValueToJSON }));
 app.use('/nina/', ninaRouter(configValues, { getJSONContent }));
 app.use('/weather/', weatherRouter(configValues, {}));
+
 
 app.listen(port, '0.0.0.0', () => {
   console.log("----------- Serverstart -----------")

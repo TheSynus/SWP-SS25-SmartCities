@@ -1,6 +1,3 @@
-<!-- MapComponent.vue -->
-<!-- Level2, Linker Unterbaum -->
- 
 <template>
   <div class="h-full flex flex-col p-2">
     <div class="flex-1 bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 dark:bg-gray-800 dark:border-gray-700">
@@ -10,8 +7,10 @@
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick, watch, computed } from 'vue';
+import { ref, onMounted, onUnmounted, nextTick, watch } from 'vue';
 import * as L from 'leaflet';
+
+let testGeoLayer = null
 
 const props = defineProps({
   categories: {
@@ -29,16 +28,24 @@ const props = defineProps({
   loading: {
     type: Boolean,
     default: false
+  },
+  fitBoundsOnLoad: {
+    type: Boolean,
+    default: true
   }
 });
 
 const emit = defineEmits(['marker-click', 'map-click']);
 
-// Map setup (no API calls here anymore)
+// Map setup
 const map = ref(null);
 const markersLayer = ref(null);
+const leafletMarkers = ref(new Map()); 
+const isInitialized = ref(false);
+const currentOpenPopup = ref(null); 
 
-const latitude = ref(53.5837);  // Hamburg coordinates
+// Hamburg coordinates
+const latitude = ref(53.5837);  
 const longitude = ref(9.6984);
 const tileLayerUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 const attribution = '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors';
@@ -51,8 +58,8 @@ const getCategoryById = (categoryId) => {
 // Create custom colored marker icon
 const createColoredIcon = (color = '#3388ff', isSelected = false) => {
   const size = isSelected ? 35 : 25;
-  const iconSize = isSelected ? [size, size * 1.2] : [size, size * 1.2];
-  
+  const iconSize = [size, size * 1.2];
+
   return L.divIcon({
     html: `
       <div style="
@@ -73,17 +80,17 @@ const createColoredIcon = (color = '#3388ff', isSelected = false) => {
           color: white;
           font-size: ${size * 0.4}px;
           font-weight: bold;
-        ">📍</div>
+        "></div>
       </div>
     `,
     className: 'custom-marker',
     iconSize: iconSize,
-    iconAnchor: [size / 2, size * 1.2],
-    popupAnchor: [0, -size * 1.2]
+    iconAnchor: [size / 2, size * 1.2 * 0.85],
+    popupAnchor: [0, -size * 1.2 * 0.85]
   });
 };
 
-// Create popup content for marker
+
 const createPopupContent = (marker) => {
   const category = getCategoryById(marker.categoryId);
   const categoryName = category?.name || 'Unbekannt';
@@ -172,50 +179,286 @@ const createPopupContent = (marker) => {
   `;
 };
 
-// Update markers on map
-const updateMapMarkers = () => {
-  if (!map.value || !markersLayer.value) return;
+// Handle popup positioning during zoom
+const handlePopupPositioning = () => {
+  if (!map.value || !currentOpenPopup.value) return;
   
-  // Clear existing markers
-  markersLayer.value.clearLayers();
-  
-  // Add new markers from props
-  props.markers.forEach(marker => {
-    if (!marker.latitude || !marker.longitude) return;
-    
-    const category = getCategoryById(marker.categoryId);
-    const isSelected = props.selectedMarker?.id === marker.id;
-    const markerIcon = createColoredIcon(category?.color || '#3388ff', isSelected);
-    
-    const leafletMarker = L.marker([marker.latitude, marker.longitude], {
-      icon: markerIcon
+  try {
+    // Force popup to update its position
+    map.value.closePopup();
+    nextTick(() => {
+      if (currentOpenPopup.value) {
+        currentOpenPopup.value.openPopup();
+      }
     });
-    
-    // Add popup
-    leafletMarker.bindPopup(createPopupContent(marker), {
-      maxWidth: 300,
-      className: 'custom-popup'
-    });
-    
-    // Add click event
-    leafletMarker.on('click', () => {
-      emit('marker-click', marker);
-    });
-    
-    // Add to layer
-    markersLayer.value.addLayer(leafletMarker);
-  });
-  
-  // Fit map to markers if there are any
-  if (props.markers.length > 0) {
-    const group = new L.featureGroup(markersLayer.value.getLayers());
-    if (group.getBounds().isValid()) {
-      map.value.fitBounds(group.getBounds(), { padding: [20, 20] });
-    }
+  } catch (error) {
+    console.error('Error handling popup positioning:', error);
   }
 };
 
-// Global function for popup button
+// Update only the visual appearance of existing markers
+const updateMarkerAppearance = () => {
+  if (!map.value || !markersLayer.value || !isInitialized.value) return;
+
+  try {
+    leafletMarkers.value.forEach((leafletMarker, markerId) => {
+      const marker = props.markers.find(m => m.id === markerId);
+      if (!marker) return;
+
+      const category = getCategoryById(marker.categoryId);
+      const isSelected = props.selectedMarker?.id === marker.id;
+      const newIcon = createColoredIcon(category?.color || '#3388ff', isSelected);
+      
+      const wasPopupOpen = leafletMarker.isPopupOpen();
+      leafletMarker.setIcon(newIcon);
+      
+      // Update popup content
+      if (leafletMarker.getPopup()) {
+        leafletMarker.getPopup().setContent(createPopupContent(marker));
+      }
+      
+      // Handle popup state for selected marker
+      if (isSelected && !leafletMarker.isPopupOpen()) {
+        leafletMarker.openPopup();
+        currentOpenPopup.value = leafletMarker;
+      } else if (!isSelected && leafletMarker.isPopupOpen()) {
+        leafletMarker.closePopup();
+        if (currentOpenPopup.value === leafletMarker) {
+          currentOpenPopup.value = null;
+        }
+      }
+      
+      // Restore popup state if it was open and marker is selected
+      if (wasPopupOpen && isSelected) {
+        leafletMarker.openPopup(); 
+      }
+    });
+  } catch (error) {
+    console.error('Error updating marker appearance:', error);
+  }
+};
+
+
+const addNewMarkers = () => {
+  if (!map.value || !markersLayer.value || !isInitialized.value) return;
+
+  try {
+    props.markers.forEach(marker => {
+      if (!marker.coordinates?.lat || !marker.coordinates?.lng) return;
+      if (leafletMarkers.value.has(marker.id)) return; 
+
+      const category = getCategoryById(marker.categoryId);
+      const isSelected = props.selectedMarker?.id === marker.id;
+      const markerIcon = createColoredIcon(category?.color || '#3388ff', isSelected);
+
+      const leafletMarker = L.marker([marker.coordinates.lat, marker.coordinates.lng], {
+        icon: markerIcon
+      });
+
+      const popup = L.popup({
+        maxWidth: 300,
+        className: 'custom-popup',
+        closeButton: true,
+        autoClose: false,
+        closeOnEscapeKey: true,
+        keepInView: true,
+        autoPan: true,
+        autoPanPadding: [10, 10]
+      });
+
+      leafletMarker.bindPopup(popup);
+      leafletMarker.getPopup().setContent(createPopupContent(marker));
+
+      leafletMarker.on('popupopen', () => {
+        currentOpenPopup.value = leafletMarker;
+      });
+
+      leafletMarker.on('popupclose', () => {
+        if (currentOpenPopup.value === leafletMarker) {
+          currentOpenPopup.value = null;
+        }
+      });
+
+      leafletMarker.on('click', () => {
+        emit('marker-click', marker);
+      });
+
+      markersLayer.value.addLayer(leafletMarker);
+      leafletMarkers.value.set(marker.id, leafletMarker);
+
+      if (isSelected) {
+        leafletMarker.openPopup();
+        currentOpenPopup.value = leafletMarker;
+      }
+    });
+  } catch (error) {
+    console.error('Error adding new markers:', error);
+  }
+};
+
+const removeObsoleteMarkers = () => {
+  if (!markersLayer.value || !isInitialized.value) return;
+
+  try {
+    const currentMarkerIds = new Set(props.markers.map(m => m.id));
+    
+    leafletMarkers.value.forEach((leafletMarker, markerId) => {
+      if (!currentMarkerIds.has(markerId)) {
+
+        if (currentOpenPopup.value === leafletMarker) {
+          currentOpenPopup.value = null;
+        }
+        markersLayer.value.removeLayer(leafletMarker);
+        leafletMarkers.value.delete(markerId);
+      }
+    });
+  } catch (error) {
+    console.error('Error removing obsolete markers:', error);
+  }
+};
+
+const updateChangedPositions = () => {
+  if (!map.value || !markersLayer.value || !isInitialized.value) return;
+
+  try {
+    props.markers.forEach(marker => {
+      if (!marker.coordinates?.lat || !marker.coordinates?.lng) return;
+      
+      const leafletMarker = leafletMarkers.value.get(marker.id);
+      if (!leafletMarker) return;
+
+      const currentLatLng = leafletMarker.getLatLng();
+      const newLat = marker.coordinates.lat;
+      const newLng = marker.coordinates.lng;
+
+
+      if (Math.abs(currentLatLng.lat - newLat) > 0.000001 || 
+          Math.abs(currentLatLng.lng - newLng) > 0.000001) {
+        
+        const wasPopupOpen = leafletMarker.isPopupOpen();
+        
+        leafletMarker.setLatLng([newLat, newLng]);
+        
+
+        if (wasPopupOpen) {
+          leafletMarker.openPopup();
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error updating marker positions:', error);
+  }
+};
+
+const updateMapMarkers = () => {
+  if (!map.value || !markersLayer.value || !isInitialized.value) return;
+
+  removeObsoleteMarkers();
+  addNewMarkers();
+  updateChangedPositions();
+  updateMarkerAppearance();
+};
+
+
+const initializeMarkers = () => {
+  if (!map.value || !markersLayer.value) return;
+
+  try {
+    markersLayer.value.clearLayers();
+    leafletMarkers.value.clear();
+    currentOpenPopup.value = null;
+
+    props.markers.forEach(marker => {
+      if (!marker.coordinates?.lat || !marker.coordinates?.lng) return;
+
+      const category = getCategoryById(marker.categoryId);
+      const isSelected = props.selectedMarker?.id === marker.id;
+      const markerIcon = createColoredIcon(category?.color || '#3388ff', isSelected);
+
+      const leafletMarker = L.marker([marker.coordinates.lat, marker.coordinates.lng], {
+        icon: markerIcon
+      });
+
+      const popup = L.popup({
+        maxWidth: 300,
+        className: 'custom-popup',
+        closeButton: true,
+        autoClose: false,
+        closeOnEscapeKey: true,
+        keepInView: true,
+        autoPan: true,
+        autoPanPadding: [10, 10]
+      });
+
+      leafletMarker.bindPopup(popup);
+      leafletMarker.getPopup().setContent(createPopupContent(marker));
+
+      leafletMarker.on('popupopen', () => {
+        currentOpenPopup.value = leafletMarker;
+      });
+
+      leafletMarker.on('popupclose', () => {
+        if (currentOpenPopup.value === leafletMarker) {
+          currentOpenPopup.value = null;
+        }
+      });
+
+      leafletMarker.on('click', () => {
+        emit('marker-click', marker);
+      });
+
+      markersLayer.value.addLayer(leafletMarker);
+      leafletMarkers.value.set(marker.id, leafletMarker);
+
+      if (isSelected) {
+        leafletMarker.openPopup();
+        currentOpenPopup.value = leafletMarker;
+      }
+    });
+
+
+    if (props.fitBoundsOnLoad && props.markers.length > 0) {
+      fitBoundsToMarkers();
+    }
+  } catch (error) {
+    console.error('Error initializing markers:', error);
+  }
+};
+
+
+const fitBoundsToMarkers = () => {
+  if (!map.value || !markersLayer.value || !isInitialized.value) return;
+  
+  try {
+    if (props.markers.length > 0) {
+      const group = new L.featureGroup(markersLayer.value.getLayers());
+      if (group.getBounds().isValid()) {
+        map.value.fitBounds(group.getBounds(), { padding: [20, 20] });
+      }
+    }
+  } catch (error) {
+    console.error('Error fitting bounds to markers:', error);
+  }
+};
+
+
+const centerOnMarker = (marker, zoom = null) => {
+  if (!map.value || !isInitialized.value) return;
+  
+  try {
+    if (marker?.coordinates?.lat && marker?.coordinates?.lng) {
+      if (zoom) {
+        map.value.setView([marker.coordinates.lat, marker.coordinates.lng], zoom);
+      } else {
+        map.value.panTo([marker.coordinates.lat, marker.coordinates.lng]);
+      }
+    }
+  } catch (error) {
+    console.error('Error centering on marker:', error);
+  }
+};
+
+
 window.selectMarker = (markerId) => {
   const marker = props.markers.find(m => m.id === markerId);
   if (marker) {
@@ -223,7 +466,7 @@ window.selectMarker = (markerId) => {
   }
 };
 
-// Initialize map
+
 const initializeMap = () => {
   try {
     const mapContainer = document.getElementById('map');
@@ -232,17 +475,32 @@ const initializeMap = () => {
       return;
     }
 
-    map.value = L.map('map').setView([latitude.value, longitude.value], 13);
+    if (map.value) {
+      console.warn('Map already initialized');
+      return;
+    }
+
+    const containerRect = mapContainer.getBoundingClientRect();
+    if (containerRect.width === 0 || containerRect.height === 0) {
+      console.warn('Map container has no dimensions, retrying...');
+      setTimeout(() => initializeMap(), 100);
+      return;
+    }
+
+    map.value = L.map('map', {
+      zoomAnimation: true,
+      zoomAnimationThreshold: 4,
+      fadeAnimation: true,
+      markerZoomAnimation: true
+    }).setView([latitude.value, longitude.value], 13);
     
     L.tileLayer(tileLayerUrl, {
       maxZoom: 19,
       attribution: attribution
     }).addTo(map.value);
 
-    // Create markers layer
     markersLayer.value = L.layerGroup().addTo(map.value);
     
-    // Add map click event
     map.value.on('click', (e) => {
       emit('map-click', {
         latitude: e.latlng.lat,
@@ -251,55 +509,124 @@ const initializeMap = () => {
       });
     });
 
-    // Load initial markers
-    updateMapMarkers();
+
+    map.value.on('zoomstart', () => {
+      if (currentOpenPopup.value && currentOpenPopup.value.isPopupOpen()) {
+        map.value.closePopup();
+      }
+    });
+
+    map.value.on('zoomend', () => {
+      if (currentOpenPopup.value) {
+        setTimeout(() => {
+          currentOpenPopup.value.openPopup();
+        }, 50);
+      }
+    });
+
+    map.value.on('viewreset', () => {
+      if (currentOpenPopup.value) {
+        setTimeout(() => {
+          currentOpenPopup.value.openPopup();
+        }, 50);
+      }
+    });
+
+    isInitialized.value = true;
+
+    nextTick(() => {
+      initializeMarkers();
+    });
 
   } catch (error) {
     console.error('Error initializing map:', error);
+    isInitialized.value = false;
   }
 };
 
-// Watch for prop changes
-watch([
-  () => props.markers,
-  () => props.categories
-], () => {
-  updateMapMarkers();
-}, { deep: true });
-
-// Watch for selected marker changes
-watch(() => props.selectedMarker, () => {
-  updateMapMarkers();
+// Watcher for markers array changes (add/remove/position changes)
+watch(() => props.markers, (newMarkers, oldMarkers) => {
+  if (!isInitialized.value) return;
   
-  // Center map on selected marker
-  if (props.selectedMarker && props.selectedMarker.latitude && props.selectedMarker.longitude) {
-    map.value?.setView([props.selectedMarker.latitude, props.selectedMarker.longitude], 15);
+  try {
+    if (JSON.stringify(newMarkers) !== JSON.stringify(oldMarkers)) {
+      updateMapMarkers();
+    }
+  } catch (error) {
+    console.error('Error in markers watcher:', error);
   }
 }, { deep: true });
 
-// Mount logic
+// Watcher for category changes
+watch(() => props.categories, () => {
+  if (!isInitialized.value) return;
+  
+  try {
+    updateMarkerAppearance();
+  } catch (error) {
+    console.error('Error in categories watcher:', error);
+  }
+}, { deep: true });
+
+// Watcher for selected marker changes
+watch(() => props.selectedMarker, (newSelected, oldSelected) => {
+  if (!isInitialized.value) return;
+  
+  try {
+    if (newSelected?.id !== oldSelected?.id) {
+      updateMarkerAppearance();
+    }
+  } catch (error) {
+    console.error('Error in selectedMarker watcher:', error);
+  }
+}, { deep: true });
+
+
 onMounted(async () => {
-  await nextTick();
-  
-  const mapContainer = document.getElementById('map');
-  if (!mapContainer) {
-    console.error('Map container not found');
-    return;
-  }
+  try {
+    await nextTick();
+    
+    const mapContainer = document.getElementById('map');
+    if (!mapContainer) {
+      console.error('Map container not found');
+      return;
+    }
 
-  const containerRect = mapContainer.getBoundingClientRect();
-  if (containerRect.width === 0 || containerRect.height === 0) {
-    console.warn('Map container has no dimensions, retrying...');
-    setTimeout(() => initializeMap(), 100);
-    return;
+    initializeMap();
+  } catch (error) {
+    console.error('Error in onMounted:', error);
   }
+});
 
-  initializeMap();
+
+onUnmounted(() => {
+  try {
+    if (window.selectMarker) {
+      delete window.selectMarker;
+    }
+
+    leafletMarkers.value.clear();
+    currentOpenPopup.value = null;
+    
+    if (map.value) {
+      map.value.remove();
+      map.value = null;
+    }
+    
+    markersLayer.value = null;
+    isInitialized.value = false;
+  } catch (error) {
+    console.error('Error in cleanup:', error);
+  }
 });
 
 // Expose methods for parent component
 defineExpose({
   updateMapMarkers,
+  fitBoundsToMarkers,
+  centerOnMarker,
+  updateMarkerAppearance,
+  handlePopupPositioning,
   map
 });
 </script>
@@ -328,5 +655,14 @@ defineExpose({
 :global(.custom-marker) {
   background: transparent !important;
   border: none !important;
+}
+
+/* Improve popup positioning during animations */
+:global(.leaflet-popup-pane) {
+  z-index: 700;
+}
+
+:global(.leaflet-popup) {
+  transition: none !important;
 }
 </style>

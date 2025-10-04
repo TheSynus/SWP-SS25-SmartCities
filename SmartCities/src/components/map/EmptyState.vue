@@ -44,7 +44,7 @@
       {{ description }}
     </p>
 
-    <!-- Action Button (optional) -->
+    <!-- Action Button -->
     <button
       v-if="showAction"
       @click="$emit('action')"

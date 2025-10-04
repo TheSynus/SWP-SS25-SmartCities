@@ -1,5 +1,3 @@
-<!-- ResultItem.vue -->
-
 <template>
   <li
     class="p-3 sm:p-4 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600 transition-colors cursor-pointer hover:shadow-sm"

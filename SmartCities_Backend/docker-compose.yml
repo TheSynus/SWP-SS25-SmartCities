@@ -9,7 +9,8 @@ services:
       POSTGRES_DB: webportal
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./init-db:/docker-entrypoint-initdb.d
+      - postgres_run:/var/run/postgresql
+      - ./db:/docker-entrypoint-initdb.d
     ports:
       - "5432:5432"
 
@@ -41,15 +42,7 @@ services:
     depends_on:
       - postgres
 
-  web:
-    image: nginx:alpine
-    container_name: nginx_web
-    restart: unless-stopped
-    ports:
-      - "8000:80"
-    volumes:
-      - ./website:/usr/share/nginx/html:ro
-
 volumes:
   postgres_data:
+  postgres_run:
   pgadmin_data:
