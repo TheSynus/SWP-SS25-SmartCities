@@ -19,6 +19,31 @@ Die config.json sollte initial vor der Konfiguration des Server so aussehen, dam
     } 
 ```    
 
+## Inbetriebnahme 
+
+Um das Backend lokal zu starten, wird am besten **Docker Desktop** benötigt. Die gesamte Umgebung, inklusive der Datenbank, wird über Docker Compose gesteuert.
+
+1.  **Repository klonen:**
+    ```bash
+    git clone <deine-repo-url>
+    cd SmartCities_Backend
+    ```
+
+2.  **Umgebungsvariablen einrichten:**
+    Kopiere die Vorlagedatei `api/.env.example` und benenne sie in `api/.env` um. Trage dort die notwendigen Werte ein wie den `WEATHER_API_KEY`.
+
+3.  **Container starten:**
+    Führe im Hauptverzeichnis des Projekts (`SmartCities_Backend`) das `restart.sh`-Skript aus:
+    ```bash
+    ./restart.sh
+    ```
+    Dieses Skript startet alle notwendigen Container (API, Datenbank, pgAdmin). Beim ersten Start wird das Datenbankschema aus `db/init.sql` automatisch angelegt.
+
+4.  **Server Konfigurieren:**
+    Nach dem ersten Start müssen die Server-Einstellungen über die `/setup`-Routen (siehe unten) konfiguriert werden, damit die externen APIs funktionieren.
+
+Der API-Server ist nun unter `http://localhost:3000` erreichbar.
+
 ## APIs
 
 ### /setup/...
