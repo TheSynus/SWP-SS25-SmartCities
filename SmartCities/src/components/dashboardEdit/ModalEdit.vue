@@ -3,12 +3,13 @@ import { onMounted } from 'vue';
 import AddDefaultCard from './AddDefaultCard.vue'
 import AddGraphCard from './AddGraphCard.vue'
 import { initFlowbite } from 'flowbite';
+import type { Graph } from '@/models/graph';
 
 // Event definieren, das nach außen weitergegeben wird
 const emit = defineEmits<{
   cardSelected: [cardData: { id: number; title: string; type: string }],
   closeClicked: []
-  graphSelected: [graphId: number]
+  graphSelected: [graph: Graph]
 }>()
 
 // Handler für das Event von AddDefaultCard
@@ -20,8 +21,8 @@ const handeCloseClicked = () => {
   emit('closeClicked')
 }
 
-const handleGraphSelected = (graphId: number) => {
-  emit('graphSelected', graphId)
+const handleGraphSelected = (graph: Graph) => {
+  emit('graphSelected', graph)
 }
 
 onMounted(() => {

@@ -17,4 +17,13 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url))
     },
   },
+  server: {
+    proxy: {
+      '/weather': {
+        target: 'http://localhost:3000', // Dein echtes Backend
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/weather/, '/weather'),
+      },
+    },
+  },
 })

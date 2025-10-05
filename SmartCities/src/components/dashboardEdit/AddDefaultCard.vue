@@ -10,7 +10,7 @@ const aviableCards = ref([
   { id: 3, title: 'Luftqualität', type: 'air', enabled: false },
   { id: 4, title: 'Wasserstand', type: 'water', enabled: false },
   { id: 5, title: 'Pollen', type: 'pollen', enabled: false },
-  { id: 6, title: 'Windgeschwindigkeit', type: 'wind', enabled: false },
+  { id: 6, title: 'Windgeschwindigkeit', type: 'wind', enabled: true },
 ])
 
 
@@ -23,6 +23,7 @@ const emit = defineEmits<{
 const handleCardSelect = (cardData: { id: number; title: string; type: string }) => {
   // Nur emittieren wenn Karte nicht disabled ist
   if (!isCardDisabled(cardData.type)) {
+    console.log('type: ' + cardData.type)
     emit('cardSelected', cardData)
   }
 }

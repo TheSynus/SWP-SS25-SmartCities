@@ -88,7 +88,7 @@ export function useCardStore() {
 
   const updateCard = async (card: Card) => {
     try {
-      const response = await axios.put(`${import.meta.env.VITE_API_URL}/cards/${card.id}`, {
+      await axios.put(`${import.meta.env.VITE_API_URL}/cards/${card.id}`, {
         title: card.title,
         position: card.position,
         type: card.type,

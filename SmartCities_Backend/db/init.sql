@@ -57,7 +57,7 @@ CREATE TABLE graphs_data(
 );
 
 -- Datentyp für Karten-Typen
-CREATE TYPE card_type AS ENUM ('weather', 'nina', 'line', 'bar', 'column', 'pie', 'calender');
+CREATE TYPE card_type AS ENUM ('weather', 'nina', 'wind', 'line', 'bar', 'column', 'pie', 'calender');
 
 -- cards
 CREATE TABLE card (

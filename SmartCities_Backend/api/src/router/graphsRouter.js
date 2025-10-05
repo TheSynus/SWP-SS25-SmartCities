@@ -10,7 +10,7 @@ const graphUploadSchema = {
     type: "object",
     properties: {
         title: { type: "string" },
-        type: { type: "string", enum: ["line", "bar", "pie"] },
+        type: { type: "string", enum: ["line", "bar", "pie", "column"] },
         points: {
             type: "array",
             minItems: 1,
@@ -70,7 +70,7 @@ router.post("/uploadJson", async (req, res) => {
         res.status(201).json({
             status: "success",
             graph: newGraph.rows[0],
-            points: points.length,
+            points: points,
         })
     } catch (err) {
         console.error("Fehler beim UploadJson:", err.message)

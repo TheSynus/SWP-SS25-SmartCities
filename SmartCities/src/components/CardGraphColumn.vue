@@ -1,32 +1,23 @@
 <script setup lang="ts">
+import { useGraphStore } from '@/composables/dashboard/useGraphStore'
 import ApexCharts from 'apexcharts'
 import { onMounted, ref, onUnmounted } from 'vue'
+
+const props = defineProps<{
+  graph_id: number | undefined
+}>()
 
 // Template ref für das Chart-Element
 const chartRef = ref<HTMLDivElement | null>(null)
 let chart: ApexCharts | null = null
 
 const options = {
-  colors: ["#1A56DB"],
-  series: [
-    {
-      name: "Social media",
-      color: "#FDBA8C",
-      data: [
-        { x: "Mon", y: 232 },
-        { x: "Tue", y: 113 },
-        { x: "Wed", y: 341 },
-        { x: "Thu", y: 224 },
-        { x: "Fri", y: 522 },
-        { x: "Sat", y: 411 },
-        { x: "Sun", y: 243 },
-      ],
-    },
-  ],
+  colors: ['#1A56DB'],
+  series: [] as unknown[],
   chart: {
-    type: "bar",
-    height: "100%",
-    fontFamily: "Inter, sans-serif",
+    type: 'bar',
+    height: '100%',
+    fontFamily: 'Inter, sans-serif',
     toolbar: {
       show: false,
     },
@@ -34,18 +25,18 @@ const options = {
   plotOptions: {
     bar: {
       horizontal: false,
-      columnWidth: "70%",
-      borderRadiusApplication: "end",
+      columnWidth: '70%',
+      borderRadiusApplication: 'end',
       borderRadius: 8,
     },
   },
   tooltip: {
-    enabled: false
+    enabled: false,
   },
   states: {
     hover: {
       filter: {
-        type: "darken",
+        type: 'darken',
         value: 1,
       },
     },
@@ -53,7 +44,7 @@ const options = {
   stroke: {
     show: true,
     width: 0,
-    colors: ["transparent"],
+    colors: ['transparent'],
   },
   grid: {
     show: true,
@@ -61,7 +52,7 @@ const options = {
     padding: {
       left: 2,
       right: 2,
-      top: -14
+      top: -14,
     },
   },
   dataLabels: {
@@ -75,9 +66,9 @@ const options = {
     labels: {
       show: true,
       style: {
-        fontFamily: "Inter, sans-serif",
-        cssClass: 'text-xs font-normal fill-gray-500 dark:fill-gray-400'
-      }
+        fontFamily: 'Inter, sans-serif',
+        cssClass: 'text-xs font-normal fill-gray-500 dark:fill-gray-400',
+      },
     },
     axisBorder: {
       show: false,
@@ -94,11 +85,46 @@ const options = {
   },
 }
 
+const { getDataForGraph } = useGraphStore()
+
 onMounted(() => {
   // Verwende die Template Ref anstatt getElementById
   if (chartRef.value && typeof ApexCharts !== 'undefined') {
-    chart = new ApexCharts(chartRef.value, options)
-    chart.render()
+    if (props.graph_id !== undefined) {
+      // Graph Id gefüllt -> Daten müssen geholt werden
+      getDataForGraph(props.graph_id).then((res) => {
+        options.series.push({
+          name: 'Data',
+          color: '#FDBA8C',
+          data: res.map((dat) => {
+            return { x: dat.x_comp, y: dat.y_comp }
+          }),
+        })
+
+        options.tooltip.enabled = true;
+
+        chart = new ApexCharts(chartRef.value, options)
+        chart.render()
+      })
+    } else {
+      // Beispieldaten
+      options.series.push({
+        name: 'Social media',
+        color: '#FDBA8C',
+        data: [
+          { x: 'Mon', y: 232 },
+          { x: 'Tue', y: 113 },
+          { x: 'Wed', y: 341 },
+          { x: 'Thu', y: 224 },
+          { x: 'Fri', y: 522 },
+          { x: 'Sat', y: 411 },
+          { x: 'Sun', y: 243 },
+        ],
+      })
+
+      chart = new ApexCharts(chartRef.value, options)
+      chart.render()
+    }
   }
 })
 
@@ -114,7 +140,9 @@ onUnmounted(() => {
   <div class="max-w-sm w-full bg-white rounded-lg shadow-sm dark:bg-gray-800 p-4 md:p-6">
     <div class="flex justify-between">
       <div>
-        <h5 class="leading-none text-3xl font-bold text-gray-900 dark:text-white pb-2">Säulendiagramm</h5>
+        <h5 class="leading-none text-3xl font-bold text-gray-900 dark:text-white pb-2">
+          Säulendiagramm
+        </h5>
       </div>
     </div>
     <!-- Template ref anstatt ID -->

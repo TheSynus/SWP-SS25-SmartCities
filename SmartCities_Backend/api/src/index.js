@@ -34,6 +34,7 @@ const configValues = {
   regionalKey: null,
   latitude: null,
   longitude: null,
+  apiKey: null,
 };
 
 // Verfügbare BackEnd-Routen
@@ -65,5 +66,7 @@ app.listen(port, '0.0.0.0', () => {
   console.log("Latitude from Config:", configValues.latitude);
   configValues.longitude = configJsonContent.longitude;
   console.log("Longitude from Config:", configValues.longitude);
+  configValues.apiKey = configJsonContent.apiKey;
+  console.log("Api Key from Config:", '********');
   console.log("-----------------------------------")
 });
