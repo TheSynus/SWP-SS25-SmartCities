@@ -114,10 +114,12 @@ curl -X POST "http://localhost:3000/graphs/uploadJson" -H "Content-Type: applica
 curl -X POST "http://localhost:3000/graphs/uploadJson" -H "Content-Type: application/json" -d "@testData/badbody.json"
 ```
 
+
+
 # Architektur & Datenmodell 
 Die Anwendung ist in drei Docker-Container aufgeteilt: die API (Node.js), die PostgreSQL-Datenbank und eine pgAdmin-Instanz zur Verwaltung. Das Herzstück des Backends ist das relationale Datenmodell in der PostgreSQL-Datenbank, welches die Grundlage für alle CRUD-Operationen bildet.
 
-## **Datenbankschema:**
+### **Datenbankschema:**
 Das Schema definiert alle Entitäten wie appointments, cards oder graphs und deren Beziehungen untereinander. Es wird beim ersten Start der Docker-Container automatisch aus der db/init.sql-Datei erstellt.
 
 ```mermaid
@@ -193,7 +195,7 @@ erDiagram
     CARD }o--|| CARD_TYPE : "has type"	
 ```
 
-## Datenfluss
+### Datenfluss
 Die folgenden Diagramme stellen den typischen Datenfluss vom Frontend über die API zur Datenbank am Beispiel der Dashboard-Karten (cards) dar.
 
 
