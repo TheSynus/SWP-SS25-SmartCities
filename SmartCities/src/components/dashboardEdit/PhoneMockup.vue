@@ -1,10 +1,7 @@
 <script setup lang="ts">
 import type { Card } from '@/models/card'
-import DashboardContent from '../DashboardContent.vue'
-import BottomNavigation from '../BottomNavigation.vue'
-import MoreContent from '../MoreContent.vue'
 import { ref, onMounted, nextTick } from 'vue' // ⬅️ nextTick hinzufügen
-
+import HomeView from '@/views/HomeView.vue'
 
 interface Props {
   cards: Array<Card>
@@ -13,12 +10,8 @@ interface Props {
 const props = defineProps<Props>()
 
 const scrollContainer = ref<HTMLElement>()
-const activeTab = ref('myCity')
 
-const handleTabChange = (tabName: string) => {
-  activeTab.value = tabName
-  console.log('Tab changed to:', tabName)
-
+const handleTabChange = () => {
   // Nach DOM-Update die Scroll-Position zurücksetzen
   nextTick(() => {
     const el = scrollContainer.value
@@ -26,8 +19,6 @@ const handleTabChange = (tabName: string) => {
     // zuverlässig nach ganz oben springen
     if ('scrollTo' in el) {
       el.scrollTo({ top: 0, behavior: 'auto' })
-    } else {
-      el.scrollTop = 0
     }
   })
 }
@@ -94,22 +85,7 @@ onMounted(() => {
         class="w-full h-full overflow-y-auto scrollbar-hide touch-pan-y"
         style="scrollbar-width: none; -ms-overflow-style: none; -webkit-overflow-scrolling: touch"
       >
-        <!-- myCity zeigt Dashboard, andere zeigen nur den Tab-Namen -->
-        <div v-if="activeTab === 'myCity'" class="transform scale-75 origin-top-left w-[363px] h-[763px] p-4">
-          <DashboardContent :cards="props.cards" :show-add-buttons="false" />
-        </div>
-        <div v-else-if="activeTab === 'more'" class="transform scale-75 origin-top-left w-[363px] h-[763px] p-4">
-          <MoreContent></MoreContent>
-        </div>
-        <div v-else class="transform scale-75 origin-top-left w-[363px] h-[763px] p-4">
-          {{ activeTab }}
-        </div>
-
-        <BottomNavigation
-          position="absolute"
-          :active-tab="activeTab"
-          @tab-change="handleTabChange"
-        />
+        <HomeView :cards="props.cards" :scale="0.75" @tab-changed="handleTabChange" />
       </div>
     </div>
   </div>

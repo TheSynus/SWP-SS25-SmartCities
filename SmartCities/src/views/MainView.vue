@@ -1,0 +1,18 @@
+<script setup lang="ts">
+import { onMounted } from 'vue'
+import HomeView from './HomeView.vue'
+import { cards, useCardStore } from '@/composables/dashboard/useCardStore'
+
+
+const { getCards } = useCardStore()
+
+onMounted(() => {
+  getCards()
+})
+</script>
+
+<template>
+  <div class="pt-20 min-h-screen">
+    <HomeView :cards="cards" :scale="1"></HomeView>
+  </div>
+</template>

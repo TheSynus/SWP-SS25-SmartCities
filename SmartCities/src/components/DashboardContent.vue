@@ -125,7 +125,7 @@ const getDragHandleClasses = () => {
 </script>
 
 <template>
-  <ul class="flex flex-col space-y-4 h-full">
+  <ul class="flex flex-col items-center pt-10 pb-10 space-y-4 h-full">
     <!-- Wenn Liste leer ist und showAddButtons true: nur ein Button zentriert -->
     <li
       v-if="props.showAddButtons && localCards.length === 0"
@@ -137,7 +137,7 @@ const getDragHandleClasses = () => {
     <!-- Normale Liste wenn Cards vorhanden -->
     <template v-if="localCards.length > 0">
       <!-- Erster Button vor der ersten Card -->
-      <li v-if="props.showAddButtons" class="flex items-center gap-4">
+      <li v-if="props.showAddButtons" class="flex items-center gap-4 w-full">
         <div class="flex-1 flex justify-center">
           <AddCardButton @click="addButtonClicked(0)" />
         </div>
@@ -147,7 +147,7 @@ const getDragHandleClasses = () => {
 
       <!-- Cards mit Buttons dazwischen - DRAGGABLE via Handle! -->
       <template v-for="(card, index) in localCards" :key="card.id">
-        <li class="flex items-center" :class="{ 'gap-4': props.showAddButtons }">
+        <li class="flex items-center w-full" :class="{ 'gap-4': props.showAddButtons }">
           <!-- Card Container mit separatem Drag Handle -->
           <div
             :class="getCardContainerClasses(index)"
@@ -176,7 +176,7 @@ const getDragHandleClasses = () => {
             <!-- Card Content - normal interaktiv -->
             <div
               :class="{
-                'rounded-t-none': props.showAddButtons,
+                'rounded-t-none max-w-sm': props.showAddButtons,
                 'rounded-lg': !props.showAddButtons,
               }"
             >

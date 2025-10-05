@@ -24,7 +24,7 @@ onMounted(() => {
   <div class="relative">
     <!-- Wrapper für relative Positionierung -->
     <div
-      class="block max-w-sm p-6 bg-white border-2 border-gray-200 rounded-lg shadow-sm hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700"
+      class="block p-6 bg-white border-2 border-gray-200 rounded-lg shadow-sm hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700"
       :class="{
         'opacity-50 cursor-not-allowed hover:bg-white dark:hover:bg-gray-800': props.disabled,
       }"

@@ -60,7 +60,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="grid grid-cols-2 overflow-hidden h-screen pt-20 items-center justify-center">
+  <div class="grid grid-cols-2 overflow-hidden h-screen items-center pt-20 justify-center">
     <!-- Scrollable Left Column -->
     <div class="flex justify-center overflow-y-scroll h-full custom-scrollbar items-center">
       <DashboardContent
