@@ -19,6 +19,31 @@ Die config.json sollte initial vor der Konfiguration des Server so aussehen, dam
     } 
 ```    
 
+## Inbetriebnahme 
+
+Um das Backend lokal zu starten, wird am besten **Docker Desktop** benötigt. Die gesamte Umgebung, inklusive der Datenbank, wird über Docker Compose gesteuert.
+
+1.  **Repository klonen:**
+    ```bash
+    git clone <deine-repo-url>
+    cd SmartCities_Backend
+    ```
+
+2.  **Umgebungsvariablen einrichten:**
+    Kopiere die Vorlagedatei `api/.env.example` und benenne sie in `api/.env` um. Trage dort die notwendigen Werte ein wie den `WEATHER_API_KEY`.
+
+3.  **Container starten:**
+    Führe im Hauptverzeichnis des Projekts (`SmartCities_Backend`) das `restart.sh`-Skript aus:
+    ```bash
+    ./restart.sh
+    ```
+    Dieses Skript startet alle notwendigen Container (API, Datenbank, pgAdmin). Beim ersten Start wird das Datenbankschema aus `db/init.sql` automatisch angelegt.
+
+4.  **Server Konfigurieren:**
+    Nach dem ersten Start müssen die Server-Einstellungen über die `/setup`-Routen (siehe unten) konfiguriert werden, damit die externen APIs funktionieren.
+
+Der API-Server ist nun unter `http://localhost:3000` erreichbar.
+
 ## APIs
 
 ### /setup/...
@@ -95,63 +120,34 @@ Aufbau des JSON-Response-Bodies:
 ```
 
 ### Datenbank-Routen
-Routen zur Interaktion mit der zugrundeliegenden Datenbank, stellen grundlegende CRUD-Operationen zur Verfügung.
-* **/appointments**
-* **/cards** 
-* **/categorys**
-* **/events**
-* **/graphs**
-Testen der Datenbank mit Curl:
-curl.exe -X POST "http://localhost:3000/graphs/uploadJson" -H "Content-Type: application/json" -d "@body.json"
-curl.exe -X POST "http://localhost:3000/graphs/uploadJson" -H "Content-Type: application/json" -d "@badbody.json"
+Routen zur Interaktion mit der zugrundeliegenden Datenbank, stellen grundlegende CRUD-Operationen zur Verfügung. Sie unterstützen die Standard-HTTP-Methoden (GET, POST, PUT, DELETE).
 
-* **/images**
+* **/appointments** Verwaltung von Terminen.
+* **/cards** Verwaltung der Dashboard-Karten, inklusive Positionierung.
+* **/categorys** Verwaltung von Kategorien, die z.B. für Termine verwendet werden.
+* **/events** Verwaltung von Events.
+* **/images** Verwaltung von Bildern.
+* **/graphs** Verwaltung von Graphen. Bietet einen speziellen POST /graphs/uploadJson Endpunkt, um einen Graphen inklusive aller seiner Datenpunkte in einer einzigen Anfrage zu erstellen.
 
-# Visuals 
-Bitte einmal einordnen ob das hier auch rein passt und wenn ja wo
+**Beispiel für das Testen mit cURL:**
 
-### **Sequenzdiagramm - In DB Schreiben:**
+```bash
+# Hochladen eines Graphen mit gültigen Daten
+curl -X POST "http://localhost:3000/graphs/uploadJson" -H "Content-Type: application/json" -d "@testData/body.json"
 
-```mermaid
-sequenceDiagram
-
-    participant U as User
-    participant F as useCardStore (Vue Store)
-    participant A as API-Router (cardsRouter.js)
-    participant DB as PostgreSQL (Tabelle card)
-
-    U->>F: Aktion ("Neue Karte hinzufügen")
-    F->>A: HTTP POST /cards <br/> Body: {title, type, position, graph_id}
-
-    A->>DB: SQL INSERT INTO card (...) RETURNING *
-    DB-->>A: Neuer Datensatz (Row)
-
-    A-->>F: JSON Response mit neuer Karte
-    F->>F: Lokalen cards-State updaten & Positionen anpassen
-    F->>U: UI aktualisiert sich automatisch (neue Karte sichtbar)
+# Hochladen eines Graphen mit ungültigen Daten
+curl -X POST "http://localhost:3000/graphs/uploadJson" -H "Content-Type: application/json" -d "@testData/badbody.json"
 ```
 
-### **Sequenzdiagramm - Aus DB Lesen:**
-```mermaid
-sequenceDiagram
 
-    participant U as User
-    participant F as useCardStore (Vue Store)
-    participant A as API (cardsRouter.js)
-    participant DB as PostgreSQL (Tabelle card)
 
-    U->>F: Initiales Laden der Seite
-    F->>A: HTTP GET /cards
+# Architektur & Datenmodell 
+Die Anwendung ist in drei Docker-Container aufgeteilt: die API (Node.js), die PostgreSQL-Datenbank und eine pgAdmin-Instanz zur Verwaltung. Das Herzstück des Backends ist das relationale Datenmodell in der PostgreSQL-Datenbank, welches die Grundlage für alle CRUD-Operationen bildet.
 
-    A->>DB: SQL SELECT * FROM card ORDER BY position ASC
-    DB-->>A: Ergebnis-Menge (Rows)
-
-    A-->>F: JSON Response mit Kartenliste
-    F->>F: Speichere Karten in reaktivem State (cards.value)
-    F->>U: Vue-Komponenten rendern automatisch neu
-```
 
 ### **Datenbankschema:**
+Das Schema definiert alle Entitäten wie appointments, cards oder graphs und deren Beziehungen untereinander. Es wird beim ersten Start der Docker-Container automatisch aus der db/init.sql-Datei erstellt.
+
 ```mermaid
 erDiagram
     %% Tabellen
@@ -223,4 +219,52 @@ erDiagram
     GRAPHS ||--o{ CARD : "graph_id"
     APPOINTMENTS }o--|| RECURRENCE_TYPE : "has recurrence"
     CARD }o--|| CARD_TYPE : "has type"	
+```
+
+
+### Datenfluss
+Die folgenden Diagramme stellen den typischen Datenfluss vom Frontend über die API zur Datenbank am Beispiel der Dashboard-Karten (cards) dar.
+
+
+
+#### **Sequenzdiagramm - Schreiben in die Datenbank:**
+
+```mermaid
+sequenceDiagram
+
+    participant U as User
+    participant F as useCardStore (Vue Store)
+    participant A as API-Router (cardsRouter.js)
+    participant DB as PostgreSQL (Tabelle card)
+
+    U->>F: Aktion ("Neue Karte hinzufügen")
+    F->>A: HTTP POST /cards <br/> Body: {title, type, position, graph_id}
+
+    A->>DB: SQL INSERT INTO card (...) RETURNING *
+    DB-->>A: Neuer Datensatz (Row)
+
+    A-->>F: JSON Response mit neuer Karte
+    F->>F: Lokalen cards-State updaten & Positionen anpassen
+    F->>U: UI aktualisiert sich automatisch (neue Karte sichtbar)
+```
+
+
+#### **Sequenzdiagramm - Lesen aus der Datenbank:**
+```mermaid
+sequenceDiagram
+
+    participant U as User
+    participant F as useCardStore (Vue Store)
+    participant A as API (cardsRouter.js)
+    participant DB as PostgreSQL (Tabelle card)
+
+    U->>F: Initiales Laden der Seite
+    F->>A: HTTP GET /cards
+
+    A->>DB: SQL SELECT * FROM card ORDER BY position ASC
+    DB-->>A: Ergebnis-Menge (Rows)
+
+    A-->>F: JSON Response mit Kartenliste
+    F->>F: Speichere Karten in reaktivem State (cards.value)
+    F->>U: Vue-Komponenten rendern automatisch neu
 ```
