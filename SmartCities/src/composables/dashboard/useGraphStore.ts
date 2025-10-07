@@ -1,4 +1,4 @@
-import { Graph, GraphData, type GraphDTO, type GraphResultDTO } from '@/models/graph'
+import { Graph, GraphData, type GraphResultDTO } from '@/models/graph'
 import axios from 'axios'
 import { ref } from 'vue'
 
@@ -38,9 +38,7 @@ export function useGraphStore() {
         points: data,
       })
 
-      console.log('Response', res);
-
-      const newGraph = new Graph(res.data.graph.id, type, data)
+      const newGraph = new Graph(res.data.graph.id, type, file.name, data)
 
       // Zu Liste hinzufügen
       graphs.value.push(newGraph)

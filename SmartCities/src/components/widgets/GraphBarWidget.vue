@@ -11,6 +11,7 @@ const props = defineProps<{
 const chartRef = ref<HTMLDivElement | null>(null)
 let chart: ApexCharts | null = null
 
+
 const options = {
   series: [] as unknown[],
   chart: {
@@ -100,7 +101,7 @@ onMounted(() => {
 
         options.xaxis.categories = res.map((dat) => dat.y_comp)
 
-        options.tooltip.enabled = true;
+        options.tooltip.enabled = true
 
         chart = new ApexCharts(chartRef.value, options)
         chart.render()
@@ -129,14 +130,5 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="block p-6 bg-white border-2 border-gray-200 rounded-lg shadow-sm hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700">
-    <div class="flex justify-between">
-      <div>
-        <h5 class="leading-none text-3xl font-bold text-gray-900 dark:text-white pb-2">
-          Liniendiagramm
-        </h5>
-      </div>
-    </div>
-    <div ref="chartRef"></div>
-  </div>
+  <div ref="chartRef"></div>
 </template>

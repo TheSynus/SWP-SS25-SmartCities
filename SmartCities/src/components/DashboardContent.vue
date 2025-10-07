@@ -3,13 +3,10 @@ import type { Card } from '@/models/card'
 import AddCardButton from './dashboardEdit/AddCardButton.vue'
 import DefaultCard from './cards/DefaultCard.vue'
 import { ref, watch } from 'vue'
-import CardGraphColumn from './cards/CardGraphColumn.vue'
 import NinaCard from './cards/NinaCard.vue'
-import CardGraphLine from './cards/CardGraphLine.vue'
 import WeatherCard from './cards/WeatherCard.vue'
 import WindCard from './cards/WindCard.vue'
-import CardGraphBar from './cards/CardGraphBar.vue'
-import CardGraphPie from './cards/CardGraphPie.vue'
+import CardGraph from './cards/CardGraph.vue'
 
 const props = defineProps<{
   cards: Array<Card>
@@ -17,9 +14,10 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  updateCards: [cards: Array<Card>]
+  reorderCards: [cards: Array<Card>]
   addCard: [index: number]
   deleteCard: [card: Card]
+  updateCard: [card: Card]
 }>()
 
 // Lokale Kopie der Cards für Drag & Drop
@@ -92,7 +90,7 @@ const handleDrop = (event: DragEvent, dropIndex: number) => {
   newCards.splice(dropIndex, 0, draggedCard)
 
   localCards.value = newCards
-  emit('updateCards', newCards)
+  emit('reorderCards', newCards)
 
   draggedOverIndex.value = null
 }
@@ -121,6 +119,14 @@ const getDragHandleClasses = () => {
   return props.showAddButtons
     ? 'cursor-move bg-gray-50 hover:bg-gray-100 border-b border-gray-200 p-2 rounded-t-lg transition-colors duration-150'
     : 'hidden'
+}
+
+const handleCardTitleChanged = (newTitle: string, cardId: number) => {
+  const card = localCards.value.find((c) => c.id === cardId)
+  if (card) {
+    card.title = newTitle
+    emit('updateCard', card)
+  }
 }
 </script>
 
@@ -181,10 +187,14 @@ const getDragHandleClasses = () => {
               }"
             >
               <NinaCard v-if="card.type === 'nina'" :heading="card.title" />
-              <CardGraphColumn v-else-if="card.type === 'column'" :graph_id="card.graph_id" />
-              <CardGraphLine v-else-if="card.type === 'line'" :graph_id="card.graph_id" />
-              <CardGraphBar v-else-if="card.type === 'bar'" :graph_id="card.graph_id" />
-              <CardGraphPie v-else-if="card.type === 'pie'" :graph_id="card.graph_id" />
+              <CardGraph
+                v-else-if="card.graph_id !== undefined && card.graph_id !== null"
+                :type="card.type"
+                :graph_id="card.graph_id"
+                :editable="props.showAddButtons"
+                :title="card.title"
+                @title-changed="handleCardTitleChanged($event, card.id)"
+              />
               <WeatherCard v-else-if="card.type === 'weather'" :heading="card.title"></WeatherCard>
               <WindCard v-else-if="card.type === 'wind'" :heading="card.title"></WindCard>
               <DefaultCard v-else :heading="card.title"></DefaultCard>

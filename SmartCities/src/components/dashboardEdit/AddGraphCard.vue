@@ -1,9 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import CardGraphLine from '../cards/CardGraphLine.vue'
-import CardGraphColumn from '../cards/CardGraphColumn.vue'
-import CardGraphBar from '../cards/CardGraphBar.vue'
-import CardGraphPie from '../cards/CardGraphPie.vue'
+import CardGraph from '../cards/CardGraph.vue'
 import { Info } from 'lucide-vue-next'
 import { useGraphStore, graphs } from '@/composables/dashboard/useGraphStore'
 import type { Graph } from '@/models/graph'
@@ -32,14 +29,9 @@ const handleFileSelect = async (event: Event) => {
   const file = target.files?.[0]
 
   if (file && file.type === 'text/csv') {
-    console.log('Ausgewählte CSV-Datei:', file.name)
-    console.log('Graph-Typ:', selectedGraphType)
-
     try {
       // Warten auf das Promise und die graphId erhalten
       const graphId = await createGraph(file, selectedGraphType)
-
-      console.log('graphs', graphs.value)
 
       // Event emittieren mit der erhaltenen graphId
       emit('graphAdded', graphId)
@@ -81,16 +73,36 @@ const handleFileSelect = async (event: Event) => {
     <!-- Graph Grid -->
     <div class="grid grid-cols-2 place-items-center gap-y-4">
       <div class="h-80 cursor-pointer" @click="selectGraph('line')">
-        <CardGraphLine :graph_id="undefined"/>
+        <CardGraph
+          :editable="false"
+          :type="'line'"
+          :title="'Liniendiagramm'"
+          :graph_id="undefined"
+        />
       </div>
       <div class="h-80 cursor-pointer" @click="selectGraph('column')">
-        <CardGraphColumn :graph_id="undefined" />
+        <CardGraph
+          :editable="false"
+          :type="'column'"
+          :title="'Säulendiagramm'"
+          :graph_id="undefined"
+        />
       </div>
       <div class="h-80 cursor-pointer" @click="selectGraph('bar')">
-        <CardGraphBar :graph_id="undefined" />
+        <CardGraph
+          :editable="false"
+          :type="'bar'"
+          :title="'Balkendiagramm'"
+          :graph_id="undefined"
+        />
       </div>
       <div class="h-80 cursor-pointer" @click="selectGraph('pie')">
-        <CardGraphPie :graph_id="undefined" />
+        <CardGraph
+          :editable="false"
+          :type="'pie'"
+          :title="'Kuchendiagramm'"
+          :graph_id="undefined"
+        />
       </div>
     </div>
   </div>

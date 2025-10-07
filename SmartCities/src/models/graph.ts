@@ -1,14 +1,16 @@
 export class Graph {
   public graph_id: number
   public type: string
+  public title: string
   public data: GraphData[]
 
   /**
    *
    */
-  constructor(graphId: number, type: string, data: GraphData[]) {
+  constructor(graphId: number, type: string, title: string, data: GraphData[]) {
     this.graph_id = graphId
     this.type = type
+    this.title = title
     this.data = data
   }
 }

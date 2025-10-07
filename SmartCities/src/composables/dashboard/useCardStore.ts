@@ -66,14 +66,12 @@ export function useCardStore() {
 
       // Card aus lokaler Liste entfernen
       const existing = cards.value.filter((crd) => crd.id !== card.id)
-      console.log('existing', cards.value);
       for (let i = 0; i < existing.length; i++) {
         const crd = existing[i]
         crd.position = i
         updateCard(crd).then()
       }
       cards.value = existing
-      console.log('cardsValue', cards.value);
     } catch (error) {
       console.error('Fehler beim Löschen der Card:', error)
       throw error
@@ -112,5 +110,6 @@ export function useCardStore() {
     addCard,
     deleteCard,
     reorderCards,
+    updateCard
   }
 }
