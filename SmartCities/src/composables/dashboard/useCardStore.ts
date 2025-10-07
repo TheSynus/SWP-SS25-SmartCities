@@ -55,18 +55,25 @@ export function useCardStore() {
     }
   }
 
-  const deleteCard = async (id: number) => {
+  const deleteCard = async (card: Card) => {
     try {
-      await axios.delete(`${import.meta.env.VITE_API_URL}/cards/${id}`)
+      await axios.delete(`${import.meta.env.VITE_API_URL}/cards/${card.id}`)
+
+      // Graph Daten löschen
+      if (card.graph_id !== undefined && card.graph_id !== null) {
+        await axios.delete(`${import.meta.env.VITE_API_URL}/graphs/${card.graph_id}`)
+      }
 
       // Card aus lokaler Liste entfernen
-      const existing = cards.value.filter((card) => card.id !== id)
+      const existing = cards.value.filter((crd) => crd.id !== card.id)
+      console.log('existing', cards.value);
       for (let i = 0; i < existing.length; i++) {
-        const card = existing[i]
-        card.position = i
-        updateCard(card)
+        const crd = existing[i]
+        crd.position = i
+        updateCard(crd).then()
       }
       cards.value = existing
+      console.log('cardsValue', cards.value);
     } catch (error) {
       console.error('Fehler beim Löschen der Card:', error)
       throw error

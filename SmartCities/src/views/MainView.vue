@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
-import HomeView from './HomeView.vue'
+import HomeView from '../components/cards/HomeView.vue'
 import { cards, useCardStore } from '@/composables/dashboard/useCardStore'
 
 

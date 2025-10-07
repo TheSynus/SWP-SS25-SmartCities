@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import WeatherWidget from './WeatherWidget.vue'
-import WindWidget from './WindWidget.vue'
+import WindWidget from '../widgets/WindWidget.vue'
 
 interface Props {
   heading: string
@@ -28,7 +27,7 @@ const props = withDefaults(defineProps<Props>(), {
       </h5>
     </div>
 
-    <WeatherWidget></WeatherWidget>
+    <WindWidget></WindWidget>
 
     <!-- Disabled Meldung -->
     <div v-if="props.disabled" class="mt-4 pt-3 border-t border-gray-300 dark:border-gray-600">

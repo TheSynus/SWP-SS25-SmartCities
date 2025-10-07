@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useGraphStore } from '@/composables/dashboard/useGraphStore'
+import { useGraphStore } from '../../composables/dashboard/useGraphStore'
 import ApexCharts from 'apexcharts'
 import { onMounted, onUnmounted, ref } from 'vue'
 
@@ -12,41 +12,63 @@ const chartRef = ref<HTMLDivElement | null>(null)
 let chart: ApexCharts | null = null
 
 const options = {
+  series: [] as unknown[],
   chart: {
-    height: '100%',
-    width: '100%',
-    type: 'area',
-    fontFamily: 'Inter, sans-serif',
-    dropShadow: {
+    sparkline: {
       enabled: false,
     },
+    type: 'bar',
+    width: '100%',
+    height: '100%',
     toolbar: {
       show: false,
     },
-    zoom: {
-      enabled: false,
+  },
+  plotOptions: {
+    bar: {
+      horizontal: true,
+      columnWidth: '100%',
+      borderRadiusApplication: 'end',
+      borderRadius: 6,
+      dataLabels: {
+        position: 'top',
+      },
     },
   },
-  tooltip: {
-    enabled: false,
-    x: {
-      show: false,
-    },
-  },
-  fill: {
-    type: 'gradient',
-    gradient: {
-      opacityFrom: 0.55,
-      opacityTo: 0,
-      shade: '#1C64F2',
-      gradientToColors: ['#1C64F2'],
-    },
+  legend: {
+    show: true,
+    position: 'bottom',
   },
   dataLabels: {
     enabled: false,
   },
-  stroke: {
-    width: 6,
+  tooltip: {
+    enabled: false,
+  },
+  xaxis: {
+    labels: {
+      show: true,
+      style: {
+        fontFamily: 'Inter, sans-serif',
+        cssClass: 'text-xs font-normal fill-gray-500 dark:fill-gray-400',
+      },
+    },
+    categories: [] as string[],
+    axisTicks: {
+      show: false,
+    },
+    axisBorder: {
+      show: false,
+    },
+  },
+  yaxis: {
+    labels: {
+      show: true,
+      style: {
+        fontFamily: 'Inter, sans-serif',
+        cssClass: 'text-xs font-normal fill-gray-500 dark:fill-gray-400',
+      },
+    },
   },
   grid: {
     show: true,
@@ -54,32 +76,11 @@ const options = {
     padding: {
       left: 2,
       right: 2,
-      top: 0,
+      top: -20,
     },
   },
-  series: [] as unknown[],
-  xaxis: {
-    categories: [] as unknown[],
-    labels: {
-      show: true,
-      style: {
-        colors: '#FFFFFF',
-      },
-    },
-    axisBorder: {
-      show: true,
-    },
-    axisTicks: {
-      show: false,
-    },
-  },
-  yaxis: {
-    show: true,
-    labels: {
-      style: {
-        colors: '#FFFFFF',
-      },
-    },
+  fill: {
+    opacity: 1,
   },
 }
 
@@ -92,27 +93,26 @@ onMounted(() => {
       // Graph Id gefüllt -> Daten müssen geholt werden
       getDataForGraph(props.graph_id).then((res) => {
         options.series.push({
-          name: 'New users',
-          data: res.map((dat) => dat.y_comp),
-          color: '#1A56DB',
+          name: 'Data',
+          color: '#FDBA8C',
+          data: res.map((dat) => dat.x_comp),
         })
 
-        options.xaxis.categories = res.map((dat) => dat.x_comp)
+        options.xaxis.categories = res.map((dat) => dat.y_comp)
 
-        options.tooltip.enabled = true
+        options.tooltip.enabled = true;
 
         chart = new ApexCharts(chartRef.value, options)
         chart.render()
       })
     } else {
-      // Beispieldaten
       options.series.push({
-        name: 'New users',
-        data: [6500, 6418, 6456, 6526, 6356, 6456],
-        color: '#1A56DB',
+        name: 'Income',
+        color: '#31C48D',
+        data: ['1420', '1620', '1820', '1420', '1650', '2120'],
       })
 
-      options.xaxis.categories = ['01', '02', '03', '04', '05', '06']
+      options.xaxis.categories = ['Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
       chart = new ApexCharts(chartRef.value, options)
       chart.render()
@@ -129,9 +129,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div
-    class="block p-6 bg-white border-2 border-gray-200 rounded-lg shadow-sm hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700"
-  >
+  <div class="block p-6 bg-white border-2 border-gray-200 rounded-lg shadow-sm hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700">
     <div class="flex justify-between">
       <div>
         <h5 class="leading-none text-3xl font-bold text-gray-900 dark:text-white pb-2">

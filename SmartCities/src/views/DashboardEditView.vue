@@ -37,8 +37,8 @@ const handleGraphCardAdd = (graph: Graph) => {
   hideModal()
 }
 
-const handleDeleteCard = (id: number) => {
-  deleteCard(id)
+const handleDeleteCard = (card: Card) => {
+  deleteCard(card)
 }
 
 const handleCardOrderChange = (updateCards: Card[]) => {

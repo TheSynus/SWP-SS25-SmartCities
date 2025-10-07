@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { useGraphStore } from '@/composables/dashboard/useGraphStore'
+import { useGraphStore } from '../../composables/dashboard/useGraphStore'
 import ApexCharts from 'apexcharts'
-import { onMounted, onUnmounted, ref } from 'vue'
+import { onMounted, ref, onUnmounted } from 'vue'
 
 const props = defineProps<{
   graph_id: number | undefined
@@ -12,63 +12,40 @@ const chartRef = ref<HTMLDivElement | null>(null)
 let chart: ApexCharts | null = null
 
 const options = {
+  colors: ['#1A56DB'],
   series: [] as unknown[],
   chart: {
-    sparkline: {
-      enabled: false,
-    },
     type: 'bar',
-    width: '100%',
     height: '100%',
+    width: '100%',
+    fontFamily: 'Inter, sans-serif',
     toolbar: {
       show: false,
     },
   },
   plotOptions: {
     bar: {
-      horizontal: true,
-      columnWidth: '100%',
+      horizontal: false,
+      columnWidth: '70%',
       borderRadiusApplication: 'end',
-      borderRadius: 6,
-      dataLabels: {
-        position: 'top',
-      },
+      borderRadius: 8,
     },
-  },
-  legend: {
-    show: true,
-    position: 'bottom',
-  },
-  dataLabels: {
-    enabled: false,
   },
   tooltip: {
     enabled: false,
   },
-  xaxis: {
-    labels: {
-      show: true,
-      style: {
-        fontFamily: 'Inter, sans-serif',
-        cssClass: 'text-xs font-normal fill-gray-500 dark:fill-gray-400',
+  states: {
+    hover: {
+      filter: {
+        type: 'darken',
+        value: 1,
       },
-    },
-    categories: [] as string[],
-    axisTicks: {
-      show: false,
-    },
-    axisBorder: {
-      show: false,
     },
   },
-  yaxis: {
-    labels: {
-      show: true,
-      style: {
-        fontFamily: 'Inter, sans-serif',
-        cssClass: 'text-xs font-normal fill-gray-500 dark:fill-gray-400',
-      },
-    },
+  stroke: {
+    show: true,
+    width: 0,
+    colors: ['transparent'],
   },
   grid: {
     show: true,
@@ -76,8 +53,33 @@ const options = {
     padding: {
       left: 2,
       right: 2,
-      top: -20,
+      top: -14,
     },
+  },
+  dataLabels: {
+    enabled: false,
+  },
+  legend: {
+    show: false,
+  },
+  xaxis: {
+    floating: false,
+    labels: {
+      show: true,
+      style: {
+        fontFamily: 'Inter, sans-serif',
+        cssClass: 'text-xs font-normal fill-gray-500 dark:fill-gray-400',
+      },
+    },
+    axisBorder: {
+      show: false,
+    },
+    axisTicks: {
+      show: false,
+    },
+  },
+  yaxis: {
+    show: false,
   },
   fill: {
     opacity: 1,
@@ -95,10 +97,10 @@ onMounted(() => {
         options.series.push({
           name: 'Data',
           color: '#FDBA8C',
-          data: res.map((dat) => dat.x_comp),
+          data: res.map((dat) => {
+            return { x: dat.x_comp, y: dat.y_comp }
+          }),
         })
-
-        options.xaxis.categories = res.map((dat) => dat.y_comp)
 
         options.tooltip.enabled = true;
 
@@ -106,13 +108,20 @@ onMounted(() => {
         chart.render()
       })
     } else {
+      // Beispieldaten
       options.series.push({
-        name: 'Income',
-        color: '#31C48D',
-        data: ['1420', '1620', '1820', '1420', '1650', '2120'],
+        name: 'Social media',
+        color: '#FDBA8C',
+        data: [
+          { x: 'Mon', y: 232 },
+          { x: 'Tue', y: 113 },
+          { x: 'Wed', y: 341 },
+          { x: 'Thu', y: 224 },
+          { x: 'Fri', y: 522 },
+          { x: 'Sat', y: 411 },
+          { x: 'Sun', y: 243 },
+        ],
       })
-
-      options.xaxis.categories = ['Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
       chart = new ApexCharts(chartRef.value, options)
       chart.render()
@@ -133,10 +142,11 @@ onUnmounted(() => {
     <div class="flex justify-between">
       <div>
         <h5 class="leading-none text-3xl font-bold text-gray-900 dark:text-white pb-2">
-          Liniendiagramm
+          Säulendiagramm
         </h5>
       </div>
     </div>
+    <!-- Template ref anstatt ID -->
     <div ref="chartRef"></div>
   </div>
 </template>

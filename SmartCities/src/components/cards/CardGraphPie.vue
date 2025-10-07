@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useGraphStore } from '@/composables/dashboard/useGraphStore'
+import { useGraphStore } from '../../composables/dashboard/useGraphStore'
 import ApexCharts from 'apexcharts'
 import { onMounted, onUnmounted, ref } from 'vue'
 

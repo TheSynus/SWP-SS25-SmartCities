@@ -139,11 +139,14 @@ router.get('/:id', async (req, res) => {
 router.delete('/:id', async (req, res) => {
     try {
         const { id } = req.params;
+
+        const deleteDataOp = await pool.query("DELETE FROM graphs_data WHERE graph_id = $1 RETURNING *", [id]);
+
         const deleteOp = await pool.query("DELETE FROM graphs WHERE id = $1 RETURNING *", [id]);
 
         if (deleteOp.rowCount === 0) {
             return res.status(404).json({ error: "Graph nicht gefunden." });
-        }
+        }                
 
         res.status(204).send();
     } catch (err) {

@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import CardGraphLine from '../CardGraphLine.vue'
-import CardGraphColumn from '../CardGraphColumn.vue'
-import CardGraphBar from '../CardGraphBar.vue'
-import CardGraphPie from '../CardGraphPie.vue'
+import CardGraphLine from '../cards/CardGraphLine.vue'
+import CardGraphColumn from '../cards/CardGraphColumn.vue'
+import CardGraphBar from '../cards/CardGraphBar.vue'
+import CardGraphPie from '../cards/CardGraphPie.vue'
 import { Info } from 'lucide-vue-next'
 import { useGraphStore, graphs } from '@/composables/dashboard/useGraphStore'
 import type { Graph } from '@/models/graph'
@@ -87,10 +87,10 @@ const handleFileSelect = async (event: Event) => {
         <CardGraphColumn :graph_id="undefined" />
       </div>
       <div class="h-80 cursor-pointer" @click="selectGraph('bar')">
-        <CardGraphBar />
+        <CardGraphBar :graph_id="undefined" />
       </div>
       <div class="h-80 cursor-pointer" @click="selectGraph('pie')">
-        <CardGraphPie />
+        <CardGraphPie :graph_id="undefined" />
       </div>
     </div>
   </div>

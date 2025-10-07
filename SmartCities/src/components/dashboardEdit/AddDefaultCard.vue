@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import DefaultCard from '../DefaultCard.vue'
+import DefaultCard from '../cards/DefaultCard.vue'
 import { ref } from 'vue'
 import { cards } from '@/composables/dashboard/useCardStore'
 

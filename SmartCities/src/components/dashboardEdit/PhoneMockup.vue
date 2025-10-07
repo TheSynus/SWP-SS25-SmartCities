@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { Card } from '@/models/card'
 import { ref, onMounted, nextTick } from 'vue' // ⬅️ nextTick hinzufügen
-import HomeView from '@/views/HomeView.vue'
+import HomeView from '@/components/cards/HomeView.vue'
 
 interface Props {
   cards: Array<Card>

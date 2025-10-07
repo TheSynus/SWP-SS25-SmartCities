@@ -1,15 +1,15 @@
 <script setup lang="ts">
 import type { Card } from '@/models/card'
 import AddCardButton from './dashboardEdit/AddCardButton.vue'
-import DefaultCard from './DefaultCard.vue'
+import DefaultCard from './cards/DefaultCard.vue'
 import { ref, watch } from 'vue'
-import CardGraphColumn from './CardGraphColumn.vue'
+import CardGraphColumn from './cards/CardGraphColumn.vue'
 import NinaCard from './cards/NinaCard.vue'
-import CardGraphLine from './CardGraphLine.vue'
-import WeatherCard from './WeatherCard.vue'
-import WindCard from './WindCard.vue'
-import CardGraphBar from './CardGraphBar.vue'
-import CardGraphPie from './CardGraphPie.vue'
+import CardGraphLine from './cards/CardGraphLine.vue'
+import WeatherCard from './cards/WeatherCard.vue'
+import WindCard from './cards/WindCard.vue'
+import CardGraphBar from './cards/CardGraphBar.vue'
+import CardGraphPie from './cards/CardGraphPie.vue'
 
 const props = defineProps<{
   cards: Array<Card>
@@ -19,7 +19,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   updateCards: [cards: Array<Card>]
   addCard: [index: number]
-  deleteCard: [id: number]
+  deleteCard: [card: Card]
 }>()
 
 // Lokale Kopie der Cards für Drag & Drop
@@ -102,8 +102,8 @@ const addButtonClicked = (index: number) => {
 }
 
 // Handler für das Löschen
-const handleDeleteCard = (id: number) => {
-  emit('deleteCard', id)
+const handleDeleteCard = (card: Card) => {
+  emit('deleteCard', card)
 }
 
 // Computed für CSS-Klassen
@@ -194,7 +194,7 @@ const getDragHandleClasses = () => {
           <!-- Mülltonne Button -->
           <button
             v-if="props.showAddButtons"
-            @click="handleDeleteCard(card.id)"
+            @click="handleDeleteCard(card)"
             class="flex-shrink-0 p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200 cursor-pointer"
             type="button"
             title="Karte löschen"

@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import type { Card } from '@/models/card'
 import { ref } from 'vue'
-import DashboardContent from '@/components/DashboardContent.vue'
-import MoreContent from '@/components/MoreContent.vue'
-import BottomNavigation from '@/components/BottomNavigation.vue'
+import type { Card } from '../../models/card'
+import DashboardContent from '../DashboardContent.vue'
+import MoreContent from '../MoreContent.vue'
+import BottomNavigation from '../BottomNavigation.vue'
 
 interface Props {
   cards: Array<Card>
