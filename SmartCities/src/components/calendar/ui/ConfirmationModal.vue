@@ -2,7 +2,31 @@
 // components/ConfirmationModal.vue
 <script setup lang="ts">
 import { computed } from 'vue'
-// Types
+
+/**
+ * ConfirmationModal Component
+ * Universelles Bestätigungs-Modal für sicherheitsrelevante oder
+ * bestätigungspflichtige Aktionen (z. B. Löschen, Warnungen, Hinweise).
+ *
+ * Features:
+ * - Dynamische Darstellung für Info-, Warn- und Gefahrenszenarien
+ * - Tastatursteuerung (Enter = Bestätigen, Escape = Abbrechen)
+ * - Schließen durch Klick auf das Overlay
+ * - Anpassbare Texte für Buttons, Titel und Nachricht
+ *
+ * Kommunikation:
+ * - Props definieren Darstellung (Titel, Text, Typ)
+ * - Emits geben Benutzeraktionen an die Elternkomponente weiter
+ *
+ * @component
+ * @file ConfirmationModal.vue
+ * @description Wiederverwendbarer Bestätigungsdialog mit flexiblem Design und Verhalten.
+ * @author Kire Bozinovski, Dalshad Ahmad
+ */
+
+/**
+ * Öffentliche Eigenschaften (Props) der Komponente.
+ */
 interface Props {
   isVisible: boolean
   title: string
@@ -12,19 +36,27 @@ interface Props {
   type?: 'danger' | 'warning' | 'info'
 }
 
+/**
+ * Props mit Standardwerten (über withDefaults definiert).
+ */
 const props = withDefaults(defineProps<Props>(), {
   confirmText: 'Bestätigen',
   cancelText: 'Abbrechen',
   type: 'info'
 })
 
-// Emits
+/**
+ * Events, die bei Benutzerinteraktion ausgelöst werden.
+ */
 const emit = defineEmits<{
   'confirm': []
   'cancel': []
 }>()
 
-// Computed
+/**
+ * Gibt die Farbe des Icons basierend auf dem Typ des Modals zurück.
+ * @returns CSS-Klasse für Icon-Farbe.
+ */
 const iconClasses = computed(() => {
   switch (props.type) {
     case 'danger':
@@ -37,6 +69,10 @@ const iconClasses = computed(() => {
   }
 })
 
+/**
+ * Gibt die Farbklasse für den Bestätigungsbutton zurück.
+ * @returns CSS-Klasse für Button-Farbe.
+ */
 const buttonClasses = computed(() => {
   switch (props.type) {
     case 'danger':
@@ -49,21 +85,42 @@ const buttonClasses = computed(() => {
   }
 })
 
-// Methods
+/**
+ * Bestätigt die Aktion und löst das "confirm"-Event aus.
+ * @emits confirm
+ */
 function handleConfirm() {
   emit('confirm')
 }
 
+
+/**
+ * Bricht die Aktion ab und schließt das Modal.
+ * @emits cancel
+ */
 function handleCancel() {
   emit('cancel')
 }
 
+
+/**
+ * Schließt das Modal, wenn außerhalb des Dialogbereichs geklickt wird.
+ * @param event Mausereignis für Overlay-Klick
+ * @emits cancel
+ */
 function handleBackdropClick(event: Event) {
   if (event.target === event.currentTarget) {
     handleCancel()
   }
 }
 
+
+/**
+ * Handhabt Tastatureingaben für Enter (Bestätigen) und Escape (Abbrechen).
+ * @param event KeyboardEvent – gedrückte Taste
+ * @emits confirm
+ * @emits cancel
+ */
 function handleKeydown(event: KeyboardEvent) {
   if (event.key === 'Escape') {
     handleCancel()

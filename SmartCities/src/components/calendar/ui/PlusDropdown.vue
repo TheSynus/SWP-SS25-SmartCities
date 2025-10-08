@@ -3,7 +3,35 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-// Types
+/**
+ * PlusDropdown Component                
+ * Dieses Dropdown-Menü dient als erweiterbares Aktionsmenü
+ * (z. B. über den Plus-Button in der EventSidebar).
+ * 
+ * Funktionen:
+ * - Zeigt konfigurierbare Menüeinträge (z. B. Import, Neuer Termin, Kategorien)
+ * - Unterstützt Tastatursteuerung (Enter, Leertaste)
+ * - Schließt sich automatisch nach Auswahl oder Klick außerhalb
+ * - Dynamische Positionierung (left, right, center)
+ * - Visuelle Trennung aktivierter und deaktivierter Aktionen
+ *
+ * Kommunikation:
+ * - Props übergeben Sichtbarkeit, Position und Einträge
+ * - Emits geben Aktionen und Schließen an die Elternkomponente zurück
+ *
+ * Styling:
+ * - Nutzt TailwindCSS für Animationen, Übergänge und Layout
+ * - Teleport-Komponente sorgt für z-index-korrektes Overlay im <body>
+ *
+ * @component
+ * @file PlusDropdown.vue
+ * @description Reusable Dropdown-Komponente zur Anzeige von Aktionsoptionen.
+ * @author Dalshad Ahmad, Kire Bozinovski
+ */
+
+/**
+ * Repräsentiert einen Eintrag (Button) innerhalb des Dropdown-Menüs.
+ */
 interface DropdownItem {
   id: string
   label: string
@@ -14,7 +42,9 @@ interface DropdownItem {
   shortcut?: string
 }
 
-// Props
+/**
+ * Öffentliche Eigenschaften (Props) der Komponente.
+ */
 interface Props {
   isVisible: boolean
   position?: 'left' | 'right' | 'center'
@@ -22,6 +52,10 @@ interface Props {
   class?: string
 }
 
+
+/**
+ * Props-Definition inkl. Standardwerte.
+ */
 const props = withDefaults(defineProps<Props>(), {
   position: 'right',
   class: '',
@@ -54,13 +88,19 @@ const props = withDefaults(defineProps<Props>(), {
   ]
 })
 
-// Emits
+/**
+ * Events (Emits), die an die Elternkomponente gesendet werden.
+ */
 const emit = defineEmits<{
   'item-click': [action: string, item: DropdownItem]
   'close': []
 }>()
 
-// Computed
+/**
+ * Liefert TailwindCSS-Klassen zur Positionierung des Dropdowns.
+ *
+ * @returns Klassenstring für left, center oder right.
+ */
 const positionClasses = computed(() => {
   switch (props.position) {
     case 'left':
@@ -73,15 +113,29 @@ const positionClasses = computed(() => {
   }
 })
 
+/**
+ * Gibt alle aktivierten (nicht deaktivierten) Menüeinträge zurück.
+ */
 const enabledItems = computed(() => 
   props.items.filter(item => !item.disabled)
 )
 
+
+/**
+ * Gibt alle deaktivierten Menüeinträge zurück.
+ */
 const disabledItems = computed(() => 
   props.items.filter(item => item.disabled)
 )
 
-// Methods
+/**
+ * Führt beim Klick auf einen Menüeintrag die zugehörige Aktion aus
+ * (sofern der Eintrag nicht deaktiviert ist) und schließt anschließend das Dropdown.
+ *
+ * @param item Der angeklickte Dropdown-Eintrag.
+ * @emits item-click – mit Aktion und Item-Objekt
+ * @emits close – Dropdown wird geschlossen
+ */
 function handleItemClick(item: DropdownItem) {
   if (item.disabled) return
   
@@ -89,6 +143,13 @@ function handleItemClick(item: DropdownItem) {
   emit('close')
 }
 
+/**
+ * Tastatursteuerung für Einträge:
+ * - Enter oder Leertaste aktivieren den Eintrag
+ *
+ * @param event KeyboardEvent des Buttons
+ * @param item Das betroffene Dropdown-Item
+ */
 function handleKeydown(event: KeyboardEvent, item: DropdownItem) {
   if (event.key === 'Enter' || event.key === ' ') {
     event.preventDefault()
@@ -96,10 +157,20 @@ function handleKeydown(event: KeyboardEvent, item: DropdownItem) {
   }
 }
 
+/**
+ * Schließt das Dropdown-Menü.
+ *
+ * @emits close – Dropdown wird geschlossen
+ */
 function closeDropdown() {
   emit('close')
 }
 
+/**
+ * Prüft Klicks außerhalb des Dropdowns und schließt es gegebenenfalls.
+ *
+ * @param event Klick-Ereignis (z. B. auf Overlay oder außerhalb der Komponente)
+ */
 function handleClickOutside(event: Event) {
   const target = event.target as HTMLElement
   if (!target.closest('.plus-dropdown-container')) {

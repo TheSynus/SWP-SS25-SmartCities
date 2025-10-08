@@ -3,7 +3,29 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
 
-// Types
+
+/**
+ *
+ * Modal-Dialog zum Erstellen/Bearbeiten/Löschen eines Termins.
+ *
+ * Features:
+ * - Formularfelder für Titel, Start/Ende, Kategorie, Wiederholung, Ort, Beschreibung
+ * - Dynamische Anzeige eines Enddatums bei wiederholenden Terminen
+ * - Sanfte Ein-/Ausblend-Animationen (Transition + Teleport)
+ * - Schließen durch Klick aufs Overlay oder Abbrechen-Button
+ *
+ * Kommunikation:
+ * - Props liefern Sichtbarkeit, das zu bearbeitende Event und verfügbare Kategorien
+ * - Emits geben Aktionen an die Elternkomponente: close, save(event), delete
+ *
+ * @component
+ * @file EventEditModal.vue
+ * @description Bearbeitungs-Modal für Kalendertermine (CRUD Interaktionen).
+ * @author Dalshad Ahmad, Kire Bozinovski */
+
+/**
+ * Repräsentiert einen einzelnen Termin.
+ */
 interface Event {
   id: string | number
   title: string
@@ -15,13 +37,18 @@ interface Event {
   endDate: string
 }
 
+/**
+ * Kategorie-Definition für die Auswahl im Formular.
+ */
 interface Category {
   id: number
   name: string
   color: string
 }
 
-// Props
+/**
+ * Öffentliche Eigenschaften (Props) der Komponente.
+ */
 interface Props {
   isVisible: boolean
   event: Event | null
@@ -30,14 +57,19 @@ interface Props {
 
 const props = defineProps<Props>()
 
-// Emits
+/**
+ * Events, die an die Elternkomponente gesendet werden.
+ */
 const emit = defineEmits<{
   'close': []
   'save': [event: Event]
   'delete': []
 }>()
 
-// Local state
+/**
+ * Lokale, editierbare Kopie des Events für das Formular.
+ * Wird beim Öffnen/Ändern des Props `event` synchronisiert.
+ */
 const localEvent = ref<Event>({
   id: '',
   title: '',
@@ -49,18 +81,29 @@ const localEvent = ref<Event>({
   endDate: '',
 })
 
-// Watch for prop changes
+/**
+ * Synchronisiert `localEvent` mit dem übergebenen `props.event`.
+ * - immediate: true -> auch beim ersten Rendern ausführen
+ * - deep: true -> auf tiefe Änderungen reagieren
+ */
 watch(() => props.event, (newEvent) => {
   if (newEvent) {
     localEvent.value = { ...newEvent }
   }
 }, { immediate: true, deep: true })
 
-// Computed
+
+/**
+ * Steuert, ob das Enddatum angezeigt werden soll.
+ * Nur sichtbar, wenn eine Wiederholung gesetzt ist (≠ "Keine").
+ */
 const showEndDate = computed(() => {
   return localEvent.value.repeat && localEvent.value.repeat !== 'Keine'
 })
 
+/**
+ * Vordefinierte Auswahloptionen für Wiederholungen.
+ */
 const repeatOptions = [
   'Keine',
   'Täglich',
@@ -69,19 +112,41 @@ const repeatOptions = [
   'Jährlich'
 ]
 
-// Methods
+/**
+ * Validiert (optional) und emittiert das „save“-Event mit dem Formularzustand.
+ * Hier könnte zusätzliche Validierung ergänzt werden (z. B. Pflichtfelder, Date-Checks).
+ *
+ * @emits save – mit einer Kopie von localEvent
+ */
 function handleSave() {
   emit('save', { ...localEvent.value })
 }
 
+/**
+ * Emittiert das „delete“-Event (Löschbestätigung kann im Parent erfolgen).
+ *
+ * @emits delete
+ */
 function handleDelete() {
   emit('delete')
 }
 
+/**
+ * Bricht die Bearbeitung ab und schließt das Modal.
+ *
+ * @emits close
+ */
 function handleCancel() {
   emit('close')
 }
 
+
+/**
+ * Schließt das Modal, wenn auf das halbtransparente Overlay geklickt wird.
+ *
+ * @param event Mausereignis (Overlay-Klick)
+ * @emits close
+ */
 function handleBackdropClick(event: MouseEvent) {
   if (event.target === event.currentTarget) {
     handleCancel()

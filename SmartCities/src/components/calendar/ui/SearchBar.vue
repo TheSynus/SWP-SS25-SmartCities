@@ -3,7 +3,23 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-// Props
+/**
+ *
+ * Eine wiederverwendbare Suchleiste mit:
+ * - v-model-Unterstützung (modelValue)
+ * - Tastaturkürzeln: Enter (suchen), Escape (löschen)
+ * - Events für search, clear, focus, blur
+ * - Deaktivierbar & mit optionalen Zusatzklassen
+ *
+ * @component
+ * @file SearchBar.vue
+ * @description Reusable Suchfeld-Komponente inkl. Clear-Button und Events.
+ * @author Dalshad Ahmad, Kire Bozinovsk
+ */
+
+/**
+ * Öffentliche Eigenschaften (Props) der Komponente.
+ */
 interface Props {
   modelValue: string
   placeholder?: string
@@ -11,13 +27,19 @@ interface Props {
   class?: string
 }
 
+
+/**
+ * Props-Definition inkl. Standardwerte.
+ */
 const props = withDefaults(defineProps<Props>(), {
   placeholder: 'Schwant',
   disabled: false,
   class: ''
 })
 
-// Emits
+/**
+ * Events (Emits), die die Komponente nach außen sendet.
+ */
 const emit = defineEmits<{
   'update:modelValue': [value: string]
   'search': [value: string]
@@ -26,24 +48,49 @@ const emit = defineEmits<{
   'blur': [event: FocusEvent]
 }>()
 
-// Computed
+/**
+ * Computed v-model Proxy für modelValue.
+ * - get: liest den aktuellen Wert aus den Props
+ * - set: emittiert update:modelValue
+ */
 const searchValue = computed({
   get: () => props.modelValue,
   set: (value: string) => emit('update:modelValue', value)
 })
 
+
+/**
+ * Prüft, ob das Eingabefeld einen (getrimmten) Inhalt hat.
+ */
 const hasValue = computed(() => props.modelValue.trim().length > 0)
 
-// Methods
+/**
+ * Löscht den Suchtext und informiert den Parent über den Reset.
+ *
+ * @emits update:modelValue – setzt den Wert auf leeren String
+ * @emits clear – signalisiert das Leeren der Suche
+ */
 function handleClear() {
   emit('update:modelValue', '')
   emit('clear')
 }
 
+/**
+ * Löst eine Suche mit dem aktuellen Suchtext aus.
+ *
+ * @emits search – mit aktuellem modelValue
+ */
 function handleSearch() {
   emit('search', props.modelValue)
 }
 
+/**
+ * Tastatur-Handler:
+ * - Enter: Suche auslösen
+ * - Escape: Eingabe löschen
+ *
+ * @param event Tastaturereignis vom Input
+ */
 function handleKeydown(event: KeyboardEvent) {
   if (event.key === 'Enter') {
     handleSearch()
@@ -53,10 +100,23 @@ function handleKeydown(event: KeyboardEvent) {
   }
 }
 
+/**
+ * Leitet das Focus-Event an den Parent weiter.
+ *
+ * @param event FocusEvent des Eingabefelds
+ * @emits focus
+ */
 function handleFocus(event: FocusEvent) {
   emit('focus', event)
 }
 
+
+/**
+ * Leitet das Blur-Event an den Parent weiter.
+ *
+ * @param event FocusEvent des Eingabefelds
+ * @emits blur
+ */
 function handleBlur(event: FocusEvent) {
   emit('blur', event)
 }

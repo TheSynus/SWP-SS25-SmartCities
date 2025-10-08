@@ -2,7 +2,31 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-// Types
+/**
+ * CalendarGrid Component 
+ * Diese Komponente rendert das Kalenderraster (Tagesansicht des Monats)
+ * und stellt die einzelnen Kalendertage inklusive Events dar.
+ *
+ * Features:
+ * - Dynamische Berechnung der Tage im aktuellen Monat
+ * - Darstellung von Terminen pro Tag (mit Kategorien und Farben)
+ * - Markierungen für „Heute“ und „Ausgewählten Tag“
+ * - Maus- und Tastaturinteraktion (Klick, Enter, Space)
+ * - Performance-optimierte Darstellung (v-for + computed)
+ *
+ * Kommunikation:
+ * - Props: Daten und Callback-Funktionen aus der Elternkomponente
+ * - Emits: date-select (Tag gewählt), date-click (Tag + Events gewählt)
+ *
+ * @component
+ * @file CalendarGrid.vue
+ * @description Stellt die visuelle Monatsübersicht des Kalenders dar.
+ * @author Kire Bozinovski, Dalshad Ahmad
+ */
+
+/**
+ * Struktur eines Kalendereintrags (Event).
+ */
 interface Event {
   id: string | number
   title: string
@@ -14,7 +38,9 @@ interface Event {
   endDate: string
 }
 
-// Props
+/**
+ * Öffentliche Eigenschaften der Komponente.
+ */
 interface Props {
   currentDate: Date
   selectedDate: string | null
@@ -31,16 +57,20 @@ const props = withDefaults(defineProps<Props>(), {
   class: '',
 })
 
-// Emits
+/**
+ * Events, die an die Elternkomponente gesendet werden.
+ */
 const emit = defineEmits<{
   'date-select': [dayNumber: number]
   'date-click': [dayNumber: number, events: Event[]]
 }>()
 
-// Constants
+/** Deutsche Kurzform der Wochentage für das Monatsraster */
 const weekdays = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So']
 
-// Computed
+/**
+ * Berechnet alle Tage des Monats mit ihren Attributen (Events, Status usw.).
+ */
 const calendarDays = computed(() => {
   const days = []
   const totalDays = props.daysInMonth(props.currentDate)
@@ -63,11 +93,22 @@ const calendarDays = computed(() => {
   return days
 })
 
+/**
+ * Liefert die Platzhalter-Zellen (leere Tage) vor Monatsbeginn.
+ * Wird zur korrekten Ausrichtung im Kalender verwendet.
+ */
 const offsetDays = computed(() => {
   return Array.from({ length: props.firstDayOffset(props.currentDate) }, (_, i) => i)
 })
 
-// Methods
+/**
+ * Wird aufgerufen, wenn ein Kalendertag angeklickt wird.
+ * Löst zwei Events aus:
+ * - 'date-select' (zur Auswahl des Tages)
+ * - 'date-click' (zusätzlich mit Events)
+ *
+ * @param dayNumber Der angeklickte Tag
+ */
 function handleDateClick(dayNumber: number) {
   const events = props.getEventsForDay(dayNumber)
   emit('date-select', dayNumber)
@@ -75,6 +116,11 @@ function handleDateClick(dayNumber: number) {
   console.log("DATE SELECTED: CalendarGrid")
 }
 
+/**
+ * Tastatursteuerung für Barrierefreiheit (Enter/Space = Klick simulieren).
+ * @param event KeyboardEvent
+ * @param dayNumber Tag des Monats
+ */
 function handleKeydown(event: KeyboardEvent, dayNumber: number) {
   if (event.key === 'Enter' || event.key === ' ') {
     event.preventDefault()
@@ -82,6 +128,11 @@ function handleKeydown(event: KeyboardEvent, dayNumber: number) {
   }
 }
 
+/**
+ * Liefert dynamische CSS-Klassen für die Tageszelle.
+ * @param day Das Tagesobjekt (enthält Status-Flags)
+ * @returns Array mit Tailwind-Klassen und Statusbedingungen
+ */
 function getDayClasses(day: any) {
   return [
     'relative p-1 h-20 rounded-lg bg-white/10 hover:bg-blue-600 cursor-pointer transition-all duration-200 flex flex-col group',
@@ -94,14 +145,28 @@ function getDayClasses(day: any) {
   ]
 }
 
+
+/**
+ * Gibt an, wie viele Events pro Tag direkt angezeigt werden sollen.
+ * @returns Anzahl der sichtbaren Events (Standard: 1)
+ */
 function getEventDisplayLimit(): number {
   return 1 // Only show first event, then show count
 }
 
+/**
+ * Prüft, ob ein "+X weitere"-Hinweis angezeigt werden soll.
+ * @param events Liste der Events
+ */
 function shouldShowEventCount(events: Event[]): boolean {
   return events.length > getEventDisplayLimit()
 }
 
+/**
+ * Berechnet, wie viele Events zusätzlich zum ersten versteckt sind.
+ * @param events Liste der Events
+ * @returns Anzahl der zusätzlichen Events
+ */
 function getAdditionalEventCount(events: Event[]): number {
   return Math.max(0, events.length - getEventDisplayLimit())
 }

@@ -3,7 +3,29 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
 
-// Types
+/**
+ * EventCreateModal Component 
+ * Modal-Dialog zum Erstellen eines neuen Termins.
+ *
+ * Features:
+ * - Formular für alle Termindaten (Titel, Datum, Kategorie, Wiederholung, Ort, Beschreibung)
+ * - Dynamische Anzeige des Enddatums bei wiederholenden Terminen
+ * - Automatisches Zurücksetzen des Formulars beim Öffnen/Schließen
+ * - Animationen über Vue Transitions und Teleport
+ *
+ * Kommunikation:
+ * - Props übergeben Sichtbarkeit und verfügbare Kategorien
+ * - Emits geben Aktionen an die Elternkomponente: close, save(event)
+ *
+ * @component
+ * @file EventCreateModal.vue
+ * @description Modal zur Erstellung eines neuen Termins im Smart-Cities-Dashboard.
+ * @author Kire Bozinovski, Dalshad Ahmad
+ */
+
+/**
+ * Struktur für ein neu zu erstellendes Event.
+ */
 interface NewEvent {
   title: string
   date: string
@@ -14,27 +36,41 @@ interface NewEvent {
   endDate: string
 }
 
+/**
+ * Kategorie-Objekt, das in der Dropdown-Auswahl verfügbar ist.
+ */
 interface Category {
   id: number
   name: string
   color: string
 }
 
-// Props
+/**
+ * Öffentliche Eigenschaften (Props) der Komponente.
+ */
 interface Props {
   isVisible: boolean
   categories: Category[]
 }
 
+/**
+ * Props-Definition ohne Standardwerte.
+ */
 const props = defineProps<Props>()
 
-// Emits
+
+/**
+ * Events, die an die Elternkomponente gesendet werden.
+ */
 const emit = defineEmits<{
   'close': []
   'save': [event: NewEvent]
 }>()
 
-// Local state
+/**
+ * Lokales Event-Objekt, das im Formular gebunden ist.
+ * Wird bei jedem Öffnen des Modals automatisch zurückgesetzt.
+ */
 const newEvent = ref<NewEvent>({
   title: '',
   date: '',
@@ -45,18 +81,27 @@ const newEvent = ref<NewEvent>({
   endDate: '',
 })
 
-// Watch for modal visibility to reset form
+/**
+ * Beobachtet den Sichtbarkeitsstatus (`isVisible`).
+ * Wenn das Modal geöffnet wird, wird das Formular automatisch geleert.
+ */
 watch(() => props.isVisible, (isVisible) => {
   if (isVisible) {
     resetForm()
   }
 })
 
-// Computed
+/**
+ * Steuert, ob das Enddatum angezeigt werden soll.
+ * Nur bei wiederholenden Terminen aktiv.
+ */
 const showEndDate = computed(() => {
   return newEvent.value.repeat && newEvent.value.repeat !== 'Keine'
 })
 
+/**
+ * Vordefinierte Auswahlmöglichkeiten für Wiederholungen.
+ */
 const repeatOptions = [
   'Keine',
   'Täglich',
@@ -65,7 +110,10 @@ const repeatOptions = [
   'Jährlich'
 ]
 
-// Methods
+/**
+ * Setzt das Formular auf die Standardwerte zurück.
+ * Wird beim Öffnen und Schließen des Modals aufgerufen.
+ */
 function resetForm() {
   newEvent.value = {
     title: '',
@@ -78,21 +126,36 @@ function resetForm() {
   }
 }
 
+/**
+ * Sendet das ausgefüllte Formular an die Elternkomponente.
+ * @emits save
+ */
 function handleSave() {
   console.log('Saving new event:', newEvent.value) // Debug
   emit('save', { ...newEvent.value })
 }
 
+/**
+ * Bricht die Erstellung ab, schließt das Modal und setzt das Formular zurück.
+ * @emits close
+ */
 function handleCancel() {
   emit('close')
   resetForm()
 }
 
+/**
+ * Schließt das Modal, wenn außerhalb des Dialogbereichs geklickt wird.
+ * @param event Mausereignis für Overlay-Klick
+ * @emits close
+ */
 function handleBackdropClick(event: Event) {
   if (event.target === event.currentTarget) {
     handleCancel()
   }
 }
+
+
 </script>
 
 <template>
