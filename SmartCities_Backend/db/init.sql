@@ -51,7 +51,7 @@ CREATE TABLE graphs(
 -- graphs_data
 CREATE TABLE graphs_data(
     id SERIAL PRIMARY KEY,
-    graph_id INTEGER REFERENCES graphs(id) ON DELETE SET NULL,
+    graph_id INTEGER REFERENCES graphs(id) ON DELETE CASCADE,
     x_comp VARCHAR(100),
     y_comp VARCHAR(100)
 );

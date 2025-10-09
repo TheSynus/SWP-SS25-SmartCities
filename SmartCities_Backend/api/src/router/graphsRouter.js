@@ -33,6 +33,9 @@ const graphUploadSchema = {
 // AJV Validator erstellen
 const validateGraphUpload = ajv.compile(graphUploadSchema)
 
+/*
+Routen zum validieren und Speichern von neuen Graphen inkl. Daten
+*/
 router.post("/uploadJson", async (req, res) => {
     //Validierung der JSON-Daten gegen das erstellte JSON-Schema
     const valid = validateGraphUpload(req.body)
@@ -96,6 +99,9 @@ router.post('/', async (req, res) => {
     }
 });
 
+/*
+Routen zum erhalten aller verfügbaren Graphen
+*/
 router.get('/', async (req, res) => {
     try {
         const allGraphs = await pool.query("SELECT * FROM graphs ORDER BY title ASC");
@@ -107,7 +113,9 @@ router.get('/', async (req, res) => {
     }
 });
 
-
+/*
+Routen zum erhalten eines Graphen inkl. Daten
+*/
 router.get('/:id', async (req, res) => {
     const { id } = req.params;
     try {
@@ -135,20 +143,21 @@ router.get('/:id', async (req, res) => {
     }
 });
 
-
+/*
+Routen zum löschen eines Graphen inkl. Daten
+*/
 router.delete('/:id', async (req, res) => {
     try {
         const { id } = req.params;
+                   
+        const result = await pool.query('DELETE FROM graphs WHERE id = $1', [id]);
 
-        const deleteDataOp = await pool.query("DELETE FROM graphs_data WHERE graph_id = $1 RETURNING *", [id]);
-
-        const deleteOp = await pool.query("DELETE FROM graphs WHERE id = $1 RETURNING *", [id]);
-
-        if (deleteOp.rowCount === 0) {
+        //Prüfung, ob das Löschen erfolgreich war
+        if (result.rowCount === 0) {
             return res.status(404).json({ error: "Graph nicht gefunden." });
-        }                
-
-        res.status(204).send();
+        } else {
+            res.status(204).json
+        }
     } catch (err) {
         console.error("Fehler beim Löschen des Graphen:", err.message);
         res.status(500).json({ error: "Serverfehler beim Löschen des Graphen." });
