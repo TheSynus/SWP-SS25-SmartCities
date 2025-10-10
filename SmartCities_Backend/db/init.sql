@@ -5,10 +5,9 @@ CREATE TABLE users (
     email VARCHAR(100) UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
     role VARCHAR(20) NOT NULL CHECK (role IN ('admin', 'user')),
-     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-
 
 -- category
 CREATE TABLE category (
@@ -68,6 +67,25 @@ CREATE TABLE card (
     graph_id INTEGER REFERENCES graphs(id) ON DELETE SET NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- marker
+CREATE TABLE marker (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    description TEXT NOT NULL,
+    category_id INTEGER REFERENCES category(id) ON DELETE SET NULL,
+    latitude DECIMAL(9,6),
+    longitude DECIMAL(9,6),
+    is_public BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- tags
+CREATE TABLE tags (
+    id SERIAL PRIMARY KEY,
+    title  VARCHAR(255) NOT NULL UNIQUE
 );
 
 INSERT INTO category (title, color) VALUES

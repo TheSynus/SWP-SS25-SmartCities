@@ -1,0 +1,14 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "SmartCitiesDB",
+      "Group": "Servers",
+      "Host": "postgres",
+      "Port": 5432,
+      "MaintenanceDB": "webportal",
+      "Username": "admin",
+      "Password": "Admin!1234",
+      "SSLMode": "prefer"
+    }
+  }
+}
