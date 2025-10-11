@@ -128,6 +128,13 @@ Routen zur Interaktion mit der zugrundeliegenden Datenbank, stellen grundlegende
 * **/events** Verwaltung von Events.
 * **/images** Verwaltung von Bildern.
 * **/graphs** Verwaltung von Graphen. Bietet einen speziellen POST /graphs/uploadJson Endpunkt, um einen Graphen inklusive aller seiner Datenpunkte in einer einzigen Anfrage zu erstellen.
+* **/marker** Verwaltung von Events.
+  | Methode | Endpunkt | Beschreibung |
+  | ------- | -------- | ------------ |
+  | POST | /marker/uploadJson | Erstellt neuen Marker |
+  | GET | /marker/ | Liefert alle Marker zurück
+  | GET | /marker/:id | Liefert Marker basierend auf einer ID zurück
+  | DELETE | /marker/:id | Löscht einen Marker basierend auf der ID
 
 **Beispiel für das Testen mit cURL:**
 
