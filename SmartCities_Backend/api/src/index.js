@@ -13,6 +13,7 @@ const categoryRouter = require('./router/categoryRouter.js');
 const appointmentRouter = require('./router/appointmentRouter.js');
 const cardsRouter = require('./router/cardsRouter.js');
 const graphsRouter = require('./router/graphsRouter.js');
+const markerRouter = require('./router/markerRouter.js');
 
 dotenv.config();
 
@@ -44,6 +45,7 @@ app.use('/categorys', categoryRouter);
 app.use('/appointments', appointmentRouter);
 app.use('/cards', cardsRouter)
 app.use('/graphs', graphsRouter);
+app.use('/marker', markerRouter);
 app.use('/setup/', setupRouter(configValues, { getCityToPLZ, writeValueToJSON }));
 app.use('/nina/', ninaRouter(configValues, { getJSONContent }));
 app.use('/weather/', weatherRouter(configValues, {}));

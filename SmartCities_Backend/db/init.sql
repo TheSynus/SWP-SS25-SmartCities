@@ -83,10 +83,10 @@ CREATE TABLE marker (
 );
 
 -- tags
-CREATE TABLE tags (
-    id SERIAL PRIMARY KEY,
-    title  VARCHAR(255) NOT NULL UNIQUE
-);
+--CREATE TABLE tags (
+--    id SERIAL PRIMARY KEY,
+--    title  VARCHAR(255) NOT NULL UNIQUE
+--);
 
 INSERT INTO category (title, color) VALUES
 ('Verwaltung', '#FF5733'),

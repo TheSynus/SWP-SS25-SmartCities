@@ -1,0 +1,8 @@
+{
+  "name": "Hamburger Rathaus",
+  "description": "Historisches Gebäude im Zentrum Hamburgs",
+  "category_id": 3,
+  "latitude": 53.5511,
+  "longitude": 9.9937,
+  "is_public": true
+}

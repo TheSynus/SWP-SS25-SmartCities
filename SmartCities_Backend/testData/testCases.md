@@ -55,3 +55,29 @@ Eine Kachel (kein Graph) löschen
 ```Bash
 curl.exe -X DELETE http://localhost:3000/cards/1
 ```
+
+# Marker Router
+
+## Daten Speichern
+```Bash
+curl.exe -X POST "http://localhost:3000/marker/uploadJson" -H "Content-Type: application/json" -d "@testData/validMarker.json"
+```
+
+## Daten laden
+
+Alle verfügbaren Cards abrufen:
+```Bash
+curl.exe -X GET "http://localhost:3000/marker" | ConvertFrom-Json | ConvertTo-Json
+```
+
+Einen bestimmen Marker abrufen:
+```bash
+curl.exe -X GET "http://localhost:3000/marker/1" | ConvertFrom-Json | ConvertTo-Json
+```
+
+## Daten löschen
+
+Eine Kachel (kein Graph) löschen
+```Bash
+curl.exe -X DELETE "http://localhost:3000/marker/1"
+```
