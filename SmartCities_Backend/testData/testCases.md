@@ -75,6 +75,11 @@ Einen bestimmen Marker abrufen:
 curl.exe -X GET "http://localhost:3000/marker/1" | ConvertFrom-Json | ConvertTo-Json
 ```
 
+## Daten ändern
+```bash
+curl.exe -X PATCH "http://localhost:3000/marker/1" -H "Content-Type: application/json" -d "@testData/validMarker.json"
+```
+
 ## Daten löschen
 
 Eine Kachel (kein Graph) löschen

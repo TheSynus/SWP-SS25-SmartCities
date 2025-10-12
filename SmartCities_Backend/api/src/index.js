@@ -39,11 +39,11 @@ const configValues = {
 };
 
 // Verfügbare BackEnd-Routen
-app.use('/images/', imagesRouter)
-app.use('/events/', eventsRouter)
+app.use('/images/', imagesRouter);
+app.use('/events/', eventsRouter);
 app.use('/categorys', categoryRouter);
 app.use('/appointments', appointmentRouter);
-app.use('/cards', cardsRouter)
+app.use('/cards', cardsRouter);
 app.use('/graphs', graphsRouter);
 app.use('/marker', markerRouter);
 app.use('/setup/', setupRouter(configValues, { getCityToPLZ, writeValueToJSON }));

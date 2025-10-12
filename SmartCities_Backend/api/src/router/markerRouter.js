@@ -4,40 +4,22 @@ const Ajv = require('ajv');
 const router = express.Router();
 const ajv = new Ajv();
 
+
+/*##############################---Routen---##############################*/
+
 /*
 -- Routen zum validieren und Speichern von neuen Markern
 */
 router.post("/uploadJson", async (req, res) => {
 
-    //Speichern aller aktuell verfügbaren Kategorien für Validierung
-    const { rows } = await pool.query('SELECT id FROM category');
-    const allowedCategorys = rows.map(r => r.id);
-
-    // JSON-Schema für den Upload
-    const uploadSchema = {
-        type: "object",
-        properties: {
-            name: { type: "string" },
-            description: { type: "string" },
-            category_id: { type: "number", enum: allowedCategorys },
-            latitude: { type: "number", minimum: -90, maximum: 90 },
-            longitude: { type: "number", minimum: -180, maximum: 180 },
-            is_public: { type: "boolean" },
-        },
-        required: ["name", "description", "category_id", "latitude", "longitude"],
-        additionalProperties: false,
-    }
-
-    // AJV Kompilieren und Validieren
-    const validateGraphUpload = ajv.compile(uploadSchema)
-    const valid = validateGraphUpload(req.body)
+    const validation = await validateJSON(req.body, 'create');
 
     //Bei fehlgeschlagener Validierung
-    if (!valid) {
+    if (!validation.valid) {
         return res.status(400).json({
             status: "error",
             message: "Ungültige Daten",
-            errors: validateGraphUpload.errors,
+            errors: validation.errors,
         })
     }
 
@@ -91,22 +73,111 @@ router.get('/:id', async (req, res) => {
 });
 
 /*
--- Routen zum Löschen eines Markers
+-- Route zum Aktualisieren eines Markers 
 */
-router.delete('/:id', async (req, res) => {
+router.patch('/:id', async (req, res) => {
   const { id } = req.params;
-  try {
-    const marker = await pool.query("DELETE FROM marker WHERE id = $1", [id]);
 
-    if (marker.rowCount === 0) {
+  const validation = await validateJSON(req.body, 'create');
+
+  if (!validation.valid) {
+    return res.status(400).json({
+      status: 'error',
+      message: 'Ungültige Daten',
+      errors: validation.errors,
+    });
+  }
+
+  const { name, description, category_id, latitude, longitude, is_public } = req.body;
+
+  try {
+    const result = await pool.query(
+      `UPDATE marker
+       SET name = $1,
+           description = $2,
+           category_id = $3,
+           latitude = $4,
+           longitude = $5,
+           is_public = $6,
+           updated_at = CURRENT_TIMESTAMP
+       WHERE id = $7`,
+      [name, description, category_id, latitude, longitude, is_public || false, id]
+    );
+
+    if (result.rowCount === 0) {
       return res.status(404).json({ error: 'Marker nicht gefunden' });
     }
 
-    res.json({ status: 'success', message: `Marker ${id} gelöscht` });
+    res.json({ status: 'success', message: `Marker ${id} aktualisiert` });
   } catch (err) {
-    console.error('Fehler beim Löschen des Markers:', err.message);
-    res.status(500).json({ error: 'Serverfehler beim Löschen des Markers' });
+    console.error('Fehler beim Aktualisieren des Markers:', err.message);
+    res
+      .status(500)
+      .json({ error: 'Serverfehler beim Aktualisieren des Markers' });
   }
 });
+
+/*
+-- Route zum Löschen eines Markers
+*/
+router.delete('/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const marker = await pool.query("DELETE FROM marker WHERE id = $1", [id]);
+
+        if (marker.rowCount === 0) {
+            return res.status(404).json({ error: 'Marker nicht gefunden' });
+        }
+
+        res.json({ status: 'success', message: `Marker ${id} gelöscht` });
+    } catch (err) {
+        console.error('Fehler beim Löschen des Markers:', err.message);
+        res.status(500).json({ error: 'Serverfehler beim Löschen des Markers' });
+    }
+});
+
+/*##############################---Hilfsmethoden---##############################*/
+
+async function validateJSON(data, mode = 'create') {
+    try {
+        //Speichern aller aktuell verfügbaren Kategorien für Validierung
+        const { rows } = await pool.query('SELECT id FROM category');
+        const allowedCategorys = rows.map(r => r.id);
+
+        // JSON-Schema für den Upload
+        const uploadSchema = {
+            type: "object",
+            properties: {
+                name: { type: "string" },
+                description: { type: "string" },
+                category_id: { type: "number", enum: allowedCategorys },
+                latitude: { type: "number", minimum: -90, maximum: 90 },
+                longitude: { type: "number", minimum: -180, maximum: 180 },
+                is_public: { type: "boolean" },
+            },
+            required: ["name", "description", "category_id", "latitude", "longitude"],
+            additionalProperties: false,
+        }
+
+        // AJV Kompilieren und Validieren
+        const validateGraphUpload = ajv.compile(uploadSchema)
+        const valid = validateGraphUpload(data)
+
+         if (!valid) {
+             return { 
+                valid: false, 
+                errors: validateGraphUpload.errors 
+            };
+         }
+
+         return { valid: true };
+    } catch (err) {
+        console.error('Fehler bei validateMarkerJSON:', err.message);
+        return { 
+            valid: false, 
+            errors: [{ message: 'Validator-Fehler im Server' }] 
+        };
+    }
+}
 
 module.exports = router;
