@@ -5,47 +5,18 @@ const Ajv = require('ajv');
 const router = express.Router();
 const ajv = new Ajv();
 
-// JSON-Schema für den Upload
-const graphUploadSchema = {
-    type: "object",
-    properties: {
-        title: { type: "string" },
-        type: { type: "string", enum: ["line", "bar", "pie", "column"] },
-        points: {
-            type: "array",
-            minItems: 1,
-            maxItems: 10000,
-            items: {
-                type: "object",
-                properties: {
-                    x_comp: { type: "string" },
-                    y_comp: { type: "string" },
-                },
-                required: ["x_comp", "y_comp"],
-                additionalProperties: false,
-            },
-        },
-    },
-    required: ["type", "points"],
-    additionalProperties: false,
-}
-
-// AJV Validator erstellen
-const validateGraphUpload = ajv.compile(graphUploadSchema)
-
 /*
 Routen zum validieren und Speichern von neuen Graphen inkl. Daten
 */
 router.post("/uploadJson", async (req, res) => {
-    //Validierung der JSON-Daten gegen das erstellte JSON-Schema
-    const valid = validateGraphUpload(req.body)
+    const validation = await validateJSON(req.body, 'upload');
 
     //Bei fehlgeschlagener Validierung
-    if (!valid) {
+    if (!validation.valid) {
         return res.status(400).json({
             status: "error",
             message: "Ungültige Daten",
-            errors: validateGraphUpload.errors,
+            errors: validation.errors,
         })
     }
 
@@ -81,11 +52,22 @@ router.post("/uploadJson", async (req, res) => {
     }
 })
 
+/*
+Route zum Erstellen eines Graphen (nur Metadaten)
+*/
 router.post('/', async (req, res) => {
-    const { title, type } = req.body;
-    if (!title || !type) {
-        return res.status(400).json({ error: "Titel und Typ sind Pflichtfelder." });
+    const validation = await validateJSON(req.body, 'metadata');
+
+    //Bei fehlgeschlagener Validierung
+    if (!validation.valid) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Ungültige Daten',
+        errors: validation.errors,
+      });
     }
+
+    const { title, type } = req.body;
 
     try {
         const newGraph = await pool.query(
@@ -106,7 +88,6 @@ router.get('/', async (req, res) => {
     try {
         const allGraphs = await pool.query("SELECT * FROM graphs ORDER BY title ASC");
         res.status(200).json(allGraphs.rows);
-        console.log('graphsRouter Test');
     } catch (err) {
         console.error("Fehler beim Abrufen der Graphen:", err.message);
         res.status(500).json({ error: "Serverfehler beim Abrufen der Graphen." });
@@ -130,7 +111,6 @@ router.get('/:id', async (req, res) => {
             [id]
         );
 
-
         const result = {
             ...graph,
             data_points: dataPointsRes.rows
@@ -144,6 +124,45 @@ router.get('/:id', async (req, res) => {
 });
 
 /*
+Route zum Aktualisieren eines Graphen (Metadaten)
+*/
+router.patch('/:id', async (req, res) => {
+  const { id } = req.params;
+
+  const validation = await validateJSON(req.body, 'metadata');
+
+  //Bei fehlgeschlagener Validierung
+  if (!validation.valid) {
+    return res.status(400).json({
+      status: 'error',
+      message: 'Ungültige Daten',
+      errors: validation.errors,
+    });
+  }
+
+  const { title, type } = req.body;
+
+  try {
+    const result = await pool.query(
+      'UPDATE graphs SET title = $1, type = $2 WHERE id = $3 RETURNING *',
+      [title, type, id]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Graph nicht gefunden' });
+    }
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('Fehler beim Aktualisieren des Graphen:', err.message);
+    res
+      .status(500)
+      .json({ error: 'Serverfehler beim Aktualisieren des Graphen' });
+  }
+});
+
+
+/*
 Routen zum löschen eines Graphen inkl. Daten
 */
 router.delete('/:id', async (req, res) => {
@@ -152,11 +171,10 @@ router.delete('/:id', async (req, res) => {
                    
         const result = await pool.query('DELETE FROM graphs WHERE id = $1', [id]);
 
-        //Prüfung, ob das Löschen erfolgreich war
         if (result.rowCount === 0) {
             return res.status(404).json({ error: "Graph nicht gefunden." });
         } else {
-            res.status(204).json
+            res.status(204).send(); 
         }
     } catch (err) {
         console.error("Fehler beim Löschen des Graphen:", err.message);
@@ -164,6 +182,9 @@ router.delete('/:id', async (req, res) => {
     }
 });
 
+/*
+Route zum Hinzufügen von Datenpunkten
+*/
 router.post('/:id/data', async (req, res) => {
     const { id: graph_id } = req.params;
     const { x_comp, y_comp } = req.body;
@@ -186,5 +207,71 @@ router.post('/:id/data', async (req, res) => {
         res.status(500).json({ error: "Serverfehler beim Hinzufügen des Datenpunktes." });
     }
 });
+
+
+/*##############################---Hilfsmethoden---##############################*/
+
+async function validateJSON(data, mode = 'metadata') {
+    try {
+        // JSON-Schema für den Upload (inkl. Datenpunkte)
+        const graphUploadSchema = {
+            type: "object",
+            properties: {
+                title: { type: "string" },
+                type: { type: "string", enum: ["line", "bar", "pie", "column"] },
+                points: {
+                    type: "array",
+                    minItems: 1,
+                    maxItems: 10000,
+                    items: {
+                        type: "object",
+                        properties: {
+                            x_comp: { type: "string" },
+                            y_comp: { type: "string" },
+                        },
+                        required: ["x_comp", "y_comp"],
+                        additionalProperties: false,
+                    },
+                },
+            },
+            required: ["type", "points"],
+            additionalProperties: false,
+        }
+
+        // JSON-Schema nur für Graph-Metadaten (Titel, Typ)
+        const graphMetadataSchema = {
+            type: 'object',
+            properties: {
+                title: { type: 'string', minLength: 1 },
+                type: { type: 'string', enum: ['line', 'bar', 'pie', 'column'] },
+            },
+            required: ['title', 'type'],
+            additionalProperties: false,
+        };
+
+        // Wähle das Schema basierend auf dem Modus
+        const schema = (mode === 'upload') ? graphUploadSchema : graphMetadataSchema;
+
+        // AJV Kompilieren und Validieren
+        const validate = ajv.compile(schema)
+        const valid = validate(data)
+
+         if (!valid) {
+             return { 
+                valid: false, 
+                errors: validate.errors 
+            };
+         }
+
+         return { valid: true };
+    } catch (err) {
+        console.error('Fehler bei validateJSON (graphs):', err.message);
+        return { 
+            valid: false, 
+            errors: [{ message: 'Validator-Fehler im Server' }] 
+        };
+    }
+}
+
 
 module.exports = router;

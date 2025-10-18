@@ -1,16 +1,27 @@
 const express = require('express');
 const pool = require('../db.js');
+const Ajv = require('ajv'); 
+const addFormats = require('ajv-formats'); 
 
 const router = express.Router();
+const ajv = new Ajv(); 
+addFormats(ajv); 
 
-
-
+/*
+-- Route zum Erstellen eines Termins
+*/
 router.post('/', async (req, res) => {
-    const { title, start_time, end_time, location, category_id, recurrence, description } = req.body;
-
-    if (!title || !start_time || !end_time || !category_id) {
-        return res.status(400).json({ error: "Titel, Startzeit, Endzeit und Kategorie-ID sind Pflichtfelder." });
+    
+    const validation = await validateJSON(req.body);
+    if (!validation.valid) {
+        return res.status(400).json({
+            status: "error",
+            message: "Ungültige Daten",
+            errors: validation.errors,
+        });
     }
+
+    const { title, start_time, end_time, location, category_id, recurrence, description } = req.body;
 
     try {
         const newAppointment = await pool.query(
@@ -21,7 +32,6 @@ router.post('/', async (req, res) => {
         );
 
         res.status(201).json(newAppointment.rows[0]);
-        console.log("Neuer Termin erstellt:", newAppointment.rows[0].title);
 
     } catch (err) {
         console.error("Fehler beim Erstellen des Termins:", err.message);
@@ -29,7 +39,9 @@ router.post('/', async (req, res) => {
     }
 });
 
-
+/*
+-- Route zum Abrufen aller Termine
+*/
 router.get('/', async (req, res) => {
     try {
         const allAppointments = await pool.query(
@@ -49,7 +61,6 @@ router.get('/', async (req, res) => {
         );
 
         res.status(200).json(allAppointments.rows);
-        console.log("AppointmentRouter Good");
 
     } catch (err) {
         console.error("Fehler beim Abrufen der Termine:", err.message);
@@ -57,15 +68,24 @@ router.get('/', async (req, res) => {
     }
 });
 
-router.put('/:id', async (req, res) => {
+/*
+-- Route zum Aktualisieren eines Termins (wurde von PUT zu PATCH geändert)
+*/
+router.patch('/:id', async (req, res) => {
+    const { id } = req.params;
+
+    const validation = await validateJSON(req.body);
+    if (!validation.valid) {
+        return res.status(400).json({
+            status: "error",
+            message: "Ungültige Daten",
+            errors: validation.errors,
+        });
+    }
+    
+    const { title, start_time, end_time, location, category_id, recurrence, description } = req.body;
+
     try {
-        const { id } = req.params;
-        const { title, start_time, end_time, location, category_id, recurrence, description } = req.body;
-
-        if (!title || !start_time || !end_time || !category_id) {
-            return res.status(400).json({ error: "Titel, Startzeit, Endzeit und Kategorie-ID sind Pflichtfelder." });
-        }
-
         const updatedAppointment = await pool.query(
             `UPDATE appointments 
              SET title = $1, start_time = $2, end_time = $3, location = $4, category_id = $5, recurrence = $6, description = $7, updated_at = NOW() 
@@ -86,7 +106,9 @@ router.put('/:id', async (req, res) => {
     }
 });
 
-
+/*
+-- Route zum Löschen eines Termins
+*/
 router.delete('/:id', async (req, res) => {
     try {
         const { id } = req.params;
@@ -103,5 +125,50 @@ router.delete('/:id', async (req, res) => {
         res.status(500).json({ error: "Serverfehler beim Löschen des Termins." });
     }
 });
+
+
+/*##############################---Hilfsmethoden---##############################*/
+
+async function validateJSON(data) {
+    try {
+        //Speichern aller aktuell verfügbaren Kategorien für Validierung
+        const { rows } = await pool.query('SELECT id FROM category');
+        const allowedCategorys = rows.map(r => r.id);
+
+        // JSON-Schema für einen Termin
+        const appointmentSchema = {
+            type: "object",
+            properties: {
+                title: { type: "string", minLength: 1 },
+                start_time: { type: "string", format: "date-time" }, // Validiert ISO 8601 Datum
+                end_time: { type: "string", format: "date-time" },
+                location: { type: "string" },
+                category_id: { type: "number", enum: allowedCategorys }, 
+                recurrence: { type: "string", enum: ['none', 'daily', 'weekly', 'monthly', 'yearly'] },
+                description: { type: "string" }
+            },
+            required: ["title", "start_time", "end_time", "category_id"],
+            additionalProperties: false,
+        }
+
+        const validate = ajv.compile(appointmentSchema)
+        const valid = validate(data)
+
+         if (!valid) {
+             return { 
+                valid: false, 
+                errors: validate.errors 
+            };
+         }
+
+         return { valid: true };
+    } catch (err) {
+        console.error('Fehler bei validateJSON (appointment):', err.message);
+        return { 
+            valid: false, 
+            errors: [{ message: 'Validator-Fehler im Server' }] 
+        };
+    }
+}
 
 module.exports = router;
