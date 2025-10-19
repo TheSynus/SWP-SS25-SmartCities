@@ -1,0 +1,9 @@
+{
+  "title": "Wichtiger Test-Termin",
+  "start_time": "2025-10-30T10:00:00.000Z",
+  "end_time": "2025-10-30T11:00:00.000Z",
+  "location": "Büro",
+  "category_id": 1,
+  "recurrence": "none",
+  "description": "Testbeschreibung"
+}
