@@ -10,7 +10,7 @@ const ajv = new Ajv();
 /*
 -- Routen zum validieren und Speichern von neuen Markern
 */
-router.post("/uploadJson", async (req, res) => {
+router.post("/", async (req, res) => {
 
     const validation = await validateJSON(req.body, 'create');
 
