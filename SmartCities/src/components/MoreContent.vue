@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 type RouteTargets =
@@ -44,15 +44,40 @@ const errors = computed(() => {
 
 const formValid = computed(() => !errors.value.name && !errors.value.email && !errors.value.message)
 
+// Helper: Formular zurücksetzen
+function resetContactForm(resetFields = true) {
+  formTouched.value = false
+  if (resetFields) {
+    name.value = ''
+    email.value = ''
+    message.value = ''
+  }
+}
+
+// Modal kontrolliert öffnen/schließen
+function openContactModal() {
+  resetContactForm(true)
+  contactOpen.value = true
+}
+function closeContactModal() {
+  contactOpen.value = false
+  resetContactForm(true)
+}
+
+// Beim Öffnen des Modals Fehlermeldungen zurücksetzen
+watch(contactOpen, (isOpen) => {
+  if (isOpen) formTouched.value = false
+})
+
 function go(target: 'settings' | 'imprint' | 'contact') {
   emit('navigate', target)
   const r = props.routes
   if (!r) {
-    if (target === 'contact') contactOpen.value = true
+    if (target === 'contact') openContactModal()
     return
   }
   if (target === 'contact' && props.useModalForContact !== false) {
-    contactOpen.value = true
+    openContactModal()
     return
   }
 
@@ -64,7 +89,7 @@ function go(target: 'settings' | 'imprint' | 'contact') {
     } as const
     const routeName = nameMap[target]
     if (routeName) router.push({ name: routeName }).catch(() => {})
-    else if (target === 'contact') contactOpen.value = true
+    else if (target === 'contact') openContactModal()
   } else {
     const pathMap = {
       settings: r.settings,
@@ -73,7 +98,7 @@ function go(target: 'settings' | 'imprint' | 'contact') {
     } as const
     const path = pathMap[target]
     if (path) router.push(path).catch(() => {})
-    else if (target === 'contact') contactOpen.value = true
+    else if (target === 'contact') openContactModal()
   }
 }
 
@@ -82,13 +107,8 @@ async function submitContact() {
   if (!formValid.value) return
   try {
     sending.value = true
-    // await api.post('/contact', { name: name.value, email: email.value, message: message.value })
     emit('submitContact', { name: name.value.trim(), email: email.value.trim(), message: message.value.trim() })
-    contactOpen.value = false
-    name.value = ''
-    email.value = ''
-    message.value = ''
-    formTouched.value = false
+    closeContactModal()
   } finally {
     sending.value = false
   }
@@ -115,7 +135,6 @@ async function submitContact() {
       >
         <div class="flex items-center gap-3">
           <div class="rounded-xl p-2 bg-gray-700 group-hover:bg-gray-600 transition-colors">
-            <!-- cog icon -->
             <svg class="w-6 h-6 text-gray-200" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
                 d="M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6Zm8.66 3a8.66 8.66 0 0 0-.17-1.73l2.03-1.58-2-3.46-2.43.97a8.6 8.6 0 0 0-1.5-.87L14.5 2h-5l-.99 2.33c-.52.2-1.02.45-1.5.74l-2.5-1-2 3.46 2.04 1.6c-.08.56-.13 1.13-.13 1.7s.05 1.14.15 1.7l-2.06 1.6 2 3.46 2.49-1a8.6 8.6 0 0 0 1.5.86L9.5 22h5l.99-2.34c.52-.2 1.02-.45 1.5-.74l2.5 1 2-3.46-2.04-1.6c.1-.56.15-1.13.15-1.7Z" />
@@ -136,7 +155,6 @@ async function submitContact() {
       >
         <div class="flex items-center gap-3">
           <div class="rounded-xl p-2 bg-gray-700 group-hover:bg-gray-600 transition-colors">
-            <!-- document icon -->
             <svg class="w-6 h-6 text-gray-200" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
                 d="M7 3h7l5 5v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Zm7 0v6h6" />
@@ -157,7 +175,6 @@ async function submitContact() {
       >
         <div class="flex items-center gap-3">
           <div class="rounded-xl p-2 bg-gray-700 group-hover:bg-gray-600 transition-colors">
-            <!-- mail icon -->
             <svg class="w-6 h-6 text-gray-200" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
                 d="M4 6h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1Zm0 2 8 5 8-5" />
@@ -173,90 +190,86 @@ async function submitContact() {
 
     <!-- Kontaktformular Modal -->
     <div class="relative">
-    <div
-      v-if="contactOpen"
-      class="absolute inset-0 z-20 flex items-center justify-center p-4 h-full"
-      aria-modal="true"
-      role="dialog"
-    >
-      
       <div
-        class="relative w-full max-w-lg rounded-2xl bg-gray-800 border border-gray-700 shadow-xl"
+        v-if="contactOpen"
+        class="absolute inset-0 z-20 flex items-center justify-center p-4 h-full"
+        aria-modal="true"
+        role="dialog"
       >
-        <header class="flex items-center justify-between p-4 border-b border-gray-700">
-          <h3 class="text-lg font-semibold text-gray-100">Kontaktformular</h3>
-          <button
-            type="button"
-            class="p-2 rounded-lg hover:bg-gray-700 text-gray-300"
-            @click="contactOpen = false"
-            aria-label="Modal schließen"
-          >
-            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                d="m6 6 12 12M6 18 18 6" />
-            </svg>
-          </button>
-        </header>
-
-        <form class="p-4 space-y-4" @submit.prevent="submitContact">
-          <!-- Name -->
-          <div>
-            <label class="block text-sm font-medium text-gray-200">Name</label>
-            <input
-              v-model="name"
-              type="text"
-              class="mt-1 w-full rounded-lg border border-gray-700 bg-gray-900 text-gray-100 placeholder-gray-500 focus:border-blue-500 focus:ring-blue-500"
-            />
-            <p v-if="formTouched && errors.name" class="mt-1 text-sm text-red-400">{{ errors.name }}</p>
-          </div>
-
-          <!-- E-Mail -->
-          <div>
-            <label class="block text-sm font-medium text-gray-200">E-Mail</label>
-            <input
-              v-model="email"
-              type="email"
-              class="mt-1 w-full rounded-lg border border-gray-700 bg-gray-900 text-gray-100 placeholder-gray-500 focus:border-blue-500 focus:ring-blue-500"
-            />
-            <p v-if="formTouched && errors.email" class="mt-1 text-sm text-red-400">{{ errors.email }}</p>
-          </div>
-
-          <!-- Nachricht -->
-          <div>
-            <label class="block text-sm font-medium text-gray-200">Nachricht</label>
-            <textarea
-              v-model="message"
-              rows="4"
-              class="mt-1 w-full rounded-lg border border-gray-700 bg-gray-900 text-gray-100 placeholder-gray-500 focus:border-blue-500 focus:ring-blue-500"
-            />
-            <p v-if="formTouched && errors.message" class="mt-1 text-sm text-red-400">{{ errors.message }}</p>
-          </div>
-
-          <div class="flex items-center justify-end gap-2 pt-2">
+        <div class="relative w-full max-w-lg rounded-2xl bg-gray-800 border border-gray-700 shadow-xl">
+          <header class="flex items-center justify-between p-4 border-b border-gray-700">
+            <h3 class="text-lg font-semibold text-gray-100">Kontaktformular</h3>
             <button
               type="button"
-              class="px-4 py-2 rounded-lg border border-gray-600 text-gray-100 hover:bg-gray-700"
-              @click="contactOpen = false"
+              class="p-2 rounded-lg hover:bg-gray-700 text-gray-300"
+              @click="closeContactModal"
+              aria-label="Modal schließen"
             >
-              Abbrechen
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  d="m6 6 12 12M6 18 18 6" />
+              </svg>
             </button>
-            <button
-              type="submit"
-              :disabled="sending"
-              class="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {{ sending ? 'Senden…' : 'Senden' }}
-            </button>
-          </div>
-        </form>
+          </header>
+
+          <form class="p-4 space-y-4" @submit.prevent="submitContact">
+            <div>
+              <label class="block text-sm font-medium text-gray-200">Name</label>
+              <input
+                v-model="name"
+                type="text"
+                class="mt-1 w-full rounded-lg border border-gray-700 bg-gray-900 text-gray-100 placeholder-gray-500 focus:border-blue-500 focus:ring-blue-500"
+              />
+              <p v-if="formTouched && errors.name" class="mt-1 text-sm text-red-400">{{ errors.name }}</p>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-200">E-Mail</label>
+              <input
+                v-model="email"
+                type="email"
+                class="mt-1 w-full rounded-lg border border-gray-700 bg-gray-900 text-gray-100 placeholder-gray-500 focus:border-blue-500 focus:ring-blue-500"
+              />
+              <p v-if="formTouched && errors.email" class="mt-1 text-sm text-red-400">{{ errors.email }}</p>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-200">Nachricht</label>
+              <textarea
+                v-model="message"
+                rows="4"
+                class="mt-1 w-full rounded-lg border border-gray-700 bg-gray-900 text-gray-100 placeholder-gray-500 focus:border-blue-500 focus:ring-blue-500"
+              />
+              <p v-if="formTouched && errors.message" class="mt-1 text-sm text-red-400">{{ errors.message }}</p>
+            </div>
+
+            <div class="flex items-center justify-end gap-2 pt-2">
+              <button
+                type="button"
+                class="px-4 py-2 rounded-lg border border-gray-600 text-gray-100 hover:bg-gray-700"
+                @click="closeContactModal"
+              >
+                Abbrechen
+              </button>
+              <button
+                type="submit"
+                :disabled="sending"
+                class="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {{ sending ? 'Senden…' : 'Senden' }}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
-    </div>
     </div>
   </section>
 </template>
 
 <style scoped>
-button, input, textarea {
+button,
+input,
+textarea {
   -webkit-tap-highlight-color: transparent;
 }
 </style>
