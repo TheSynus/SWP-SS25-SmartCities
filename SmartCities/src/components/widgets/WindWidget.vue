@@ -12,7 +12,6 @@ import {
 // Store-Funktion zum Laden
 const { getCurrentWind } = useWeatherStore()
 
-// Alias-Refs für Template-Komfort (optional)
 const isLoading = weatherIsLoading
 const error = weatherError
 const data = weatherData as unknown as { value: WeatherPayload | null }
@@ -62,7 +61,7 @@ onMounted(getCurrentWind)
         </div>
       </div>
 
-      <!-- Rechts: Kompass (etwas tiefer gesetzt) -->
+      <!-- Rechts: Kompass -->
       <div class="relative sm:mt-8 lg:mt-10">
         <div class="relative w-28 h-28 rounded-full border border-white/20 grid place-items-center">
           <!-- Außenring -->
@@ -105,7 +104,7 @@ onMounted(getCurrentWind)
 </template>
 
 <style scoped>
-/* Optional: subtiler Glow fürs Kompass-Zentrum */
+/*  subtiler Glow fürs Kompass-Zentrum */
 svg circle {
   filter: drop-shadow(0 0 2px rgba(255,255,255,0.25));
 }

@@ -24,14 +24,10 @@ const isActive = (tabName: string) => {
 <template>
   <div
     :class="[
-      // Basis
       'inset-x-0 bottom-0 z-50 w-full h-16 border-t',
-      // leichte Transparenz + Blur (nett, aber optional)
       'bg-white/90 dark:bg-gray-900/90 supports-[backdrop-filter]:bg-white/70 supports-[backdrop-filter]:dark:bg-gray-900/70 backdrop-blur',
       'border-gray-200 dark:border-gray-700',
-      // Safe area
       'pb-[env(safe-area-inset-bottom)]',
-      // Positionierung
       position === 'fixed'
         ? 'fixed'
         : position === 'absolute'

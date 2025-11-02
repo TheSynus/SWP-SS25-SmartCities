@@ -11,7 +11,6 @@ import type { Graph } from '@/models/graph'
 let addIndex = 0
 const isModalVisible = ref(false)
 
-// Store verwenden - cards ist jetzt reaktiv!
 const { getCards, addCard, deleteCard, reorderCards, updateCard } = useCardStore()
 
 const handleAddCardClick = (index: number) => {
@@ -21,7 +20,6 @@ const handleAddCardClick = (index: number) => {
 
 const handleDefaultCardAdd = (cardData: { id: number; title: string; type: string }) => {
 
-  // Store Aufruf - cards wird automatisch aktualisiert
   addCard(cardData.title, cardData.type, addIndex, null)
 
   hideModal()

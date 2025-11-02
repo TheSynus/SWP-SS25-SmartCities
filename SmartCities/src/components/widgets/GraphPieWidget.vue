@@ -65,10 +65,8 @@ const options = {
 const { getDataForGraph } = useGraphStore()
 
 onMounted(() => {
-  // Verwende die Template Ref anstatt getElementById
   if (chartRef.value && typeof ApexCharts !== 'undefined') {
     if (props.graph_id !== undefined) {
-      // Graph Id gefüllt -> Daten müssen geholt werden
       getDataForGraph(props.graph_id).then((res) => {
         options.series = res.map((dat) => +dat.y_comp)
 
