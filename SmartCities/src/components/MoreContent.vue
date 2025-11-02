@@ -1,4 +1,3 @@
-<!-- MehrTab.vue (dark mode + stacked layout) -->
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
@@ -98,7 +97,7 @@ async function submitContact() {
 
 <template>
   <!-- Force Dark Mode inside the component -->
-  <section class="dark w-full h-full bg-gray-900 text-gray-100">
+  <section class="relative dark w-full h-full bg-gray-900 text-gray-100">
     <header class="mb-4">
       <h2 class="text-2xl font-semibold text-gray-100">
         {{ props.title ?? 'Mehr' }}
@@ -173,14 +172,17 @@ async function submitContact() {
     </div>
 
     <!-- Kontaktformular Modal -->
+    <div class="relative">
     <div
       v-if="contactOpen"
-      class="fixed inset-0 z-50 flex items-center justify-center p-4"
+      class="absolute inset-0 z-20 flex items-center justify-center p-4 h-full"
       aria-modal="true"
       role="dialog"
     >
-      <div class="absolute inset-0 bg-black/60" @click="contactOpen = false" />
-      <div class="relative w-full max-w-lg rounded-2xl bg-gray-800 border border-gray-700 shadow-xl">
+      
+      <div
+        class="relative w-full max-w-lg rounded-2xl bg-gray-800 border border-gray-700 shadow-xl"
+      >
         <header class="flex items-center justify-between p-4 border-b border-gray-700">
           <h3 class="text-lg font-semibold text-gray-100">Kontaktformular</h3>
           <button
@@ -197,46 +199,37 @@ async function submitContact() {
         </header>
 
         <form class="p-4 space-y-4" @submit.prevent="submitContact">
+          <!-- Name -->
           <div>
             <label class="block text-sm font-medium text-gray-200">Name</label>
             <input
               v-model="name"
               type="text"
               class="mt-1 w-full rounded-lg border border-gray-700 bg-gray-900 text-gray-100 placeholder-gray-500 focus:border-blue-500 focus:ring-blue-500"
-              :aria-invalid="!!(formTouched && errors.name)"
-              :aria-errormessage="formTouched && errors.name ? 'err-name' : undefined"
             />
-            <p v-if="formTouched && errors.name" id="err-name" class="mt-1 text-sm text-red-400">
-              {{ errors.name }}
-            </p>
+            <p v-if="formTouched && errors.name" class="mt-1 text-sm text-red-400">{{ errors.name }}</p>
           </div>
 
+          <!-- E-Mail -->
           <div>
             <label class="block text-sm font-medium text-gray-200">E-Mail</label>
             <input
               v-model="email"
               type="email"
               class="mt-1 w-full rounded-lg border border-gray-700 bg-gray-900 text-gray-100 placeholder-gray-500 focus:border-blue-500 focus:ring-blue-500"
-              :aria-invalid="!!(formTouched && errors.email)"
-              :aria-errormessage="formTouched && errors.email ? 'err-email' : undefined"
             />
-            <p v-if="formTouched && errors.email" id="err-email" class="mt-1 text-sm text-red-400">
-              {{ errors.email }}
-            </p>
+            <p v-if="formTouched && errors.email" class="mt-1 text-sm text-red-400">{{ errors.email }}</p>
           </div>
 
+          <!-- Nachricht -->
           <div>
             <label class="block text-sm font-medium text-gray-200">Nachricht</label>
             <textarea
               v-model="message"
               rows="4"
               class="mt-1 w-full rounded-lg border border-gray-700 bg-gray-900 text-gray-100 placeholder-gray-500 focus:border-blue-500 focus:ring-blue-500"
-              :aria-invalid="!!(formTouched && errors.message)"
-              :aria-errormessage="formTouched && errors.message ? 'err-message' : undefined"
             />
-            <p v-if="formTouched && errors.message" id="err-message" class="mt-1 text-sm text-red-400">
-              {{ errors.message }}
-            </p>
+            <p v-if="formTouched && errors.message" class="mt-1 text-sm text-red-400">{{ errors.message }}</p>
           </div>
 
           <div class="flex items-center justify-end gap-2 pt-2">
@@ -257,6 +250,7 @@ async function submitContact() {
           </div>
         </form>
       </div>
+    </div>
     </div>
   </section>
 </template>
