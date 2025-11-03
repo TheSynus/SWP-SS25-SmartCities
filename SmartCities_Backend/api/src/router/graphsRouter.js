@@ -55,6 +55,7 @@ router.post("/uploadJson", async (req, res) => {
 /*
 Route zum Erstellen eines Graphen (nur Metadaten)
 */
+/*
 router.post('/', async (req, res) => {
     const validation = await validateJSON(req.body, 'metadata');
 
@@ -80,7 +81,7 @@ router.post('/', async (req, res) => {
         res.status(500).json({ error: "Serverfehler beim Erstellen des Graphen." });
     }
 });
-
+*/
 /*
 Routen zum erhalten aller verfügbaren Graphen
 */
@@ -272,6 +273,5 @@ async function validateJSON(data, mode = 'metadata') {
         };
     }
 }
-
 
 module.exports = router;
