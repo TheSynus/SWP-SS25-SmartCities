@@ -132,7 +132,7 @@ const handleCardTitleChanged = (newTitle: string, cardId: number) => {
 
 <template>
   <ul class="flex flex-col items-center pt-10 pb-10 space-y-4 h-full">
-    <!-- Wenn Liste leer ist und showAddButtons true: nur ein Button zentriert -->
+    <!-- Wenn Liste leer ist und showAddButtons true -->
     <li
       v-if="props.showAddButtons && localCards.length === 0"
       class="flex justify-center items-center min-h-[200px]"
