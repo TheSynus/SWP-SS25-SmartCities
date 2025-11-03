@@ -1,13 +1,7 @@
-<!-- MapSearchPage.vue - WURZEL KOMPONENTE mit zentraler API-Verwaltung -->
 <template>
-  <div class="min-h-screen bg-gray-50 dark:bg-gray-900 pt-14 sm:pt-16 lg:pt-18">
-   
+    <div class="bg-gray-50 dark:bg-gray-900 pt-14 sm:pt-16 lg:pt-18 lg:flex lg:flex-1 lg:flex-row h-screen overflow-hidden">
     <!-- Main Content Container -->
-    <div class="h-[calc(100vh-3.5rem)] sm:h-[calc(100vh-4rem)] lg:h-[calc(100vh-4.5rem)] flex flex-col lg:flex-row">
-     
-
-    
-
+      <div class="flex-1 flex flex-col lg:flex-row gap-4 min-h-0">
       <!-- Map Section -->
       <MapSection
         :show="!showNewMarkerModal"
@@ -18,10 +12,10 @@
         @marker-selected="handleMarkerSelected"
         @map-click="handleMapClick"
       />
-     
-      <!-- Sidebar Section -->
+      </div>
+      <div class="flex-1 flex flex-col lg:flex-row gap-4 min-h-0">
       <SidebarSection
-        :is-modal-open="showNewMarkerModal"
+        :is-modal-open="isSidebarMode"
         :query="query"
         :categories="categories"
         :search-results="searchResults"
@@ -33,10 +27,9 @@
         @result-select="handleResultSelect"
         @new-marker="openNewMarker"
         @category-editor="openCategoryEditor"
-        @retry="handleRetry"
-        @clear-filters="handleClearFilters"
       />
     </div>
+
     
     <!-- New Marker Modal -->
     <NewMarkerModal
@@ -128,6 +121,9 @@ async function loadMarkers() {
   }
 }
 
+const isSidebarMode = computed(() => 
+  showNewMarkerModal.value || showCategoryEditor.value
+)
 
 // Event handlers
 function handleSearch(searchQuery) {

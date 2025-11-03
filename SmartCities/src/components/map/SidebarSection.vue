@@ -1,11 +1,13 @@
 <template>
+<div
+  class="w-full order-2 lg:order-2 lg:flex lg:flex-col lg:flex-1 lg:min-h-0"
+  :class="isModalOpen ? 'lg:w-full' : 'lg:w-1/3'"
+>
   <div
-    class="flex-none w-full order-1 lg:order-2"
-    :class="isModalOpen ? 'lg:w-full' : 'lg:w-1/3 lg:h-full'"
+    class="bg-white rounded-lg shadow-md flex flex-col overflow-hidden
+           dark:bg-gray-800 border border-gray-200 dark:border-gray-700
+           p-2 sm:p-4 lg:flex-1 lg:min-h-0"
   >
-    <div class="bg-white rounded-lg shadow-md h-full flex flex-col overflow-hidden dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-2 sm:p-4">
-     
-      <!-- Search and Actions Header -->
       <SearchHeader
         :query="query"
         :categories="categories"
@@ -14,9 +16,8 @@
         @filter-update="emit('filter-update', $event)"
         @new-marker="emit('new-marker')"
         @category-editor="emit('category-editor')"
-      />  
-     
-      <!-- Results Section -->
+      />
+
       <ResultList
         :categories="categories"
         :search-results="searchResults"

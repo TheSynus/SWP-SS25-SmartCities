@@ -1,7 +1,11 @@
 <template>
-  <div class="h-full flex flex-col">
+  <!-- no h-full, no overflow here -->
+  <div class="flex-1 min-h-0 flex flex-col">
     <!-- Results List -->
-    <div v-if="searchResults.length > 0 && !loading" class="flex-1 overflow-y-auto">
+    <div
+      v-if="searchResults.length > 0 && !loading"
+      class="flex-1 min-h-0 overflow-y-auto"
+    >
       <ul class="space-y-2 p-4">
         <ResultItem
           v-for="result in searchResults"

@@ -1,11 +1,13 @@
 <template>
-  <div class="h-full flex flex-col p-2">
-    <div class="flex-1 bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 dark:bg-gray-800 dark:border-gray-700">
+  <div class="h-full flex-1 flex flex-col p-2">
+    <div
+      class="flex-1 bg-white rounded-lg shadow-md overflow-hidden
+             border border-gray-200 dark:bg-gray-800 dark:border-gray-700"
+    >
       <div id="map" class="h-full w-full rounded-lg"></div>
     </div>
   </div>
 </template>
-
 <script setup>
 import { ref, onMounted, onUnmounted, nextTick, watch } from 'vue';
 import * as L from 'leaflet';
@@ -657,11 +659,11 @@ defineExpose({
   border: none !important;
 }
 
-/* Improve popup positioning during animations */
+/* Improve popup positioning during animations 
 :global(.leaflet-popup-pane) {
-  z-index: 700;
+  z-index: 0;
 }
-
+*/
 :global(.leaflet-popup) {
   transition: none !important;
 }

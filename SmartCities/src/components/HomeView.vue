@@ -4,6 +4,7 @@ import type { Card } from '../models/card'
 import DashboardContent from './DashboardContent.vue'
 import MoreContent from './MoreContent.vue'
 import BottomNavigation from './BottomNavigation.vue'
+import MapSearchPage from '../views/MapSearchPage.vue'
 
 interface Props {
   cards: Array<Card>
@@ -27,14 +28,8 @@ const handleTabChange = (tabName: string) => {
 </script>
 
 <template>
-  <div
-    :class="[
-      'relative mx-auto h-full w-full max-w-md flex flex-col items-stretch min-h-screen',
-      'bg-gray-50 dark:bg-gray-900',
-    ]"
-  >
-    <!-- Skalierter Content-Bereich -->
-    <div class="flex-1 p-2.5">
+  <div class="min-h-screen flex flex-col ">
+    <main class="flex-1 flex flex-col overflow-hidden">
       <div
         class="h-full"
         :style="
@@ -51,6 +46,10 @@ const handleTabChange = (tabName: string) => {
         <div v-if="activeTab === 'myCity'">
           <DashboardContent :cards="props.cards" :show-add-buttons="false" />
         </div>
+        <div v-else-if= "activeTab === 'map'">
+            <MapSearchPage />
+        </div>
+
         <div v-else-if="activeTab === 'more'">
           <MoreContent />
         </div>
@@ -58,12 +57,11 @@ const handleTabChange = (tabName: string) => {
           {{ activeTab }}
         </div>
       </div>
-    </div>
-
-    <!-- BottomNav klebt unten innerhalb des Scroll-Containers -->
+    </main>
+    
     <BottomNavigation
       position="sticky"
-      class="shrink-0"
+      class="shrink-0 z-50 relative"
       :active-tab="activeTab"
       @tab-change="handleTabChange"
     />

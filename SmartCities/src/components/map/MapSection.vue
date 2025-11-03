@@ -1,10 +1,10 @@
 <template>
-  <div 
-    v-show="show" 
-    class="flex-none w-full lg:w-2/3 order-2 lg:order-1"
+  <div
+    v-show="show"
+    class="w-full lg:w-2/3 order-1 lg:order-1 lg:flex lg:flex-col lg:min-h-0 lg:flex-1"
   >
-    <MapComponent 
-      class="w-full h-full"
+    <MapComponent
+      class="w-full h-full lg:flex-1"
       :markers="markers"
       :categories="categories"
       :selected-marker="selectedMarker"

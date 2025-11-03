@@ -12,7 +12,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="pt-20 min-h-screen">
+  <div class="pt-10 min-h-screen">
     <HomeView :cards="cards" :scale="1"></HomeView>
   </div>
 </template>

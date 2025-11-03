@@ -7,16 +7,18 @@
         @input="handleInput"
         type="text"
         placeholder="Suche..."
-        class="flex-grow p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white text-sm"
+        class="flex-grow ..."
       />
-      <div class="flex gap-2">
+
+      <!-- this is the only important change -->
+      <div class="flex gap-2 ml-auto sm:justify-end">
         <FilterSection
           :categories="categories"
           :selected-categories="selectedCategories"
           @update:selected="handleFilterUpdate"
         />
         <ActionsButton
-          ref="actionsBtn"
+          :categories="categories"
           @new-marker="emit('new-marker')"
           @category-editor="emit('category-editor')"
         />

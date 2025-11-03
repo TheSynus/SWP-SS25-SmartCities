@@ -50,9 +50,8 @@
   }
 }
 
-
-
 body {
+  height: 100%;
   min-height: 100vh;
   color: var(--color-text);
   background: var(--color-background);
@@ -115,4 +114,8 @@ body {
 .custom-scrollbar::-webkit-scrollbar-button {
   height: 0px;
   width: 0px;
+}
+
+html {
+  height: 100%;
 }
