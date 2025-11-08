@@ -33,7 +33,7 @@
 import { ref } from 'vue'
 import FilterSection from './FilterSection.vue'
 import ActionsButton from './ActionsButton.vue'
-import { useAdmin } from '@useAdmin/composables/admin/useAdmin'
+import { useAdmin } from '@/composables/admin/useAdmin'
 
 const { isAdmin } = useAdmin()
 

@@ -12,36 +12,39 @@
       <!-- Map Section -->
       <MapSection
         :show="!showNewMarkerModal"
-        :markers="searchResults"
+        :markers="customFilteredMarkers"
         :categories="categories"
         :selected-marker="selectedMarker"
-        :loading="markersLoading"
+        :loading="loading"
         @marker-selected="handleMarkerSelected"
         @map-click="handleMapClick"
       />
-      </div>
-      <div class="flex-1 flex flex-col lg:flex-row gap-4 min-h-0">
+    </div>
+    <div class="flex-1 flex flex-col lg:flex-row gap-4 min-h-0">
       <SidebarSection
         :is-modal-open="isSidebarMode"
-        :query="query"
+        :query="searchQuery"
         :categories="categories"
-        :search-results="searchResults"
-        :selected-categories="selectedCategories"
-        :loading="markersLoading"
-        :total-results="totalResults"
+        :search-results="customFilteredMarkers"
+        :selected-categories="selectedCategoryIds"
+        :loading="loading"
+        :categories-loading="categoriesLoading"
+        :categories-error="categoriesError"
+        :total-results="customFilteredMarkers.length"
         @search="handleSearch"
         @filter-update="handleFilterUpdate"
         @result-select="handleResultSelect"
         @new-marker="openNewMarker"
         @category-editor="openCategoryEditor"
+        @retry-categories="fetchCategories"
       />
     </div>
 
-    
     <!-- New Marker Modal -->
     <NewMarkerModal
       :show="showNewMarkerModal"
       :categories="categories"
+      :initial-coordinates="selectedMapCoordinates"
       modal-id="new-marker-modal"
       @close="closeNewMarkerModal"
       @submit="handleNewMarker"
@@ -53,9 +56,8 @@
       :categories="categories"
       :selectedCategory="selectedCategory"
       @close="closeCategoryEditor"
+      @category-updated="handleCategoryUpdate"
     />
-
-    
   </div>
 </template>
 
@@ -64,120 +66,89 @@ import { ref, computed, onMounted, watch } from 'vue'
 import MapSection from '../components/map/MapSection.vue'
 import SidebarSection from '../components/map/SidebarSection.vue'
 import NewMarkerModal from '../components/map/modal/MarkerModal.vue'
-import CategoryEditorModal from '../components/calendar/ui/CategoryManagementModal.vue';
+import CategoryEditorModal from '../components/calendar/ui/CategoryManagementModal.vue'
 
+// Nur noch deine 2 Composables!
 import { useCategories } from '../composables/map/useCategories'
 import { useMarkers } from '../composables/map/useMarkers'
-import { useMarkerAPI } from '../composables/map/useMarkerAPI'
 
+// Composables initialisieren
+const {
+  categories,
+  loading: categoriesLoading,
+  error: categoriesError,
+  fetchCategories
+} = useCategories()
 
-// Composables verwenden
-const { categories, loadCategories } = useCategories()
-const { createMarker } = useMarkers()
-const { loading: markersLoading, error: markersError, fetchMarkers } = useMarkerAPI()
+const {
+  markers,
+  loading: markersLoading,
+  error: markersError,
+  searchQuery,
+  selectedCategory,
+  filteredMarkers,
+  fetchMarkers,
+  createMarker,
+  updateMarker,
+  deleteMarker
+} = useMarkers()
 
+// Kombiniertes Loading
+const loading = computed(() => categoriesLoading.value || markersLoading.value)
 
-
-// Reactive state
-const query = ref('')
-const searchResults = ref([])
-const totalResults = ref(0)
-const selectedCategories = ref([])
+// Local State
+const selectedCategoryIds = ref([]) // Array von aktiven Kategorie-IDs
 const selectedMarker = ref(null)
 const selectedMapCoordinates = ref(null)
 const showNewMarkerModal = ref(false)
 const showCategoryEditor = ref(false)
-const selectedCategory = ref(null)
 const layoutRoot = ref(null)
 const isNarrow = ref(true)
 
-// Sort options (können später als Props oder aus Settings kommen)
-const sortBy = ref('date')
-const sortOrder = ref('desc')
-const limit = ref(null)
-
-// API Methods - Zentrale Suchfunktion
-async function loadMarkers() {
-  try {
-    const filters = {
-      query: query.value || undefined,
-      categoryIds: selectedCategories.value
-        .filter(cat => cat.active)
-        .map(cat => cat.id),
-      sortBy: sortBy.value,
-      sortOrder: sortOrder.value,
-      limit: limit.value
-    }
-    
-    // Entferne leere Filter
-    Object.keys(filters).forEach(key => {
-      if (filters[key] === undefined || 
-          (Array.isArray(filters[key]) && filters[key].length === 0)) {
-        delete filters[key]
-      }
-    })
-    
-    console.log('Lade Marker mit Filtern:', filters)
-    
-    const fetchedResults = await fetchMarkers(filters)
-    searchResults.value = fetchedResults
-    totalResults.value = fetchedResults.length // In echter API würde das separat kommen
-    
-  } catch (err) {
-    console.error('Fehler beim Laden der Marker:', err)
-    searchResults.value = []
-    totalResults.value = 0
-  }
-}
-
-const isSidebarMode = computed(() => 
+let resizeObserver
+// Computed
+const isSidebarMode = computed(() =>
   showNewMarkerModal.value || showCategoryEditor.value
 )
 
-// Event handlers
-function handleSearch(searchQuery) {
-  query.value = searchQuery
-  // loadMarkers wird durch watcher ausgelöst
+// Event Handlers
+function handleSearch(query) {
+  searchQuery.value = query
 }
 
-function handleFilterUpdate(updatedCategories) {
-  selectedCategories.value = updatedCategories
-  // loadMarkers wird durch watcher ausgelöst
+function handleFilterUpdate(categoryIds) {
+  // Wenn Array von IDs kommt
+  if (Array.isArray(categoryIds)) {
+    selectedCategoryIds.value = categoryIds
+    // Wenn nur eine Kategorie ausgewählt ist, setze sie im Composable
+    selectedCategory.value = categoryIds.length === 1 ? categoryIds[0] : null
+  } else {
+    // Fallback: wenn einzelne ID kommt
+    selectedCategory.value = categoryIds
+    selectedCategoryIds.value = categoryIds ? [categoryIds] : []
+  }
 }
 
-function handleResultSelect(item) {
-  console.log('Selected result:', item)
-  selectedMarker.value = item
-  // Hier können Sie die Karte zu diesem Ergebnis navigieren
+function handleResultSelect(marker) {
+  console.log('Selected result:', marker)
+  selectedMarker.value = marker
 }
 
 function handleMarkerSelected(marker) {
   console.log('Marker selected on map:', marker)
   selectedMarker.value = marker
-  // Synchronisation zwischen Karte und Sidebar
 }
 
 function handleMapClick(coordinates) {
   console.log('Map clicked at coordinates:', coordinates)
   selectedMapCoordinates.value = coordinates
-  
-  // Optional: Automatisch neuen Marker öffnen
+  // Optional: Auto-open new marker modal
   // openNewMarker()
 }
 
-function handleRetry() {
-  console.log('Retry wurde ausgelöst')
-  loadMarkers()
-}
-
-function handleClearFilters() {
-  // Filter zurücksetzen
-  selectedCategories.value = selectedCategories.value.map(cat => ({
-    ...cat,
-    active: true
-  }))
-  query.value = ''
-  selectedMarker.value = null
+function handleCategoryUpdate() {
+  // Kategorien neu laden nach Update
+  fetchCategories()
 }
 
 function openNewMarker(coordinates = null) {
@@ -196,63 +167,75 @@ function openCategoryEditor() {
   showCategoryEditor.value = true
 }
 
-function closeCategoryEditor () {
+function closeCategoryEditor() {
   showCategoryEditor.value = false
 }
 
 async function handleNewMarker(markerData) {
-
   try {
-    const markerWithCoordinates = {
-      ...markerData,
-      coordinates: selectedMapCoordinates.value || markerData.coordinates
+    // Datenformat für Backend vorbereiten
+    const payload = {
+      name: markerData.name,
+      description: markerData.description || '',
+      category_id: markerData.category_id,
+      latitude: markerData.latitude || selectedMapCoordinates.value?.lat || 0,
+      longitude: markerData.longitude || selectedMapCoordinates.value?.lng || 0,
+      is_public: markerData.is_public ?? false
     }
-    
-    const newMarkers = await createMarker(markerWithCoordinates)
-   
-    showNewMarkerModal.value = false
-    selectedMapCoordinates.value = null
-   
-    const markerCount = newMarkers.length
-    const markerType = markerData.type === 'area' ? 'Bereich' : 'Pin(s)'
-    showToast(`${markerCount} ${markerType} erfolgreich erstellt!`)
-    
-    // Ergebnisse neu laden um neue Marker anzuzeigen
-    await loadMarkers()
-   
+
+    console.log('Creating marker with payload:', payload)
+
+    const success = await createMarker(payload)
+
+    if (success) {
+      console.log('Marker erfolgreich erstellt!')
+      closeNewMarkerModal()
+      selectedMarker.value = null
+    } else {
+      console.error('Fehler beim Erstellen:', markersError.value)
+      alert(`Fehler: ${markersError.value || 'Unbekannter Fehler'}`)
+    }
+
   } catch (error) {
     console.error('Error creating marker:', error)
-    showToast('Fehler beim Erstellen der Markierung!')
+    alert('Fehler beim Erstellen der Markierung!')
   }
 }
 
-// Watchers - Neu laden wenn sich Filter ändern
-watch([
-  () => query.value,
-  () => selectedCategories.value,
-  () => sortBy.value,
-  () => sortOrder.value
-], () => {
-  loadMarkers()
-}, { 
-  deep: true,
-  immediate: false
+// Computed: Gefilterte Marker basierend auf selectedCategoryIds
+const customFilteredMarkers = computed(() => {
+  let filtered = [...markers.value]
+
+  // Filter nach Kategorien
+  if (selectedCategoryIds.value.length > 0 &&
+      selectedCategoryIds.value.length < categories.value.length) {
+    filtered = filtered.filter(marker =>
+      selectedCategoryIds.value.includes(marker.category_id)
+    )
+  }
+
+  // Filter nach Suchquery (wird bereits vom Composable gemacht via searchQuery)
+  // Das Composable filteredMarkers nutzt searchQuery bereits
+  return filtered
 })
 
-// Kategorien laden und selectedCategories initialisieren
-watch(categories, (newCategories) => {
-  if (newCategories.length > 0 && selectedCategories.value.length === 0) {
-    selectedCategories.value = newCategories.map(cat => ({
-      ...cat,
-      active: true
-    }))
-  }
-}, { immediate: true })
+// Watcher für Debug
+watch(
+  () => [markers.value, categories.value, selectedCategoryIds.value],
+  ([markersData, categoriesData, selectedIds]) => {
+    console.log('=== MAP SEARCH DEBUG ===')
+    console.log('Markers:', markersData)
+    console.log('Categories:', categoriesData)
+    console.log('Selected Category IDs:', selectedIds)
+    console.log('Filtered Markers:', customFilteredMarkers.value)
+    console.log('========================')
+  },
+  { deep: true, immediate: true }
+)
 
 // Lifecycle
 onMounted(async () => {
-  await loadCategories()
-  // Initial load wird durch watcher ausgelöst sobald categories geladen sind
+
   const observer = new ResizeObserver(entries => {
     const width = entries[0].contentRect.width
     isNarrow.value = width < 500
@@ -262,8 +245,18 @@ onMounted(async () => {
     observer.observe(layoutRoot.value)
   }
 
-  onBeforeUnmount(() => {
-    observer.disconnect()
-  })
+  // Parallel laden für bessere Performance
+  await Promise.all([
+    fetchCategories(),
+    fetchMarkers()
+  ])
+
+  // Alle Kategorien initial als aktiv setzen
+  if (categories.value.length > 0) {
+    selectedCategoryIds.value = categories.value.map(cat => cat.id)
+  }
+
+
 })
+
 </script>
