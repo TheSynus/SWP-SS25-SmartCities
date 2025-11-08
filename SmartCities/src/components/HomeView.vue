@@ -5,6 +5,11 @@ import DashboardContent from './DashboardContent.vue'
 import MoreContent from './MoreContent.vue'
 import BottomNavigation from './BottomNavigation.vue'
 import MapSearchPage from '../views/MapSearchPage.vue'
+import CalendarView from '@/components/calendar/CalendarView.vue'
+import CalendarEditView from '@/views/CalendarEditView.vue'
+
+
+
 
 interface Props {
   cards: Array<Card>
@@ -49,6 +54,9 @@ const handleTabChange = (tabName: string) => {
         <div v-else-if= "activeTab === 'map'">
             <MapSearchPage />
         </div>
+<div v-else-if="activeTab === 'calendar'">
+  <CalendarEditView />
+    </div>
 
         <div v-else-if="activeTab === 'more'">
           <MoreContent />
