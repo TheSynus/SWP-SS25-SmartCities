@@ -1,7 +1,14 @@
 <template>
-    <div class="bg-gray-50 dark:bg-gray-900 pt-14 sm:pt-16 lg:pt-18 lg:flex lg:flex-1 lg:flex-row h-screen overflow-hidden">
+  <div
+    ref="layoutRoot"
+    class="bg-gray-50 dark:bg-gray-900 pt-14 sm:pt-16 lg:pt-18 flex flex-1 h-full overflow-hidden"
+    :class="isNarrow ? 'flex-col' : 'flex-row'"
+  >
     <!-- Main Content Container -->
-      <div class="flex-1 flex flex-col lg:flex-row gap-4 min-h-0">
+    <div
+      class="flex-1 flex gap-4 min-h-0"
+      :class="isNarrow ? 'flex-col' : 'flex-row'"
+    >
       <!-- Map Section -->
       <MapSection
         :show="!showNewMarkerModal"
@@ -81,6 +88,8 @@ const selectedMapCoordinates = ref(null)
 const showNewMarkerModal = ref(false)
 const showCategoryEditor = ref(false)
 const selectedCategory = ref(null)
+const layoutRoot = ref(null)
+const isNarrow = ref(true)
 
 // Sort options (können später als Props oder aus Settings kommen)
 const sortBy = ref('date')
@@ -244,5 +253,17 @@ watch(categories, (newCategories) => {
 onMounted(async () => {
   await loadCategories()
   // Initial load wird durch watcher ausgelöst sobald categories geladen sind
+  const observer = new ResizeObserver(entries => {
+    const width = entries[0].contentRect.width
+    isNarrow.value = width < 500
+  })
+
+  if (layoutRoot.value) {
+    observer.observe(layoutRoot.value)
+  }
+
+  onBeforeUnmount(() => {
+    observer.disconnect()
+  })
 })
 </script>

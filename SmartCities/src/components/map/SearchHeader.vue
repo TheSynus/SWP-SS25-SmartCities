@@ -17,11 +17,13 @@
           :selected-categories="selectedCategories"
           @update:selected="handleFilterUpdate"
         />
-        <ActionsButton
-          :categories="categories"
-          @new-marker="emit('new-marker')"
-          @category-editor="emit('category-editor')"
-        />
+        <div v-if="isAdmin">
+          <ActionsButton
+            :categories="categories"
+            @new-marker="emit('new-marker')"
+            @category-editor="emit('category-editor')"
+          />
+        </div>
       </div>
     </div>
   </div>
@@ -31,6 +33,9 @@
 import { ref } from 'vue'
 import FilterSection from './FilterSection.vue'
 import ActionsButton from './ActionsButton.vue'
+import { useAdmin } from '@useAdmin/composables/admin/useAdmin'
+
+const { isAdmin } = useAdmin()
 
 const props = defineProps({
   query: {

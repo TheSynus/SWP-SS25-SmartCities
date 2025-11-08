@@ -157,10 +157,11 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useAdmin } from '../composables/admin/useAdmin'
 
 const showMobileMenu = ref(false)
 const isDark = ref(false)
-const isAdmin = ref(true)
+const { isAdmin } = useAdmin()
 const displayIcon = ref('A')
 const displayName = ref('Admin')
 

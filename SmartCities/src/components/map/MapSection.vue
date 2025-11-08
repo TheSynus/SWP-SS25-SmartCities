@@ -1,7 +1,7 @@
 <template>
   <div
     v-show="show"
-    class="w-full lg:w-2/3 order-1 lg:order-1 lg:flex lg:flex-col lg:min-h-0 lg:flex-1"
+    class="flex-1 min-h-0 flex"
   >
     <MapComponent
       class="w-full h-full lg:flex-1"
