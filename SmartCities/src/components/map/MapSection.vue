@@ -17,6 +17,7 @@
 
 <script setup>
 import MapComponent from './MapComponent.vue'
+
 const props = defineProps({
   show: {
     type: Boolean,
@@ -31,7 +32,7 @@ const props = defineProps({
     default: () => []
   },
   selectedMarker: {
-    type: Object,
+    type: [Object, null],
     default: null
   },
   loading: {

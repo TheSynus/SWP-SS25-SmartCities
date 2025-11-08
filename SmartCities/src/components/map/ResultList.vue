@@ -1,5 +1,4 @@
 <template>
-  <!-- no h-full, no overflow here -->
   <div class="flex-1 min-h-0 flex flex-col">
     <!-- Results List -->
     <div
@@ -11,16 +10,21 @@
           v-for="result in searchResults"
           :key="result.id"
           :item="result"
-          :category-name="getCategoryName(result.categoryId)"
+          :category="getCategoryById(result.category_id)"
           @click="$emit('result-select', result)"
         />
       </ul>
     </div>
-    
+
     <!-- Loading State -->
     <div v-else-if="loading" class="flex-1 flex items-center justify-center">
       <div class="text-center">
-        <svg class="animate-spin h-8 w-8 text-blue-600 mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <svg
+          class="animate-spin h-8 w-8 text-blue-600 mx-auto mb-4"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+        >
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
         </svg>
@@ -29,7 +33,7 @@
         </p>
       </div>
     </div>
-    
+
     <!-- Empty State -->
     <div v-else class="flex-1 flex items-center justify-center">
       <EmptyState
@@ -41,7 +45,7 @@
         @action="handleEmptyAction"
       />
     </div>
-    
+
     <!-- Results Counter -->
     <div
       v-if="searchResults.length > 0 && !loading"
@@ -91,18 +95,40 @@ const props = defineProps({
 
 const emit = defineEmits(['result-select', 'retry', 'clear-filters'])
 
-const getCategoryName = (categoryId) => {
+// Get category by ID (using DB field names)
+const getCategoryById = (categoryId) => {
+  if (!categoryId) return null
   const category = props.categories.find(cat => cat.id === categoryId)
-  return category?.name || 'Unbekannt'
+  return category || null
 }
 
+// Empty State Logic
 const emptyStateType = computed(() => {
   if (props.query && props.searchResults.length === 0) return 'no-results'
+
+  // Check if filters are active
+  const hasActiveFilters = props.selectedCategories &&
+                          props.selectedCategories.length > 0 &&
+                          props.selectedCategories.length < props.categories.length
+
+  if (hasActiveFilters && props.searchResults.length === 0) return 'no-results'
+
   return 'no-markers'
 })
 
 const emptyStateTitle = computed(() => {
-  if (props.query && props.searchResults.length === 0) return 'Keine Ergebnisse gefunden'
+  if (props.query && props.searchResults.length === 0) {
+    return 'Keine Ergebnisse gefunden'
+  }
+
+  const hasActiveFilters = props.selectedCategories &&
+                          props.selectedCategories.length > 0 &&
+                          props.selectedCategories.length < props.categories.length
+
+  if (hasActiveFilters && props.searchResults.length === 0) {
+    return 'Keine Markierungen in dieser Kategorie'
+  }
+
   return 'Keine Markierungen vorhanden'
 })
 
@@ -110,20 +136,49 @@ const emptyStateDescription = computed(() => {
   if (props.query && props.searchResults.length === 0) {
     return `Keine Ergebnisse für "${props.query}". Versuchen Sie andere Suchbegriffe oder passen Sie Ihre Filter an.`
   }
-  return 'Fügen Sie Ihre erste Markierung hinzu, indem Sie auf die Karte klicken.'
+
+  const hasActiveFilters = props.selectedCategories &&
+                          props.selectedCategories.length > 0 &&
+                          props.selectedCategories.length < props.categories.length
+
+  if (hasActiveFilters && props.searchResults.length === 0) {
+    return 'Versuchen Sie andere Kategorien auszuwählen oder fügen Sie eine neue Markierung in dieser Kategorie hinzu.'
+  }
+
+  return 'Fügen Sie Ihre erste Markierung hinzu, indem Sie auf die Karte klicken oder den "+" Button verwenden.'
 })
 
 const showEmptyAction = computed(() => {
-  return props.query && props.searchResults.length === 0
+  // Show action if search query exists or filters are active
+  if (props.query && props.searchResults.length === 0) return true
+
+  const hasActiveFilters = props.selectedCategories &&
+                          props.selectedCategories.length > 0 &&
+                          props.selectedCategories.length < props.categories.length
+
+  return hasActiveFilters && props.searchResults.length === 0
 })
 
 const emptyActionText = computed(() => {
-  if (props.query && props.searchResults.length === 0) return 'Filter zurücksetzen'
+  if (props.query && props.searchResults.length === 0) {
+    return 'Filter zurücksetzen'
+  }
+
+  const hasActiveFilters = props.selectedCategories &&
+                          props.selectedCategories.length > 0 &&
+                          props.selectedCategories.length < props.categories.length
+
+  if (hasActiveFilters && props.searchResults.length === 0) {
+    return 'Alle Kategorien anzeigen'
+  }
+
   return 'Markierung hinzufügen'
 })
 
 const handleEmptyAction = () => {
-  if (props.query && props.searchResults.length === 0) {
+  if (props.query || (props.selectedCategories &&
+                      props.selectedCategories.length > 0 &&
+                      props.selectedCategories.length < props.categories.length)) {
     emit('clear-filters')
   }
 }

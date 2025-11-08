@@ -1,87 +1,121 @@
-// composables/map/useCategories.js
+// composables/useCategories.js
 import { ref } from 'vue'
+import axios from 'axios'
+
+const API_URL = 'http://localhost:3000' // Beispiel-URL, anpassen nach Bedarf
 
 export function useCategories() {
+  // State
   const categories = ref([])
   const loading = ref(false)
   const error = ref(null)
 
-  // Mock-Daten für Kategorien
-  const mockCategories = [
-    { id: 1, name: 'Restaurants', color: '#FF6B6B', active: true, icon: '🍴' },
-    { id: 2, name: 'Hotels', color: '#4ECDC4', active: true, icon: '🏨' },
-    { id: 3, name: 'Sehenswürdigkeiten', color: '#45B7D1', active: true, icon: '📍' },
-    { id: 4, name: 'Shopping', color: '#96CEB4', active: false, icon: '🛍️' },
-    { id: 5, name: 'Parks', color: '#FECA57', active: false, icon: '🌳' },
-    { id: 6, name: 'Transport', color: '#FF9FF3', active: false, icon: '🚌' }
-  ]
+  /*##########################
+    Helper Function
+  ##########################*/
+  const handleError = (err) => {
+    if (err.response && err.response.data) {
+      error.value = err.response.data.error || err.response.data.message
+    } else {
+      error.value = err.message || 'Unbekannter Fehler'
+    }
+    console.error('API Error:', error.value)
+  }
 
-  const loadCategories = async () => {
+  /*##########################
+    Fetch All Categories
+  ##########################*/
+  const fetchCategories = async () => {
     loading.value = true
     error.value = null
-    
     try {
-      // Simuliere API-Aufruf
-      await new Promise(resolve => setTimeout(resolve, 500))
-      categories.value = [...mockCategories]
+      const res = await axios.get(`${API_URL}/categorys`)
+      categories.value = res.data
     } catch (err) {
-      error.value = err.message
-      console.error('Fehler beim Laden der Kategorien:', err)
+      handleError(err)
     } finally {
       loading.value = false
     }
   }
 
+  /*##########################
+    Create Category
+  ##########################*/
   const createCategory = async (categoryData) => {
+    loading.value = true
+    error.value = null
     try {
-      const newCategory = {
-        id: Date.now(),
-        ...categoryData,
-        active: true
-      }
-      categories.value.push(newCategory)
-      return newCategory
-    } catch (err) {
-      error.value = err.message
-      throw err
-    }
-  }
+      const res = await axios.post(`${API_URL}/categorys`, categoryData)
 
-  const updateCategory = async (id, updates) => {
-    try {
-      const index = categories.value.findIndex(cat => cat.id === id)
-      if (index !== -1) {
-        categories.value[index] = { ...categories.value[index], ...updates }
-        return categories.value[index]
-      }
-      throw new Error('Kategorie nicht gefunden')
-    } catch (err) {
-      error.value = err.message
-      throw err
-    }
-  }
-
-  const deleteCategory = async (id) => {
-    try {
-      const index = categories.value.findIndex(cat => cat.id === id)
-      if (index !== -1) {
-        categories.value.splice(index, 1)
+      if (res.status === 201 && res.data) {
+        // sichere Variante: komplette Liste neu laden (um DB-Defaults wie color zu holen)
+        await fetchCategories()
         return true
       }
-      throw new Error('Kategorie nicht gefunden')
+      return false
     } catch (err) {
-      error.value = err.message
-      throw err
+      handleError(err)
+      return false
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /*##########################
+    Update Category
+  ##########################*/
+  const updateCategory = async (id, categoryData) => {
+    loading.value = true
+    error.value = null
+    try {
+      const res = await axios.patch(`${API_URL}/categorys/${id}`, categoryData)
+
+      if (res.status === 200 && res.data) {
+        // Liste neu laden (zur Sicherheit)
+        await fetchCategories()
+        return true
+      }
+      return false
+    } catch (err) {
+      handleError(err)
+      return false
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /*##########################
+    Delete Category
+  ##########################*/
+  const deleteCategory = async (id) => {
+    loading.value = true
+    error.value = null
+    try {
+      const res = await axios.delete(`${API_URL}/categorys/${id}`)
+
+      if (res.status === 204 || res.status === 200) {
+        categories.value = categories.value.filter((c) => c.id !== id)
+        return true
+      }
+      return false
+    } catch (err) {
+      handleError(err)
+      return false
+    } finally {
+      loading.value = false
     }
   }
 
   return {
+    // State
     categories,
     loading,
     error,
-    loadCategories,
+
+    // Actions
+    fetchCategories,
     createCategory,
     updateCategory,
-    deleteCategory
+    deleteCategory,
   }
 }

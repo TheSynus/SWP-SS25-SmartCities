@@ -6,16 +6,21 @@
         :value="query"
         @input="handleInput"
         type="text"
-        placeholder="Suche..."
-        class="flex-grow ..."
+        placeholder="Suche nach Markern..."
+        class="flex-grow px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg
+               focus:ring-2 focus:ring-blue-500 focus:border-transparent
+               dark:bg-gray-700 dark:text-white placeholder-gray-400 dark:placeholder-gray-500
+               transition-colors duration-200"
       />
 
-      <!-- this is the only important change -->
       <div class="flex gap-2 ml-auto sm:justify-end">
         <FilterSection
           :categories="categories"
           :selected-categories="selectedCategories"
+          :loading="categoriesLoading"
+          :error="categoriesError"
           @update:selected="handleFilterUpdate"
+          @retry="emit('retry-categories')"
         />
         <ActionsButton
           :categories="categories"
@@ -28,7 +33,6 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
 import FilterSection from './FilterSection.vue'
 import ActionsButton from './ActionsButton.vue'
 
@@ -44,6 +48,14 @@ const props = defineProps({
   selectedCategories: {
     type: Array,
     default: () => []
+  },
+  categoriesLoading: {
+    type: Boolean,
+    default: false
+  },
+  categoriesError: {
+    type: [String, null],
+    default: null
   }
 })
 
@@ -51,10 +63,9 @@ const emit = defineEmits([
   'search',
   'filter-update',
   'new-marker',
-  'category-editor'
+  'category-editor',
+  'retry-categories'
 ])
-
-const actionsBtn = ref(null)
 
 function handleInput(event) {
   emit('search', event.target.value)
