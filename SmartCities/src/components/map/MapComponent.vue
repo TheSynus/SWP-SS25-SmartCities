@@ -33,10 +33,14 @@ const props = defineProps({
   fitBoundsOnLoad: {
     type: Boolean,
     default: true
+  },
+  isAdmin: {
+    type: Boolean,
+    default: false
   }
 })
 
-const emit = defineEmits(['marker-click', 'map-click'])
+const emit = defineEmits(['marker-click', 'map-click', 'marker-details'])
 
 // Map setup
 const map = ref(null)
@@ -44,6 +48,7 @@ const markersLayer = ref(null)
 const leafletMarkers = ref(new Map())
 const isInitialized = ref(false)
 const currentOpenPopup = ref(null)
+let mapResizeObserver = null
 
 // Hamburg coordinates
 const latitude = ref(53.5837)
@@ -95,11 +100,37 @@ const createColoredIcon = (color = '#3388ff', isSelected = false) => {
 const createPopupContent = (marker) => {
   const category = getCategoryById(marker.category_id)
   const categoryName = category?.title || 'Unbekannt'
-  const categoryColor = category?.color || '#3388ff'
+  const categoryColor = category?.color || '#4B5563'
 
   // Convert string coordinates to numbers
   const lat = parseFloat(marker.latitude)
   const lng = parseFloat(marker.longitude)
+
+  // Only show Details button if user is admin
+  const detailsButton = props.isAdmin ? `
+    <div style="
+      margin-top: 12px;
+      padding-top: 8px;
+      border-top: 1px solid #eee;
+      text-align: center;
+    ">
+      <button
+        onclick="window.selectMarkerDetails(${marker.id})"
+        style="
+          background: ${categoryColor};
+          color: white;
+          border: none;
+          padding: 6px 12px;
+          border-radius: 4px;
+          cursor: pointer;
+          font-size: 12px;
+          font-weight: bold;
+        "
+      >
+        Details anzeigen
+      </button>
+    </div>
+  ` : ''
 
   return `
     <div class="marker-popup" style="min-width: 200px;">
@@ -147,28 +178,7 @@ const createPopupContent = (marker) => {
           ` : ''}
         </div>
 
-        <div style="
-          margin-top: 12px;
-          padding-top: 8px;
-          border-top: 1px solid #eee;
-          text-align: center;
-        ">
-          <button
-            onclick="window.selectMarker(${marker.id})"
-            style="
-              background: ${categoryColor};
-              color: white;
-              border: none;
-              padding: 6px 12px;
-              border-radius: 4px;
-              cursor: pointer;
-              font-size: 12px;
-              font-weight: bold;
-            "
-          >
-            Details anzeigen
-          </button>
-        </div>
+        ${detailsButton}
       </div>
     </div>
   `
@@ -185,7 +195,7 @@ const updateMarkerAppearance = () => {
 
       const category = getCategoryById(marker.category_id)
       const isSelected = props.selectedMarker?.id === marker.id
-      const newIcon = createColoredIcon(category?.color || '#3388ff', isSelected)
+      const newIcon = createColoredIcon(category?.color || '#4B5563', isSelected)
 
       const wasPopupOpen = leafletMarker.isPopupOpen()
       leafletMarker.setIcon(newIcon)
@@ -305,8 +315,8 @@ const updateChangedPositions = () => {
       if (!leafletMarker) return
 
       const currentLatLng = leafletMarker.getLatLng()
-      const newLat = marker.latitude
-      const newLng = marker.longitude
+      const newLat = parseFloat(marker.latitude)
+      const newLng = parseFloat(marker.longitude)
 
       if (Math.abs(currentLatLng.lat - newLat) > 0.000001 ||
           Math.abs(currentLatLng.lng - newLng) > 0.000001) {
@@ -417,10 +427,22 @@ const centerOnMarker = (marker, zoom = null) => {
 
   try {
     if (marker?.latitude && marker?.longitude) {
+      // Invalidate size before centering to fix offset issues
+      map.value.invalidateSize()
+
+      const lat = parseFloat(marker.latitude)
+      const lng = parseFloat(marker.longitude)
+
       if (zoom) {
-        map.value.setView([marker.latitude, marker.longitude], zoom)
+        map.value.setView([lat, lng], zoom, {
+          animate: true,
+          duration: 0.5
+        })
       } else {
-        map.value.panTo([marker.latitude, marker.longitude])
+        map.value.panTo([lat, lng], {
+          animate: true,
+          duration: 0.5
+        })
       }
     }
   } catch (error) {
@@ -428,11 +450,18 @@ const centerOnMarker = (marker, zoom = null) => {
   }
 }
 
-// Global function for popup button clicks
+// Global functions for popup interactions
 window.selectMarker = (markerId) => {
   const marker = props.markers.find(m => m.id === markerId)
   if (marker) {
     emit('marker-click', marker)
+  }
+}
+
+window.selectMarkerDetails = (markerId) => {
+  const marker = props.markers.find(m => m.id === markerId)
+  if (marker) {
+    emit('marker-details', marker)
   }
 }
 
@@ -468,10 +497,17 @@ const initializeMap = () => {
       attribution: attribution
     }).addTo(map.value)
 
+    // Force recalculation of map size after initialization
+    setTimeout(() => {
+      if (map.value) {
+        map.value.invalidateSize()
+      }
+    }, 100)
+
     markersLayer.value = L.layerGroup().addTo(map.value)
 
-    // Emit coordinates with correct format
-    map.value.on('click', (e) => {
+    // Emit coordinates on double-click (for creating new markers)
+    map.value.on('dblclick', (e) => {
       emit('map-click', {
         lat: e.latlng.lat,
         lng: e.latlng.lng
@@ -502,6 +538,16 @@ const initializeMap = () => {
 
     isInitialized.value = true
 
+    // Add ResizeObserver for responsive map sizing
+    if (mapContainer) {
+      mapResizeObserver = new ResizeObserver(() => {
+        if (map.value && isInitialized.value) {
+          map.value.invalidateSize()
+        }
+      })
+      mapResizeObserver.observe(mapContainer)
+    }
+
     nextTick(() => {
       initializeMarkers()
     })
@@ -517,7 +563,14 @@ watch(() => props.markers, (newMarkers, oldMarkers) => {
   if (!isInitialized.value) return
 
   try {
-    if (JSON.stringify(newMarkers) !== JSON.stringify(oldMarkers)) {
+    // Simple length check is more reliable than JSON.stringify
+    const hasChanges = newMarkers.length !== oldMarkers.length ||
+                      newMarkers.some((marker, index) => {
+                        const oldMarker = oldMarkers[index]
+                        return !oldMarker || marker.id !== oldMarker.id
+                      })
+
+    if (hasChanges) {
       updateMapMarkers()
     }
   } catch (error) {
@@ -574,6 +627,15 @@ onUnmounted(() => {
     if (window.selectMarker) {
       delete window.selectMarker
     }
+    if (window.selectMarkerDetails) {
+      delete window.selectMarkerDetails
+    }
+
+    // Cleanup ResizeObserver
+    if (mapResizeObserver) {
+      mapResizeObserver.disconnect()
+      mapResizeObserver = null
+    }
 
     leafletMarkers.value.clear()
     currentOpenPopup.value = null
@@ -603,6 +665,14 @@ defineExpose({
 <style scoped>
 #map {
   min-height: 400px;
+  width: 100%;
+  height: 100%;
+}
+
+/* Ensure Leaflet container fills parent */
+:deep(.leaflet-container) {
+  width: 100%;
+  height: 100%;
 }
 
 :global(.custom-popup .leaflet-popup-content-wrapper) {

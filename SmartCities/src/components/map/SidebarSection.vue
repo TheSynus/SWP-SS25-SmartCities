@@ -28,6 +28,7 @@
         :query="query"
         :loading="loading"
         :total-results="totalResults"
+        :is-admin="isAdmin"
         @result-select="emit('result-select', $event)"
         @retry="emit('retry')"
         @clear-filters="emit('clear-filters')"
@@ -76,6 +77,10 @@ const props = defineProps({
   totalResults: {
     type: Number,
     default: 0
+  },
+  isAdmin: {
+    type: Boolean,
+    default: false
   }
 })
 

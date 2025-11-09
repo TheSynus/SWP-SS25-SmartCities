@@ -11,13 +11,15 @@
     >
       <!-- Map Section -->
       <MapSection
-        :show="!showNewMarkerModal"
+        :show="!isSidebarMode"
         :markers="customFilteredMarkers"
         :categories="categories"
         :selected-marker="selectedMarker"
         :loading="loading"
+        :is-admin="isAdmin"
         @marker-selected="handleMarkerSelected"
         @map-click="handleMapClick"
+        @marker-details="handleMarkerDetails"
       />
     </div>
     <div class="flex-1 flex flex-col lg:flex-row gap-4 min-h-0">
@@ -31,23 +33,28 @@
         :categories-loading="categoriesLoading"
         :categories-error="categoriesError"
         :total-results="customFilteredMarkers.length"
+        :is-admin="isAdmin"
         @search="handleSearch"
         @filter-update="handleFilterUpdate"
         @result-select="handleResultSelect"
         @new-marker="openNewMarker"
         @category-editor="openCategoryEditor"
         @retry-categories="fetchCategories"
+        @clear-filters="handleClearFilters"
       />
     </div>
 
-    <!-- New Marker Modal -->
-    <NewMarkerModal
-      :show="showNewMarkerModal"
+    <!-- Marker Modal (Create/Edit) -->
+    <MarkerModal
+      :show="showMarkerModal"
       :categories="categories"
       :initial-coordinates="selectedMapCoordinates"
-      modal-id="new-marker-modal"
-      @close="closeNewMarkerModal"
-      @submit="handleNewMarker"
+      :marker-data="editingMarker"
+      :is-edit-mode="isEditMode"
+      modal-id="marker-modal"
+      @close="closeMarkerModal"
+      @submit="handleMarkerSubmit"
+      @delete="handleMarkerDelete"
     />
 
     <!-- Category Editor Modal -->
@@ -62,15 +69,16 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import MapSection from '../components/map/MapSection.vue'
 import SidebarSection from '../components/map/SidebarSection.vue'
-import NewMarkerModal from '../components/map/modal/MarkerModal.vue'
-import CategoryEditorModal from '../components/calendar/ui/CategoryManagementModal.vue'
+import MarkerModal from '../components/map/modal/MarkerModal.vue'
+import CategoryEditorModal from '../components/map/modal/CategoryManagement.vue'
 
-// Nur noch deine 2 Composables!
+// Composables
 import { useCategories } from '../composables/map/useCategories'
 import { useMarkers } from '../composables/map/useMarkers'
+import { useAdmin } from '@/composables/admin/useAdmin'
 
 // Composables initialisieren
 const {
@@ -93,22 +101,27 @@ const {
   deleteMarker
 } = useMarkers()
 
+const { isAdmin } = useAdmin()
+
 // Kombiniertes Loading
 const loading = computed(() => categoriesLoading.value || markersLoading.value)
 
 // Local State
-const selectedCategoryIds = ref([]) // Array von aktiven Kategorie-IDs
+const selectedCategoryIds = ref([])
 const selectedMarker = ref(null)
 const selectedMapCoordinates = ref(null)
-const showNewMarkerModal = ref(false)
+const showMarkerModal = ref(false)
+const isEditMode = ref(false)
+const editingMarker = ref(null)
 const showCategoryEditor = ref(false)
 const layoutRoot = ref(null)
 const isNarrow = ref(true)
 
-let resizeObserver
+let resizeObserver = null
+
 // Computed
 const isSidebarMode = computed(() =>
-  showNewMarkerModal.value || showCategoryEditor.value
+  showMarkerModal.value || showCategoryEditor.value
 )
 
 // Event Handlers
@@ -117,49 +130,68 @@ function handleSearch(query) {
 }
 
 function handleFilterUpdate(categoryIds) {
-  // Wenn Array von IDs kommt
   if (Array.isArray(categoryIds)) {
     selectedCategoryIds.value = categoryIds
-    // Wenn nur eine Kategorie ausgewählt ist, setze sie im Composable
     selectedCategory.value = categoryIds.length === 1 ? categoryIds[0] : null
   } else {
-    // Fallback: wenn einzelne ID kommt
     selectedCategory.value = categoryIds
     selectedCategoryIds.value = categoryIds ? [categoryIds] : []
   }
 }
 
 function handleResultSelect(marker) {
-  console.log('Selected result:', marker)
   selectedMarker.value = marker
 }
 
 function handleMarkerSelected(marker) {
-  console.log('Marker selected on map:', marker)
   selectedMarker.value = marker
 }
 
 function handleMapClick(coordinates) {
-  console.log('Map clicked at coordinates:', coordinates)
-  selectedMapCoordinates.value = coordinates
-  // Optional: Auto-open new marker modal
-  // openNewMarker()
+  // Only allow creating markers if user is admin
+  if (isAdmin.value) {
+    openNewMarker(coordinates)
+  }
 }
 
 function handleCategoryUpdate() {
-  // Kategorien neu laden nach Update
   fetchCategories()
 }
 
+// Clear all filters and search
+function handleClearFilters() {
+  searchQuery.value = ''
+  if (categories.value.length > 0) {
+    selectedCategoryIds.value = categories.value.map(cat => cat.id)
+  }
+}
+
+// Open modal for creating new marker
 function openNewMarker(coordinates = null) {
   if (coordinates) {
     selectedMapCoordinates.value = coordinates
   }
-  showNewMarkerModal.value = true
+  isEditMode.value = false
+  editingMarker.value = null
+  showMarkerModal.value = true
 }
 
-function closeNewMarkerModal() {
-  showNewMarkerModal.value = false
+// Open modal for editing existing marker (triggered by "Details anzeigen")
+function handleMarkerDetails(marker) {
+  // Only allow editing markers if user is admin
+  if (!isAdmin.value) {
+    return
+  }
+  isEditMode.value = true
+  editingMarker.value = { ...marker }
+  selectedMapCoordinates.value = null
+  showMarkerModal.value = true
+}
+
+function closeMarkerModal() {
+  showMarkerModal.value = false
+  isEditMode.value = false
+  editingMarker.value = null
   selectedMapCoordinates.value = null
 }
 
@@ -171,9 +203,9 @@ function closeCategoryEditor() {
   showCategoryEditor.value = false
 }
 
-async function handleNewMarker(markerData) {
+// Handle marker submit (create or update)
+async function handleMarkerSubmit(markerData) {
   try {
-    // Datenformat für Backend vorbereiten
     const payload = {
       name: markerData.name,
       description: markerData.description || '',
@@ -183,28 +215,65 @@ async function handleNewMarker(markerData) {
       is_public: markerData.is_public ?? false
     }
 
-    console.log('Creating marker with payload:', payload)
+    let success = false
 
-    const success = await createMarker(payload)
+    if (isEditMode.value && editingMarker.value) {
+      // Update existing marker
+      success = await updateMarker(editingMarker.value.id, payload)
 
-    if (success) {
-      console.log('Marker erfolgreich erstellt!')
-      closeNewMarkerModal()
-      selectedMarker.value = null
+      if (!success) {
+        alert(`Fehler beim Aktualisieren: ${markersError.value || 'Unbekannter Fehler'}`)
+      }
     } else {
-      console.error('Fehler beim Erstellen:', markersError.value)
-      alert(`Fehler: ${markersError.value || 'Unbekannter Fehler'}`)
+      // Create new marker
+      success = await createMarker(payload)
+
+      if (!success) {
+        alert(`Fehler beim Erstellen: ${markersError.value || 'Unbekannter Fehler'}`)
+      }
     }
 
+    if (success) {
+      closeMarkerModal()
+      selectedMarker.value = null
+    }
   } catch (error) {
-    console.error('Error creating marker:', error)
-    alert('Fehler beim Erstellen der Markierung!')
+    alert('Fehler beim Speichern der Markierung!')
   }
 }
 
-// Computed: Gefilterte Marker basierend auf selectedCategoryIds
+// Handle marker delete
+async function handleMarkerDelete(markerId) {
+  try {
+    const confirmed = confirm('Möchten Sie diese Markierung wirklich löschen?')
+    if (!confirmed) return
+
+    const success = await deleteMarker(markerId)
+
+    if (success) {
+      closeMarkerModal()
+      selectedMarker.value = null
+    } else {
+      alert(`Fehler beim Löschen: ${markersError.value || 'Unbekannter Fehler'}`)
+    }
+  } catch (error) {
+    alert('Fehler beim Löschen der Markierung!')
+  }
+}
+
+// Computed: Gefilterte Marker mit Such- UND Kategorie-Filter
 const customFilteredMarkers = computed(() => {
   let filtered = [...markers.value]
+
+  // Filter nach Suchquery
+  if (searchQuery.value && searchQuery.value.trim() !== '') {
+    const query = searchQuery.value.toLowerCase().trim()
+    filtered = filtered.filter(marker => {
+      const matchesName = marker.name?.toLowerCase().includes(query)
+      const matchesDescription = marker.description?.toLowerCase().includes(query)
+      return matchesName || matchesDescription
+    })
+  }
 
   // Filter nach Kategorien
   if (selectedCategoryIds.value.length > 0 &&
@@ -214,35 +283,19 @@ const customFilteredMarkers = computed(() => {
     )
   }
 
-  // Filter nach Suchquery (wird bereits vom Composable gemacht via searchQuery)
-  // Das Composable filteredMarkers nutzt searchQuery bereits
   return filtered
 })
 
-// Watcher für Debug
-watch(
-  () => [markers.value, categories.value, selectedCategoryIds.value],
-  ([markersData, categoriesData, selectedIds]) => {
-    console.log('=== MAP SEARCH DEBUG ===')
-    console.log('Markers:', markersData)
-    console.log('Categories:', categoriesData)
-    console.log('Selected Category IDs:', selectedIds)
-    console.log('Filtered Markers:', customFilteredMarkers.value)
-    console.log('========================')
-  },
-  { deep: true, immediate: true }
-)
-
 // Lifecycle
 onMounted(async () => {
-
-  const observer = new ResizeObserver(entries => {
+  // Responsive Observer
+  resizeObserver = new ResizeObserver(entries => {
     const width = entries[0].contentRect.width
     isNarrow.value = width < 500
   })
 
   if (layoutRoot.value) {
-    observer.observe(layoutRoot.value)
+    resizeObserver.observe(layoutRoot.value)
   }
 
   // Parallel laden für bessere Performance
@@ -255,8 +308,12 @@ onMounted(async () => {
   if (categories.value.length > 0) {
     selectedCategoryIds.value = categories.value.map(cat => cat.id)
   }
-
-
 })
 
+onUnmounted(() => {
+  if (resizeObserver && layoutRoot.value) {
+    resizeObserver.unobserve(layoutRoot.value)
+    resizeObserver = null
+  }
+})
 </script>

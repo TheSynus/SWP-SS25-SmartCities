@@ -6,22 +6,28 @@
         :value="query"
         @input="handleInput"
         type="text"
-        placeholder="Suche..."
-        class="flex-grow ..."
+        placeholder="Suche nach Markierungen..."
+        class="flex-grow bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg
+               focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5
+               dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400
+               dark:text-white"
       />
 
-      <!-- this is the only important change -->
       <div class="flex gap-2 ml-auto sm:justify-end">
         <FilterSection
+          ref="filterSection"
           :categories="categories"
           :selected-categories="selectedCategories"
           @update:selected="handleFilterUpdate"
+          @dropdown-opened="handleFilterOpened"
         />
         <div v-if="isAdmin">
           <ActionsButton
+            ref="actionsButton"
             :categories="categories"
             @new-marker="emit('new-marker')"
             @category-editor="emit('category-editor')"
+            @dropdown-opened="handleActionsOpened"
           />
         </div>
       </div>
@@ -59,7 +65,8 @@ const emit = defineEmits([
   'category-editor'
 ])
 
-const actionsBtn = ref(null)
+const filterSection = ref(null)
+const actionsButton = ref(null)
 
 function handleInput(event) {
   emit('search', event.target.value)
@@ -67,5 +74,18 @@ function handleInput(event) {
 
 function handleFilterUpdate(updatedCategories) {
   emit('filter-update', updatedCategories)
+}
+
+// Close other dropdowns when one opens
+function handleFilterOpened() {
+  if (actionsButton.value) {
+    actionsButton.value.closeDropdown()
+  }
+}
+
+function handleActionsOpened() {
+  if (filterSection.value) {
+    filterSection.value.closeDropdown()
+  }
 }
 </script>

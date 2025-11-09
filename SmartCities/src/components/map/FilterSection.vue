@@ -162,7 +162,7 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['update:selected', 'retry'])
+const emit = defineEmits(['update:selected', 'retry', 'dropdown-opened'])
 
 // Use dropdown composable
 const dropdownContainer = ref(null)
@@ -172,9 +172,15 @@ const { showDropdown, toggleDropdown, closeDropdown } = useDropdown()
 const localSelectedIds = ref([])
 const isInitialized = ref(false)
 
+// Watch showDropdown to emit event when opened
+watch(showDropdown, (isOpen) => {
+  if (isOpen) {
+    emit('dropdown-opened')
+  }
+})
+
 // Initialize on mount
 onMounted(() => {
-  console.log('FilterSection mounted')
   if (props.selectedCategories.length > 0) {
     localSelectedIds.value = [...props.selectedCategories]
   } else if (props.categories.length > 0) {

@@ -90,6 +90,10 @@ const props = defineProps({
   totalResults: {
     type: Number,
     default: 0
+  },
+  isAdmin: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -102,17 +106,17 @@ const getCategoryById = (categoryId) => {
   return category || null
 }
 
+// Helper: Check if filters are active
+const hasActiveFilters = computed(() => {
+  return props.selectedCategories &&
+         props.selectedCategories.length > 0 &&
+         props.selectedCategories.length < props.categories.length
+})
+
 // Empty State Logic
 const emptyStateType = computed(() => {
   if (props.query && props.searchResults.length === 0) return 'no-results'
-
-  // Check if filters are active
-  const hasActiveFilters = props.selectedCategories &&
-                          props.selectedCategories.length > 0 &&
-                          props.selectedCategories.length < props.categories.length
-
-  if (hasActiveFilters && props.searchResults.length === 0) return 'no-results'
-
+  if (hasActiveFilters.value && props.searchResults.length === 0) return 'no-results'
   return 'no-markers'
 })
 
@@ -121,15 +125,12 @@ const emptyStateTitle = computed(() => {
     return 'Keine Ergebnisse gefunden'
   }
 
-  const hasActiveFilters = props.selectedCategories &&
-                          props.selectedCategories.length > 0 &&
-                          props.selectedCategories.length < props.categories.length
-
-  if (hasActiveFilters && props.searchResults.length === 0) {
+  if (hasActiveFilters.value && props.searchResults.length === 0) {
     return 'Keine Markierungen in dieser Kategorie'
   }
 
-  return 'Keine Markierungen vorhanden'
+  // Different for admin vs user
+  return props.isAdmin ? 'Keine Markierungen vorhanden' : 'Keine Markierungen verfügbar'
 })
 
 const emptyStateDescription = computed(() => {
@@ -137,26 +138,29 @@ const emptyStateDescription = computed(() => {
     return `Keine Ergebnisse für "${props.query}". Versuchen Sie andere Suchbegriffe oder passen Sie Ihre Filter an.`
   }
 
-  const hasActiveFilters = props.selectedCategories &&
-                          props.selectedCategories.length > 0 &&
-                          props.selectedCategories.length < props.categories.length
-
-  if (hasActiveFilters && props.searchResults.length === 0) {
-    return 'Versuchen Sie andere Kategorien auszuwählen oder fügen Sie eine neue Markierung in dieser Kategorie hinzu.'
+  if (hasActiveFilters.value && props.searchResults.length === 0) {
+    if (props.isAdmin) {
+      return 'Versuchen Sie andere Kategorien auszuwählen oder fügen Sie eine neue Markierung in dieser Kategorie hinzu.'
+    } else {
+      return 'Versuchen Sie andere Kategorien auszuwählen oder kontaktieren Sie den Administrator.'
+    }
   }
 
-  return 'Fügen Sie Ihre erste Markierung hinzu, indem Sie auf die Karte klicken oder den "+" Button verwenden.'
+  // Different for admin vs user when no markers at all
+  if (props.isAdmin) {
+    return 'Fügen Sie Ihre erste Markierung hinzu, indem Sie auf der Karte einen Doppelklick ausführen oder den "+" Button verwenden.'
+  } else {
+    return 'Derzeit sind keine Markierungen verfügbar. Bitte kontaktieren Sie den Administrator.'
+  }
 })
 
 const showEmptyAction = computed(() => {
-  // Show action if search query exists or filters are active
+  // Show "clear filters" button if search query exists or filters are active
   if (props.query && props.searchResults.length === 0) return true
+  if (hasActiveFilters.value && props.searchResults.length === 0) return true
 
-  const hasActiveFilters = props.selectedCategories &&
-                          props.selectedCategories.length > 0 &&
-                          props.selectedCategories.length < props.categories.length
-
-  return hasActiveFilters && props.searchResults.length === 0
+  // No action button when no markers at all (admin would use + button, user can't do anything)
+  return false
 })
 
 const emptyActionText = computed(() => {
@@ -164,22 +168,15 @@ const emptyActionText = computed(() => {
     return 'Filter zurücksetzen'
   }
 
-  const hasActiveFilters = props.selectedCategories &&
-                          props.selectedCategories.length > 0 &&
-                          props.selectedCategories.length < props.categories.length
-
-  if (hasActiveFilters && props.searchResults.length === 0) {
+  if (hasActiveFilters.value && props.searchResults.length === 0) {
     return 'Alle Kategorien anzeigen'
   }
 
-  return 'Markierung hinzufügen'
+  return ''
 })
 
 const handleEmptyAction = () => {
-  if (props.query || (props.selectedCategories &&
-                      props.selectedCategories.length > 0 &&
-                      props.selectedCategories.length < props.categories.length)) {
-    emit('clear-filters')
-  }
+  // Clear search query and filters
+  emit('clear-filters')
 }
 </script>

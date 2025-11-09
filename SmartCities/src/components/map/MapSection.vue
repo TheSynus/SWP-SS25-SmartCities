@@ -9,8 +9,10 @@
       :categories="categories"
       :selected-marker="selectedMarker"
       :loading="loading"
+      :is-admin="isAdmin"
       @marker-click="handleMarkerClick"
       @map-click="handleMapClick"
+      @marker-details="$emit('marker-details', $event)"
     />
   </div>
 </template>
@@ -38,10 +40,14 @@ const props = defineProps({
   loading: {
     type: Boolean,
     default: false
+  },
+  isAdmin: {
+    type: Boolean,
+    default: false
   }
 })
 
-const emit = defineEmits(['marker-selected', 'map-click'])
+const emit = defineEmits(['marker-selected', 'map-click', 'marker-details'])
 
 function handleMarkerClick(marker) {
   emit('marker-selected', marker)

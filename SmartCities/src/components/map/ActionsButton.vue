@@ -2,7 +2,7 @@
   <div class="relative" ref="dropdownContainer" data-dropdown>
     <button
       ref="actionsBtn"
-      @click="toggleDropdown"
+      @click="handleButtonClick"
       class="flex-none px-3 sm:px-4 py-2 sm:py-3 bg-green-600 text-white rounded-lg
              hover:bg-green-700 focus:ring-4 focus:outline-none focus:ring-green-300
              dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800
@@ -89,14 +89,25 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { useDropdown } from '../../composables/map/useDropdown'
 
-const emit = defineEmits(['new-marker', 'category-editor'])
+const emit = defineEmits(['new-marker', 'category-editor', 'dropdown-opened'])
 
 // Use dropdown composable
 const dropdownContainer = ref(null)
 const { showDropdown, toggleDropdown, closeDropdown } = useDropdown()
+
+// Watch showDropdown to emit event when opened
+watch(showDropdown, (isOpen) => {
+  if (isOpen) {
+    emit('dropdown-opened')
+  }
+})
+
+function handleButtonClick() {
+  toggleDropdown()
+}
 
 function handleNewMarker() {
   closeDropdown()
