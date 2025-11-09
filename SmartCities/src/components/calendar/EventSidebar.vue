@@ -1,4 +1,4 @@
-// === EVENT SIDEBAR COMPONENT ===
+// === EVENT SIDEBAR COMPONENT (REFACTORED) ===
 // components/EventSidebar.vue
 <script setup lang="ts">
 import { Filter, Plus } from 'lucide-vue-next'
@@ -6,7 +6,6 @@ import { useAdmin } from '@/composables/admin/useAdmin.ts'
 
 // Admin Check
 const { isAdmin } = useAdmin()
-
 
 // Types
 interface Event {
@@ -58,7 +57,7 @@ const props = withDefaults(defineProps<Props>(), {
   hasActiveFilters: false,
   showFilters: false,
   showPopup: false,
-  getCategoryColor: () => () => 'bg-gray-500'
+  getCategoryColor: () => () => '#6B7280' // ← GEÄNDERT: Hex statt Tailwind
 })
 
 // Emits
@@ -77,14 +76,29 @@ const emit = defineEmits<{
   'import-click': []
 }>()
 
+// ========================================
+// HELPER: Get Category by Title (NEU)
+// ========================================
+function getCategoryByTitle(categoryTitle: string): Category | undefined {
+  return props.categories.find((cat) => cat.title === categoryTitle)
+}
+
+// ========================================
+// HELPER: Get Category Display (NEU)
+// ========================================
+function getCategoryDisplay(categoryTitle: string) {
+  const category = getCategoryByTitle(categoryTitle)
+  return {
+    title: category?.title || 'Unbekannt',
+    color: category?.color || '#6B7280'
+  }
+}
+
 // Methods
 function updateSearchText(value: string) {
   const updatedForm = { ...props.filterForm, searchText: value }
-  emit('update:filterForm', updatedForm) 
-  console.log(updatedForm) 
-  //TODO
-  //emit('date-click', dayNumber, events)
-   //const events = props.getEventsForDay(dayNumber)
+  emit('update:filterForm', updatedForm)
+  console.log(updatedForm)
 }
 
 function updateFilterForm(updates: Partial<FilterForm>) {
@@ -180,7 +194,7 @@ function formatDateForDisplay(dateString: string): string {
           placeholder="Suche nach Kategorie/Ort"
           class="form-input flex-1 bg-white/10 border border-white/20 text-white placeholder-gray-300 rounded-lg text-sm"
         />
-        
+
         <!-- Filter Dropdown -->
         <div class="relative filter-dropdown">
           <button
@@ -190,7 +204,7 @@ function formatDateForDisplay(dateString: string): string {
           >
             <Filter class="w-5 h-5 stroke-[1.5]" />
           </button>
-          
+
           <div
             v-if="showFilters"
             class="absolute top-10 right-0 bg-[#0B1739] border border-white/10 text-white rounded-lg shadow-lg p-4 z-50 w-56 space-y-3"
@@ -205,7 +219,7 @@ function formatDateForDisplay(dateString: string): string {
                 class="w-full p-2 bg-white/10 border border-white/20 rounded text-sm text-white"
               />
             </div>
-            
+
             <!-- Category Filter -->
             <div>
               <label class="block text-sm text-gray-300 mb-1">Kategorie</label>
@@ -225,7 +239,7 @@ function formatDateForDisplay(dateString: string): string {
                 </option>
               </select>
             </div>
-            
+
             <!-- Location Filter -->
             <div>
               <label class="block text-sm text-gray-300 mb-1">Ort</label>
@@ -255,10 +269,10 @@ function formatDateForDisplay(dateString: string): string {
             </div>
           </div>
         </div>
-        
+
         <!-- Plus Dropdown -->
         <div
-          v-if=isAdmin
+          v-if="isAdmin"
           class="relative plus-dropdown">
           <button @click="handleTogglePopup" class="p-2 hover:text-blue-400">
             <Plus class="w-5 h-5 stroke-[1.5]" />
@@ -339,15 +353,17 @@ function formatDateForDisplay(dateString: string): string {
             {{ event?.start_time ? formatEventDate(event.start_time) : 'Kein Datum' }}
           </div>
           <div class="text-sm text-gray-400">
-            {{ event?.start_time ? formatEventTime(event.start_time) : '' }} 
+            {{ event?.start_time ? formatEventTime(event.start_time) : '' }}
             <span v-if="event?.start_time">Uhr</span>
           </div>
           <div class="text-xs text-gray-400 mt-1">📍 {{ event?.location || 'Kein Ort' }}</div>
+
+          <!-- ← GEÄNDERT: Inline-Style mit Hex-Farbe statt Tailwind-Klasse -->
           <div
             class="absolute top-4 right-4 text-xs px-2 py-0.5 rounded-full text-white"
-            :class="event?.category ? props.getCategoryColor(event.category) : 'bg-gray-500'"
+            :style="{ backgroundColor: event?.category ? getCategoryDisplay(event.category).color : '#6B7280' }"
           >
-            {{ event?.category || 'Keine Kategorie' }}
+            {{ event?.category ? getCategoryDisplay(event.category).title : 'Unbekannt' }}
           </div>
         </li>
       </ul>

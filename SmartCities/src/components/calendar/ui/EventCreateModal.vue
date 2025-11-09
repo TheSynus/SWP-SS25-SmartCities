@@ -1,4 +1,4 @@
-// === EVENT CREATE MODAL COMPONENT ===
+// === EVENT CREATE MODAL COMPONENT (REFACTORED) ===
 // components/EventCreateModal.vue
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
@@ -45,6 +45,24 @@ const newEvent = ref<NewEvent>({
   end_time: '',
 })
 
+// ========================================
+// HELPER: Get Category by Title (NEU)
+// ========================================
+function getCategoryByTitle(categoryTitle: string): Category | undefined {
+  return props.categories.find((cat) => cat.title === categoryTitle)
+}
+
+// ========================================
+// HELPER: Get Category Display (NEU)
+// ========================================
+function getCategoryDisplay(categoryTitle: string) {
+  const category = getCategoryByTitle(categoryTitle)
+  return {
+    title: category?.title || 'Unbekannt',
+    color: category?.color || '#6B7280'
+  }
+}
+
 // Watch for modal visibility to reset form
 watch(() => props.isVisible, (isVisible) => {
   if (isVisible) {
@@ -57,6 +75,21 @@ const showEndDate = computed(() => {
   return newEvent.value.recurrence && newEvent.value.recurrence !== 'Keine'
 })
 
+// ========================================
+// COMPUTED: Hat verfügbare Kategorien (NEU)
+// ========================================
+const hasCategories = computed(() => {
+  return props.categories && props.categories.length > 0
+})
+
+// ========================================
+// COMPUTED: Standard-Kategorie (NEU)
+// ========================================
+const defaultCategory = computed(() => {
+  // Erste verfügbare Kategorie als Default
+  return props.categories.length > 0 ? props.categories[0].title : ''
+})
+
 const repeatOptions = [
   'Keine',
   'Täglich',
@@ -64,6 +97,7 @@ const repeatOptions = [
   'Monatlich',
   'Jährlich'
 ]
+
 // Mapping: Deutsch (Anzeige) → Englisch (DB)
 const recurrenceMapDeToEn: Record<string, string> = {
   'Keine': 'none',
@@ -78,7 +112,7 @@ function resetForm() {
   newEvent.value = {
     title: '',
     start_time: '',
-    category: '',
+    category: defaultCategory.value, // ← GEÄNDERT: Default-Kategorie setzen
     recurrence: '',
     location: '',
     description: '',
@@ -87,15 +121,26 @@ function resetForm() {
 }
 
 function handleSave() {
-  console.log('Saving new event:', newEvent.value) // Debug
-  
+  console.log('Saving new event:', newEvent.value)
+
+  // ← NEU: Validierung
+  if (!hasCategories.value) {
+    alert('⚠️ Es sind keine Kategorien verfügbar. Bitte erstellen Sie zuerst eine Kategorie.')
+    return
+  }
+
+  if (!newEvent.value.category) {
+    alert('⚠️ Bitte wählen Sie eine Kategorie aus.')
+    return
+  }
+
   // Konvertiere deutsche Wiederholung zu englisch für die DB
   const eventToSave = {
     ...newEvent.value,
     recurrence: recurrenceMapDeToEn[newEvent.value.recurrence] || 'none'
   }
-  
-  console.log('Event mit englischer recurrence:', eventToSave) // Debug
+
+  console.log('Event mit englischer recurrence:', eventToSave)
   emit('save', eventToSave)
 }
 
@@ -140,7 +185,17 @@ function handleBackdropClick(event: Event) {
             @click.stop
           >
             <h3 class="mb-4 text-xl font-semibold">Neuen Termin erstellen</h3>
-            
+
+            <!-- ← NEU: Warnung wenn keine Kategorien vorhanden -->
+            <div
+              v-if="!hasCategories"
+              class="mb-4 p-3 bg-yellow-600/20 border border-yellow-500/30 rounded-lg"
+            >
+              <p class="text-sm text-yellow-300">
+                ⚠️ Keine Kategorien vorhanden. Bitte erstellen Sie zuerst eine Kategorie über "Kategorien bearbeiten".
+              </p>
+            </div>
+
             <div class="space-y-3 max-h-96 overflow-y-auto">
               <!-- Title -->
               <input
@@ -149,7 +204,7 @@ function handleBackdropClick(event: Event) {
                 placeholder="Bezeichnung"
                 class="w-full p-2 rounded bg-white/10 border border-white/20 text-sm"
               />
-              
+
               <!-- Start Date -->
               <div>
                 <label class="block text-sm text-gray-300 mb-1">Startdatum</label>
@@ -159,23 +214,30 @@ function handleBackdropClick(event: Event) {
                   class="w-full p-2 rounded bg-white/10 border border-white/20 text-sm"
                 />
               </div>
-              
+
               <!-- Category -->
-              <select
-                v-model="newEvent.category"
-                class="w-full p-2 rounded bg-white/10 text-sm text-white border-0 outline-0 focus:ring-0"
-              >
-                <option disabled value="" class="bg-[#0B1739] text-gray-400">Kategorie wählen</option>
-                <option
-                  v-for="category in categories"
-                  :key="category.id"
-                  :value="category.title"
-                  class="bg-[#0B1739] text-white"
+              <div>
+                <label class="block text-sm text-gray-300 mb-1">Kategorie</label>
+                <select
+                  v-model="newEvent.category"
+                  :disabled="!hasCategories"
+                  class="w-full p-2 rounded bg-white/10 text-sm text-white border-0 outline-0 focus:ring-0"
+                  :class="{ 'cursor-not-allowed opacity-50': !hasCategories }"
                 >
-                  {{ category.title }}
-                </option>
-              </select>
-              
+                  <option disabled value="" class="bg-[#0B1739] text-gray-400">
+                    {{ hasCategories ? 'Kategorie wählen' : 'Keine Kategorien verfügbar' }}
+                  </option>
+                  <option
+                    v-for="category in categories"
+                    :key="category.id"
+                    :value="category.title"
+                    class="bg-[#0B1739] text-white"
+                  >
+                    {{ category.title }}
+                  </option>
+                </select>
+              </div>
+
               <!-- Repeat -->
               <select
                 v-model="newEvent.recurrence"
@@ -184,7 +246,7 @@ function handleBackdropClick(event: Event) {
                 <option disabled value="" class="bg-[#0B1739] text-gray-400">
                   Wiederholung wählen
                 </option>
-                <option 
+                <option
                   v-for="option in repeatOptions"
                   :key="option"
                   class="bg-[#0B1739] text-white"
@@ -192,7 +254,7 @@ function handleBackdropClick(event: Event) {
                   {{ option }}
                 </option>
               </select>
-              
+
               <!-- End Date (conditional) -->
               <div v-if="showEndDate">
                 <label class="block text-sm text-gray-300 mb-1">Enddatum (bis wann wiederholen)</label>
@@ -202,7 +264,7 @@ function handleBackdropClick(event: Event) {
                   class="w-full p-2 rounded bg-white/10 border border-white/20 text-sm"
                 />
               </div>
-              
+
               <!-- Location -->
               <input
                 v-model="newEvent.location"
@@ -210,7 +272,7 @@ function handleBackdropClick(event: Event) {
                 placeholder="Ort"
                 class="w-full p-2 rounded bg-white/10 border border-white/20 text-sm"
               />
-              
+
               <!-- Description -->
               <div>
                 <label class="block text-sm text-gray-300 mb-1">Beschreibung</label>
@@ -221,8 +283,21 @@ function handleBackdropClick(event: Event) {
                   class="w-full p-2 rounded bg-white/10 border border-white/20 text-sm resize-none"
                 ></textarea>
               </div>
+
+              <!-- ← NEU: Preview Badge mit Hex-Farbe -->
+              <div v-if="newEvent.category" class="mt-4">
+                <label class="block text-sm text-gray-300 mb-1">Vorschau</label>
+                <div class="p-3 bg-white/5 rounded border border-white/10">
+                  <span
+                    class="inline-block px-3 py-1 rounded-full text-xs text-white font-medium"
+                    :style="{ backgroundColor: getCategoryDisplay(newEvent.category).color }"
+                  >
+                    {{ getCategoryDisplay(newEvent.category).title }}
+                  </span>
+                </div>
+              </div>
             </div>
-            
+
             <!-- Action Buttons -->
             <div class="flex justify-end gap-2 mt-6">
               <button
@@ -233,7 +308,8 @@ function handleBackdropClick(event: Event) {
               </button>
               <button
                 @click="handleSave"
-                class="px-4 py-2 text-sm text-white bg-blue-600 rounded hover:bg-blue-700"
+                :disabled="!hasCategories"
+                class="px-4 py-2 text-sm text-white bg-blue-600 rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Speichern
               </button>

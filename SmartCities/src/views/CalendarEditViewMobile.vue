@@ -1,47 +1,63 @@
-// === MOBILE CALENDAR VIEW FOR IPHONE MOCKUP ===
+// === MOBILE CALENDAR VIEW FOR IPHONE MOCKUP (REFACTORED) ===
 // CalendarEditViewMobile.vue
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useCalendarStore } from '@/composables/calendar/useCalendarStore'
 import { useModalStore } from '@/composables/calendar/useModalStore'
+import { useCategories } from '@/composables/map/useCategories.js' // ← NEU
 import { useAdmin } from '@/composables/admin/useAdmin'
 import EventEditModal from '@/components/calendar/ui/EventEditModal.vue'
 import EventCreateModal from '@/components/calendar/ui/EventCreateModal.vue'
+import CategoryManagementModal from '@/components/map/modal/CategoryManagement.vue' // ← NEU
 import ConfirmationModal from '@/components/calendar/ui/ConfirmationModal.vue'
 
 // Stores initialisieren
 const calendarStore = useCalendarStore()
 const modalStore = useModalStore()
+const { fetchCategories } = useCategories() // ← NEU
 const { isAdmin } = useAdmin()
 
 // Mobile State
 const showEventList = ref(true)
 const currentView = ref<'calendar' | 'list'>('list')
 const showFilters = ref(false)
+const showMobileMenu = ref(false) // ← NEU: Für 3-Punkt-Menü
 const searchQuery = ref('')
 
 // Computed
-const hasModalOpen = computed(() => 
-  modalStore.showEditPopup || 
-  modalStore.showNewEventPopup || 
+const hasModalOpen = computed(() =>
+  modalStore.showEditPopup ||
+  modalStore.showNewEventPopup ||
+  modalStore.showCategoriesPopup || // ← NEU
   modalStore.showDeleteEventConfirm
 )
+
+// ========================================
+// HELPER: Get Category Display (NEU - Fallback Pattern)
+// ========================================
+function getCategoryDisplay(categoryTitle: string) {
+  const category = calendarStore.getCategoryById(categoryTitle)
+  return {
+    title: category?.title || 'Unbekannt',
+    color: category?.color || '#6B7280'
+  }
+}
 
 // Filtered events based on search and filters
 const displayedEvents = computed(() => {
   let events = calendarStore.filteredEvents.value
-  
+
   // Apply search query
   if (searchQuery.value.trim()) {
     const query = searchQuery.value.toLowerCase()
-    events = events.filter(event => 
+    events = events.filter(event =>
       event.title.toLowerCase().includes(query) ||
       event.location.toLowerCase().includes(query) ||
       event.category.toLowerCase().includes(query) ||
       event.description?.toLowerCase().includes(query)
     )
   }
-  
+
   return events
 })
 
@@ -76,6 +92,18 @@ function confirmEventDelete() {
   modalStore.closeEditPopup()
 }
 
+// ← NEU: Handler für Map-Team Modal
+async function handleCategoryUpdated() {
+  await calendarStore.getCategories()
+  modalStore.closeCategoriesPopup()
+  showMobileMenu.value = false
+}
+
+// ← NEU: Handler für Retry
+async function handleRetryCategories() {
+  await calendarStore.getCategories()
+}
+
 function toggleView() {
   currentView.value = currentView.value === 'calendar' ? 'list' : 'calendar'
 }
@@ -89,8 +117,50 @@ function openNewEvent() {
   modalStore.openNewEventPopup()
 }
 
+// ← NEU: Kategorien-Modal öffnen
+function openCategories() {
+  if (!isAdmin.value) {
+    alert('Nur Administratoren können Kategorien bearbeiten.')
+    return
+  }
+  modalStore.openCategoriesPopup()
+  showMobileMenu.value = false
+}
+
+// ← NEU: Import-Funktion
+function handleImportClick() {
+  if (!isAdmin.value) {
+    alert('Nur Administratoren können Termine importieren.')
+    return
+  }
+
+  const input = document.createElement('input')
+  input.type = 'file'
+  input.accept = '.json'
+
+  input.onchange = async (event) => {
+    const file = (event.target as HTMLInputElement).files?.[0]
+    if (!file) return
+
+    try {
+      const count = await calendarStore.importEventsFromJSON(file)
+      // Alert wird bereits in importEventsFromJSON angezeigt
+    } catch (error: any) {
+      console.error('Import-Fehler:', error)
+      alert(`❌ Fehler beim Importieren: ${error.message}`)
+    }
+  }
+
+  input.click()
+  showMobileMenu.value = false
+}
+
 function toggleFilters() {
   showFilters.value = !showFilters.value
+}
+
+function toggleMobileMenu() {
+  showMobileMenu.value = !showMobileMenu.value
 }
 
 function applySearch() {
@@ -149,7 +219,7 @@ onMounted(async () => {
             {{ calendarStore.month.value }} {{ calendarStore.year.value }}
           </p>
         </div>
-        
+
         <div class="flex gap-2">
           <button
             @click="toggleView"
@@ -166,8 +236,50 @@ onMounted(async () => {
           >
             🔍
           </button>
+
+          <!-- ← NEU: 3-Punkt-Menü für Admin-Funktionen -->
+          <div v-if="isAdmin" class="relative">
+            <button
+              @click="toggleMobileMenu"
+              class="p-2 rounded-lg bg-white/5 hover:bg-white/10 transition text-xs"
+              :class="{ 'bg-blue-600': showMobileMenu }"
+            >
+              ⋮
+            </button>
+
+            <!-- Mobile Menu Dropdown -->
+            <div
+              v-if="showMobileMenu"
+              class="absolute top-10 right-0 bg-[#0d1f4d] border border-white/20 rounded-lg shadow-xl w-48 z-50"
+              @click.stop
+            >
+              <button
+                @click="openNewEvent"
+                class="w-full px-4 py-2.5 text-left text-sm hover:bg-white/10 flex items-center gap-2 border-b border-white/10"
+              >
+                <span>➕</span>
+                <span>Neuer Termin</span>
+              </button>
+              <button
+                @click="handleImportClick"
+                class="w-full px-4 py-2.5 text-left text-sm hover:bg-white/10 flex items-center gap-2 border-b border-white/10"
+              >
+                <span>📥</span>
+                <span>Importieren</span>
+              </button>
+              <button
+                @click="openCategories"
+                class="w-full px-4 py-2.5 text-left text-sm hover:bg-white/10 flex items-center gap-2"
+              >
+                <span>🏷️</span>
+                <span>Kategorien bearbeiten</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- ← GEÄNDERT: + Button nur noch für Non-Admins sichtbar (oder als Shortcut) -->
           <button
-            v-if="isAdmin"
+            v-else
             @click="openNewEvent"
             class="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 transition text-xs font-medium"
           >
@@ -197,21 +309,21 @@ onMounted(async () => {
 
       <!-- Filter Panel -->
       <div v-if="showFilters" class="mt-2 p-2 bg-white/5 rounded-lg space-y-2">
-  <!-- Category Filter -->
-<select
-  v-model="calendarStore.filterForm.value.category"
-  class="w-full px-2 py-1.5 rounded bg-white/10 text-xs text-white border-0 focus:ring-1 focus:ring-blue-500"
->
-  <option value="" class="bg-[#0B1739] text-white">Alle Kategorien</option>
-  <option
-    v-for="category in calendarStore.categories.value"
-    :key="category.id"
-    :value="category.title"
-    class="bg-[#0B1739] text-white"
-  >
-    {{ category.title }}
-  </option>
-</select>
+        <!-- Category Filter -->
+        <select
+          v-model="calendarStore.filterForm.value.category"
+          class="w-full px-2 py-1.5 rounded bg-white/10 text-xs text-white border-0 focus:ring-1 focus:ring-blue-500"
+        >
+          <option value="" class="bg-[#0B1739] text-white">Alle Kategorien</option>
+          <option
+            v-for="category in calendarStore.categories.value"
+            :key="category.id"
+            :value="category.title"
+            class="bg-[#0B1739] text-white"
+          >
+            {{ category.title }}
+          </option>
+        </select>
 
         <!-- Location Filter -->
         <input
@@ -245,7 +357,7 @@ onMounted(async () => {
       <div v-if="currentView === 'calendar'" class="flex-1 overflow-y-auto p-2">
         <!-- Month Navigation -->
         <div class="flex items-center justify-between mb-2 bg-white/5 rounded-lg p-2">
-          <button 
+          <button
             @click="calendarStore.previousMonth"
             class="p-1.5 rounded hover:bg-white/10 transition text-sm"
           >
@@ -254,7 +366,7 @@ onMounted(async () => {
           <span class="text-sm font-medium">
             {{ calendarStore.month.value }} {{ calendarStore.year.value }}
           </span>
-          <button 
+          <button
             @click="calendarStore.nextMonth"
             class="p-1.5 rounded hover:bg-white/10 transition text-sm"
           >
@@ -266,7 +378,7 @@ onMounted(async () => {
         <div class="bg-white/5 rounded-lg p-2">
           <!-- Weekday Headers -->
           <div class="grid grid-cols-7 gap-1 mb-1">
-            <div 
+            <div
               v-for="day in ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So']"
               :key="day"
               class="text-center text-[10px] text-gray-400 font-medium py-1"
@@ -297,8 +409,8 @@ onMounted(async () => {
               }"
             >
               <span>{{ day }}</span>
-              <!-- Event indicator dots -->
-              <div 
+              <!-- Event indicator dots mit Fallback-Farbe -->
+              <div
                 v-if="calendarStore.getEventsForDay(day).length > 0"
                 class="flex gap-0.5 mt-0.5"
               >
@@ -306,7 +418,7 @@ onMounted(async () => {
                   v-for="(event, idx) in calendarStore.getEventsForDay(day).slice(0, 3)"
                   :key="idx"
                   class="w-1 h-1 rounded-full"
-                  :class="calendarStore.getCategoryColor(event.category)"
+                  :style="{ backgroundColor: getCategoryDisplay(event.category).color }"
                 />
               </div>
             </button>
@@ -340,9 +452,11 @@ onMounted(async () => {
                     {{ formatEventTime(event.start_time) }} • {{ event.location }}
                   </p>
                 </div>
+                <!-- ← GEÄNDERT: Inline-Style mit Hex-Farbe -->
                 <div
                   class="flex-shrink-0 w-2 h-2 rounded-full"
-                  :class="calendarStore.getCategoryColor(event.category)"
+                  :style="{ backgroundColor: getCategoryDisplay(event.category).color }"
+                  :title="getCategoryDisplay(event.category).title"
                 />
               </div>
             </div>
@@ -396,26 +510,36 @@ onMounted(async () => {
                   <span>📍</span>
                   <span class="truncate">{{ event.location }}</span>
                 </p>
-                <p 
-                  v-if="event.description" 
+                <!-- ← NEU: Kategorie-Badge mit Fallback -->
+                <div class="flex items-center gap-1.5 mb-1">
+                  <div
+                    class="w-2 h-2 rounded-full flex-shrink-0"
+                    :style="{ backgroundColor: getCategoryDisplay(event.category).color }"
+                  />
+                  <span class="text-[10px] text-gray-400">
+                    {{ getCategoryDisplay(event.category).title }}
+                  </span>
+                </div>
+                <p
+                  v-if="event.description"
                   class="text-xs text-gray-500 line-clamp-2"
                 >
                   {{ event.description }}
                 </p>
               </div>
 
-              <!-- Category Badge -->
+              <!-- Category Badge (Right) -->
               <div
                 class="flex-shrink-0 w-3 h-3 rounded-full"
-                :class="calendarStore.getCategoryColor(event.category)"
-                :title="event.category"
+                :style="{ backgroundColor: getCategoryDisplay(event.category).color }"
+                :title="getCategoryDisplay(event.category).title"
               />
             </div>
           </div>
 
           <!-- Empty State -->
-          <div 
-            v-if="displayedEvents.length === 0" 
+          <div
+            v-if="displayedEvents.length === 0"
             class="text-center py-8 text-gray-400"
           >
             <div class="text-3xl mb-2">📅</div>
@@ -456,6 +580,16 @@ onMounted(async () => {
       @save="handleNewEventSave"
     />
 
+    <!-- ← NEU: Map-Team CategoryManagementModal -->
+    <CategoryManagementModal
+      :is-visible="modalStore.showCategoriesPopup.value"
+      :categories="calendarStore.categories.value"
+      :selected-category="calendarStore.selectedCategory.value"
+      @close="modalStore.closeCategoriesPopup"
+      @category-updated="handleCategoryUpdated"
+      @retry-categories="handleRetryCategories"
+    />
+
     <ConfirmationModal
       :is-visible="modalStore.showDeleteEventConfirm.value"
       title="Termin löschen"
@@ -465,6 +599,13 @@ onMounted(async () => {
       type="danger"
       @confirm="confirmEventDelete"
       @cancel="modalStore.cancelDeleteEvent"
+    />
+
+    <!-- ← NEU: Backdrop für Mobile Menu -->
+    <div
+      v-if="showMobileMenu"
+      class="fixed inset-0 bg-black/20 z-40"
+      @click="showMobileMenu = false"
     />
   </div>
 </template>

@@ -88,7 +88,7 @@ router.patch('/:id', async (req, res) => {
     try {
         const updatedAppointment = await pool.query(
             `UPDATE appointments 
-             SET title = $1, start_time = $2, end_time = $3, location = $4, category_id = $5, recurrence = $6, description = $7, updated_at = NOW() 
+             SET title = $1, start_time = $2, end_time = $3, location = $4, category_id = $5, recurrence = $6, description = $7
              WHERE id = $8 
              RETURNING *`,
             [title, start_time, end_time, location, category_id, recurrence, description, id]

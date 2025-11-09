@@ -1,4 +1,4 @@
-// === CALENDAR VIEW COMPONENT ===
+// === CALENDAR VIEW COMPONENT (REFACTORED) ===
 // components/CalendarView.vue
 <script setup lang="ts">
 import { ChevronLeft, ChevronRight } from 'lucide-vue-next'
@@ -7,12 +7,18 @@ import { ChevronLeft, ChevronRight } from 'lucide-vue-next'
 interface Event {
   id: string | number
   title: string
-  date: string
+  start_time: string
+  end_time: string
   category: string
-  repeat: string
+  recurrence: string
   location: string
   description: string
-  endDate: string
+}
+
+interface Category {
+  id: number
+  title: string
+  color: string
 }
 
 // Props
@@ -27,6 +33,7 @@ interface Props {
   getDateString: (dayNumber: number) => string
   getEventsForDay: (dayNumber: number) => Event[]
   getCategoryColor: (category: string) => string
+  categories?: Category[] // ← NEU: Optional für Fallback
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -42,7 +49,8 @@ const props = withDefaults(defineProps<Props>(), {
   isToday: () => (dayNumber: number) => false,
   getDateString: () => (dayNumber: number) => '',
   getEventsForDay: () => (dayNumber: number) => [],
-  getCategoryColor: () => (category: string) => 'bg-gray-500'
+  getCategoryColor: () => (category: string) => '#6B7280', // ← GEÄNDERT: Hex statt Tailwind
+  categories: () => []
 })
 
 // Emits
@@ -51,6 +59,24 @@ const emit = defineEmits<{
   'next-month': []
   'select-date': [dayNumber: number]
 }>()
+
+// ========================================
+// HELPER: Get Category by Title (NEU)
+// ========================================
+function getCategoryByTitle(categoryTitle: string): Category | undefined {
+  return props.categories?.find((cat) => cat.title === categoryTitle)
+}
+
+// ========================================
+// HELPER: Get Category Display (NEU)
+// ========================================
+function getCategoryDisplay(categoryTitle: string) {
+  const category = getCategoryByTitle(categoryTitle)
+  return {
+    title: category?.title || 'Unbekannt',
+    color: category?.color || '#6B7280'
+  }
+}
 
 // Methods
 function handlePreviousMonth() {
@@ -65,7 +91,6 @@ function handleSelectDate(dayNumber: number) {
   emit('select-date', dayNumber)
   console.log("DEBUG: CalendarView")
 }
-
 </script>
 
 <template>
@@ -111,7 +136,7 @@ function handleSelectDate(dayNumber: number) {
         >
           <!-- Day Number -->
           <div class="text-center font-semibold mb-1">{{ n }}</div>
-          
+
           <!-- Events for this day -->
           <div class="flex-1 overflow-hidden">
             <template v-for="(event, index) in (props.getEventsForDay?.(n) || [])" :key="event.id + '-label'">
@@ -119,12 +144,12 @@ function handleSelectDate(dayNumber: number) {
               <div
                 v-if="index === 0"
                 class="text-xs px-1 py-0.5 mb-0.5 rounded text-white truncate"
-                :class="props.getCategoryColor?.(event.category) || 'bg-gray-500'"
+                :style="{ backgroundColor: getCategoryDisplay(event.category).color }"
               >
                 {{ event.title }}
               </div>
             </template>
-            
+
             <!-- Show additional event count -->
             <div
               v-if="(props.getEventsForDay?.(n) || []).length > 1"
