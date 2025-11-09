@@ -6,8 +6,8 @@ const { getCityToPLZ } = require('./general_utils.js');
 const { getJSONContent, writeValueToJSON } = require('./json_utils.js');
 const setupRouter = require('./router/setupRouter.js');
 const ninaRouter = require('./router/ninaRouter.js');
-const imagesRouter = require('./router/imagesRouter.js');
-const eventsRouter = require('./router/eventsRouter.js');
+
+
 const weatherRouter = require('./router/weatherRouter.js');
 const categoryRouter = require('./router/categoryRouter.js');
 const appointmentRouter = require('./router/appointmentRouter.js');
@@ -39,8 +39,7 @@ const configValues = {
 };
 
 // Verfügbare BackEnd-Routen
-app.use('/images/', imagesRouter);
-app.use('/events/', eventsRouter);
+
 app.use('/categorys', categoryRouter);
 app.use('/appointments', appointmentRouter);
 app.use('/cards', cardsRouter);
@@ -52,6 +51,8 @@ app.use('/weather/', weatherRouter(configValues, {}));
 
 
 app.listen(port, '0.0.0.0', () => {
+  console.log('DB_USER:', process.env.DB_USER, 'DB_PASSWORD:', process.env.DB_PASSWORD);
+
   console.log("----------- Serverstart -----------")
   console.log(`Server läuft auf http://0.0.0.0:${port}`);
   

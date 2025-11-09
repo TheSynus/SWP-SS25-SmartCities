@@ -2,61 +2,30 @@
 // components/EventSidebar.vue
 <script setup lang="ts">
 import { Filter, Plus } from 'lucide-vue-next'
+import { useAdmin } from '@/composables/admin/useAdmin.ts'
+
+// Admin Check
+const { isAdmin } = useAdmin()
 
 
-/**
- * Eventsidebar Komponente
- * 
- * Seitliche Leiste für die Terminverwaltung und -filterung
- * 
- * Funktionen:
- * - Volltextsuche über Termine
- * - Filtern nach Datum, Kategorie und Ort
- * - Anzeigen der aktiven Filter (mit Reset)
- * - Kontextmenü zum Import, neuen Terminen und Kategorien
- * - Klick auf einen Termin emittiert ein Detail-Event
- *
- * Kommunikation:
- * - Props liefern gefilterte Events, Kategorien und den aktuellen Filterzustand
- * - Emits geben Nutzeraktionen (Filter/Popup/Item-Klicks) an die Elternkomponente zurück
- *
- * Styling:
- * - TailwindCSS-Klassen, responsive Aufbau, fixierte Suchleiste, scrollbare Liste
- *
- * @component
- * @file EventSidebar.vue
- * @description Sidebar zur Suche, Filterung und Anzeige von Terminen.
- * @author Dalshad Ahmad, Kire Bozinovski
- * 
- */
-
-
-/**
- * Repräsentiert einen einzelnen Termin (Event).
- */
+// Types
 interface Event {
   id: string | number
   title: string
-  date: string
-  category: string
-  repeat: string
+  start_time: string
+  end_time: string
   location: string
+  category: string
+  recurrence: string
   description: string
-  endDate: string
 }
 
-/**
- * Kategorie-Definition für Events.
- */
 interface Category {
   id: number
-  name: string
+  title: string
   color: string
 }
 
-/**
- * Formularzustand für die Filtersteuerung.
- */
 interface FilterForm {
   date: string
   category: string
@@ -64,9 +33,7 @@ interface FilterForm {
   searchText: string
 }
 
-/**
- * Öffentliche Eigenschaften (Props) der Sidebar.
- */
+// Props
 interface Props {
   filteredEvents: Event[]
   categories: Category[]
@@ -78,9 +45,6 @@ interface Props {
   getCategoryColor: (category: string) => string
 }
 
-/**
- * Props-Definition inkl. Standardwerte.
- */
 const props = withDefaults(defineProps<Props>(), {
   filteredEvents: () => [],
   categories: () => [],
@@ -113,12 +77,7 @@ const emit = defineEmits<{
   'import-click': []
 }>()
 
-/**
- * Aktualisiert den Suchtext im Filterformular.
- * 
- * @param value Neuer Suchtext.
- * @emits update:filterForm – mit aktualisiertem Filterzustand
- */
+// Methods
 function updateSearchText(value: string) {
   const updatedForm = { ...props.filterForm, searchText: value }
   emit('update:filterForm', updatedForm) 
@@ -128,118 +87,53 @@ function updateSearchText(value: string) {
    //const events = props.getEventsForDay(dayNumber)
 }
 
-/**
- * Führt ein partielles Update des Filterformulars durch.
- * 
- * @param updates Teilobjekt mit zu ändernden Feldern.
- * @emits update:filterForm – mit zusammengeführtem Filterzustand
- */
 function updateFilterForm(updates: Partial<FilterForm>) {
   const updatedForm = { ...props.filterForm, ...updates }
   emit('update:filterForm', updatedForm)
 }
 
-/**
- * Öffnet/schließt das Filter-Dropdown.
- * 
- * @emits toggle-filters
- * @emits update:showFilters – invertierter Sichtbarkeitszustand
- */
 function handleToggleFilters() {
   emit('toggle-filters')
   emit('update:showFilters', !props.showFilters)
 }
 
-/**
- * Öffnet/schließt das Plus-Popup (Import/Neu/Kategorien).
- * 
- * @emits toggle-popup
- * @emits update:showPopup – invertierter Sichtbarkeitszustand
- */
 function handleTogglePopup() {
   emit('toggle-popup')
   emit('update:showPopup', !props.showPopup)
 }
 
-/**
- * Bestätigt die aktuellen Filter und schließt das Filter-Dropdown.
- * 
- * @emits apply-filters
- * @emits update:showFilters – false
- */
 function handleApplyFilters() {
   emit('apply-filters')
   emit('update:showFilters', false)
 }
 
-/**
- * Setzt alle Filter zurück.
- * 
- * @emits reset-filters
- */
 function handleResetFilters() {
   emit('reset-filters')
 }
 
-/**
- * Setzt einen bestimmten Filter zurück (z. B. "category" oder "selectedDate").
- * 
- * @param key Schlüssel im FilterForm oder 'selectedDate'.
- * @emits reset-single-filter – mit Schlüssel
- */
 function handleResetSingleFilter(key: keyof FilterForm | 'selectedDate') {
   emit('reset-single-filter', key)
 }
 
-/**
- * Meldet einen Klick auf ein Event an die Elternkomponente.
- * 
- * @param event Das angeklickte Event.
- * @emits event-click – mit Event-Objekt
- */
 function handleEventClick(event: Event) {
   emit('event-click', event)
 }
 
-/**
- * Startet den Importvorgang über die Elternkomponente und schließt das Popup.
- * 
- * @emits import-click
- * @emits update:showPopup – false
- */
 function handleImportClick() {
   emit('import-click')
   emit('update:showPopup', false)
 }
 
-/**
- * Öffnet den Dialog zum Erstellen eines neuen Termins und schließt das Popup.
- * 
- * @emits open-new-event
- * @emits update:showPopup – false
- */
 function handleNewEventClick() {
   emit('open-new-event')
   emit('update:showPopup', false)
 }
 
-/**
- * Öffnet den Kategorien-Dialog und schließt das Popup.
- * 
- * @emits open-categories
- * @emits update:showPopup – false
- */
 function handleCategoriesClick() {
   emit('open-categories')
   emit('update:showPopup', false)
 }
 
-/**
- * Formatiert ein ISO-Datum als lokalen Langtext (de-DE), z. B. "Montag, 8. Oktober 2025".
- * 
- * @param dateString ISO-String des Datums.
- * @returns Formatierter Datumsstring oder Original bei Fehler.
- */
 function formatEventDate(dateString: string) {
   try {
     return new Date(dateString).toLocaleDateString('de-DE', {
@@ -253,12 +147,6 @@ function formatEventDate(dateString: string) {
   }
 }
 
-/**
- * Formatiert die Uhrzeit aus einem ISO-String (de-DE), z. B. "09:30".
- * 
- * @param dateString ISO-String mit Zeitanteil.
- * @returns Formatierte Uhrzeit oder leerer String bei Fehler.
- */
 function formatEventTime(dateString: string) {
   try {
     return new Date(dateString).toLocaleTimeString('de-DE', {
@@ -270,12 +158,6 @@ function formatEventTime(dateString: string) {
   }
 }
 
-/**
- * Kompakte Datumsformatierung (de-DE), z. B. "08.10.2025".
- * 
- * @param dateString ISO-String des Datums.
- * @returns Kurzform des Datums oder Original bei Fehler.
- */
 function formatDateForDisplay(dateString: string): string {
   try {
     return new Date(dateString).toLocaleDateString('de-DE')
@@ -336,10 +218,10 @@ function formatDateForDisplay(dateString: string): string {
                 <option
                   v-for="category in categories"
                   :key="category.id"
-                  :value="category.name"
+                  :value="category.title"
                   class="bg-[#0B1739] text-white"
                 >
-                  {{ category.name }}
+                  {{ category.title }}
                 </option>
               </select>
             </div>
@@ -375,7 +257,9 @@ function formatDateForDisplay(dateString: string): string {
         </div>
         
         <!-- Plus Dropdown -->
-        <div class="relative plus-dropdown">
+        <div
+          v-if=isAdmin
+          class="relative plus-dropdown">
           <button @click="handleTogglePopup" class="p-2 hover:text-blue-400">
             <Plus class="w-5 h-5 stroke-[1.5]" />
           </button>
@@ -452,11 +336,11 @@ function formatDateForDisplay(dateString: string): string {
         >
           <div class="text-lg font-bold">{{ event?.title || 'Unbekannter Titel' }}</div>
           <div class="text-sm text-gray-300 mt-1">
-            {{ event?.date ? formatEventDate(event.date) : 'Kein Datum' }}
+            {{ event?.start_time ? formatEventDate(event.start_time) : 'Kein Datum' }}
           </div>
           <div class="text-sm text-gray-400">
-            {{ event?.date ? formatEventTime(event.date) : '' }} 
-            <span v-if="event?.date">Uhr</span>
+            {{ event?.start_time ? formatEventTime(event.start_time) : '' }} 
+            <span v-if="event?.start_time">Uhr</span>
           </div>
           <div class="text-xs text-gray-400 mt-1">📍 {{ event?.location || 'Kein Ort' }}</div>
           <div

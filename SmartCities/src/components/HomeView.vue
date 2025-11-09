@@ -7,6 +7,7 @@ import BottomNavigation from './BottomNavigation.vue'
 import MapSearchPage from '../views/MapSearchPage.vue'
 import CalendarView from '@/components/calendar/CalendarView.vue'
 import CalendarEditView from '@/views/CalendarEditView.vue'
+import CalendarEditViewMobile from '@/views/CalendarEditViewMobile.vue'
 
 
 
@@ -55,7 +56,7 @@ const handleTabChange = (tabName: string) => {
             <MapSearchPage />
         </div>
 <div v-else-if="activeTab === 'calendar'">
-  <CalendarEditView />
+  <CalendarEditViewMobile />
     </div>
 
         <div v-else-if="activeTab === 'more'">

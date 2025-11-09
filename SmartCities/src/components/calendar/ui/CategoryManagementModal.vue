@@ -4,54 +4,20 @@
 import { ref, computed, watch } from 'vue'
 import { Plus } from 'lucide-vue-next'
 
-
-
-
-/**
- * CategoryManagementModal Component 
- * Modal zur Verwaltung von Kategorien:
- * - Auflistung vorhandener Kategorien
- * - Auswahl & Bearbeitung einer Kategorie
- * - Anlegen neuer Kategorien
- * - Löschen (optional, z. B. Sperre für "Sonstiges")
- *
- * UX/Technik:
- * - Zweispaltiges Layout: links Liste, rechts Formular
- * - Farbauswahl aus vordefiniertem Set (Tailwind-Klassen)
- * - Validierung: Namenskonflikte werden verhindert (case-insensitive)
- * - Formular wird beim Öffnen zurückgesetzt
- *
- * Kommunikation:
- * - Props liefern Sichtbarkeit, alle Kategorien sowie die aktuell ausgewählte
- * - Emits: close, save(category, isNew), delete, select-category(category)
- *
- * @component
- * @file CategoryManagementModal.vue
- * @description Modal zur Anlage, Bearbeitung und Verwaltung von Kategorien.
- * @version 1.0
- */
-
-/**
- * Persistente Kategorie-Struktur.
- */
+// Types
 interface Category {
   id: number
-  name: string
+  title: string
   color: string
 }
 
-/**
- * Editierbare Kategorie (neu oder bestehend).
- */
 interface EditingCategory {
   id: number | null
-  name: string
+  title: string
   color: string
 }
 
-/**
- * Öffentliche Eigenschaften der Komponente.
- */
+// Props
 interface Props {
   isVisible: boolean
   categories: Category[]
@@ -60,9 +26,7 @@ interface Props {
 
 const props = defineProps<Props>()
 
-/**
- * Events, die an die Elternkomponente gesendet werden.
- */
+// Emits
 const emit = defineEmits<{
   'close': []
   'save': [category: EditingCategory, isNew: boolean]
@@ -70,24 +34,15 @@ const emit = defineEmits<{
   'select-category': [category: Category]
 }>()
 
-/**
- * Flag, ob eine neue Kategorie erstellt wird (rechter Bereich wechselt in "Neu"-Modus).
- */
+// Local state
 const isCreatingNewCategory = ref(false)
-
-/**
- * Formularmodell für die aktuelle Bearbeitung (neu oder bestehend).
- */
 const editingCategory = ref<EditingCategory>({
   id: null,
-  name: '',
+  title: '',
   color: '',
 })
 
-/**
- * Verfügbare Farboptionen (Tailwind-Klassen).
- * Diese Liste wird für die Farbauswahl im Formular verwendet.
- */
+// Available color options
 const availableColors = [
   'bg-blue-600',
   'bg-green-600',
@@ -99,139 +54,85 @@ const availableColors = [
   'bg-orange-600',
 ]
 
-/**
- * Reagiert auf Änderung der ausgewählten Kategorie:
- * - Deaktiviert Neuanlage-Modus
- * - Befüllt das Formular mit den Daten der ausgewählten Kategorie
- */
+// Watch for prop changes
 watch(() => props.selectedCategory, (newCategory) => {
   if (newCategory) {
     isCreatingNewCategory.value = false
     editingCategory.value = {
       id: newCategory.id,
-      name: newCategory.name,
+      title: newCategory.title,
       color: newCategory.color,
     }
   }
 }, { immediate: true })
 
-
-/**
- * Setzt das Formular beim Öffnen des Modals zurück.
- */
 watch(() => props.isVisible, (isVisible) => {
   if (isVisible) {
     resetForm()
   }
 })
 
-
-/**
- * Prüft, ob ein Namenskonflikt mit bestehenden Kategorien vorliegt.
- * - Case-insensitive Vergleich
- * - Ignoriert die aktuell bearbeitete Kategorie (ID-Vergleich)
- */
+// Computed
 const hasNameConflict = computed(() => {
-  return editingCategory.value.name &&
+  return editingCategory.value.title &&
     props.categories.some(
       (cat) =>
-        cat.name.toLowerCase() === editingCategory.value.name.toLowerCase() &&
+        cat.title.toLowerCase() === editingCategory.value.title.toLowerCase() &&
         cat.id !== editingCategory.value.id,
     )
 })
 
-
-/**
- * Button-Guard: Speichern nur möglich, wenn ein Name vorhanden ist
- * und kein Namenskonflikt besteht.
- */
 const canSave = computed(() => {
-  return editingCategory.value.name.trim() && !hasNameConflict.value
+  return editingCategory.value.title.trim() && !hasNameConflict.value
 })
 
-/**
- * Button-Guard: Löschen erlaubt, wenn:
- * - eine Kategorie ausgewählt ist
- * - NICHT im Neuanlage-Modus
- * - die Kategorie nicht "Sonstiges" heißt (Beispiel-Sperre)
- */
 const canDelete = computed(() => {
   return props.selectedCategory && 
          !isCreatingNewCategory.value && 
-         props.selectedCategory.name !== 'Sonstiges'
+         props.selectedCategory.title !== 'Sonstiges'
 })
 
-/**
- * Setzt den Formularzustand in den neutralen Ausgangszustand.
- */
+// Methods
 function resetForm() {
   isCreatingNewCategory.value = false
   editingCategory.value = {
     id: null,
-    name: '',
+    title: '',
     color: '',
   }
 }
 
-/**
- * Wechselt in den Neuanlage-Modus und setzt Default-Farbe.
- */
 function startNewCategory() {
   isCreatingNewCategory.value = true
   editingCategory.value = {
     id: null,
-    name: '',
+    title: '',
     color: 'bg-blue-600',
   }
 }
 
-/** 
- * Wählt eine vorhandene Kategorie zur Bearbeitung aus.
- * Ignoriert Klicks, wenn sich die UI gerade im Neuanlage-Modus befindet.
- *
- * @param category Die angeklickte Kategorie aus der Liste
- * @emits select-category
- */
 function selectCategoryForEdit(category: Category) {
   if (isCreatingNewCategory.value) return
   emit('select-category', category)
 }
 
-/**
- * Validiert (minimal) und sendet die Kategorie an den Parent.
- * @emits save – mit { ...editingCategory }, isCreatingNewCategory
- */
 function handleSave() {
   if (!canSave.value) return
   
-  console.log("Neue Kategoire:" + editingCategory.value.name + "\nIsNew:" +isCreatingNewCategory.value )
+  console.log("Neue Kategoire:" + editingCategory.value.title + "\nIsNew:" +isCreatingNewCategory.value )
   
   emit('save', { ...editingCategory.value }, isCreatingNewCategory.value)
 }
 
-/**
- * Fordert das Löschen der aktuellen Kategorie im Parent an.
- * @emits delete
- */
 function handleDelete() {
   emit('delete')
 }
 
-
-/**
- * Bricht den Vorgang ab und schließt das Modal.
- * @emits close
- */
 function handleCancel() {
   emit('close')
   resetForm()
 }
 
-/**
- * Schließt das Modal bei Klick auf das Overlay.
- * @param event Mausereignis des Overlays
- * @emits close
- */
 function handleBackdropClick(event: Event) {
   if (event.target === event.currentTarget) {
     handleCancel()
@@ -297,7 +198,7 @@ function handleBackdropClick(event: Event) {
                     }"
                   >
                     <div class="w-4 h-4 rounded-full" :class="category.color"></div>
-                    <span class="font-medium">{{ category.name }}</span>
+                    <span class="font-medium">{{ category.title }}</span>
                   </div>
                 </div>
               </div>
@@ -313,7 +214,7 @@ function handleBackdropClick(event: Event) {
                   <div>
                     <label class="block text-sm text-gray-300 mb-2">Kategoriebezeichnung</label>
                     <input
-                      v-model="editingCategory.name"
+                      v-model="editingCategory.title"
                       type="text"
                       class="w-full p-3 rounded bg-white/10 border border-white/20 text-white"
                       placeholder="Kategoriebezeichnung eingeben"
@@ -353,7 +254,7 @@ function handleBackdropClick(event: Event) {
                     <div class="p-3 bg-white/5 rounded border border-white/10 flex items-center gap-3">
                       <div class="w-4 h-4 rounded-full" :class="editingCategory.color"></div>
                       <span class="font-medium">{{
-                        editingCategory.name || 'Kategoriebezeichnung eingeben'
+                        editingCategory.title || 'Kategoriebezeichnung eingeben'
                       }}</span>
                     </div>
                   </div>

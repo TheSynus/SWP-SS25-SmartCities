@@ -3,35 +3,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-
-/**
- * EventList Component  
- *
- * Zeigt eine scrollbare Liste von Terminen (Events) an.
- *
- * Features:
- * - Tastatur- und Mausinteraktion (Enter/Space & Click)
- * - Visuelle Kennzeichnung vergangener Termine (abgeblendet)
- * - Kategoriebadge mit Farblogik (per getCategoryColor)
- * - Emittiert Klick- und Auswahl-Events an den Parent
- * - Leerer Zustand mit kontextabhängiger Nachricht (Filter aktiv / keine Daten)
- *
- * Kommunikation:
- * - Props liefern Events, Filterstatus und eine Farb-Funktion.
- * - Emits geben Event-Klicks/Selektion nach außen.
- *
- * Styling:
- * - TailwindCSS-Klassen für Layout, Hover-States und Badges.
- *
- * @component
- * @file EventList.vue
- * @description Liste von Terminen mit Interaktionen und Statusdarstellung.
- * @author Kire Bozinovski, Dalshad Ahmad
- */
-
-/**
- * Repräsentiert einen Termin/Eintrag in der Liste.
- */
+// Types
 interface Event {
   id: string | number
   title: string
@@ -43,18 +15,13 @@ interface Event {
   endDate: string
 }
 
-/**
- * Beispiel-Kategorie-Struktur (optional, hier nicht direkt genutzt).
- */
 interface Category {
   id: number
   name: string
   color: string
 }
 
-/**
- * Öffentliche Eigenschaften (Props) der Komponente.
- */
+// Props
 interface Props {
   events: Event[]
   hasActiveFilters: boolean
@@ -62,44 +29,25 @@ interface Props {
   class?: string
 }
 
-/**
- * Props-Definition inkl. Standardwerte.
- */
 const props = withDefaults(defineProps<Props>(), {
   class: ''
 })
 
-/**
- * Events, die bei Interaktionen ausgelöst werden.
- */
+// Emits
 const emit = defineEmits<{
   'event-click': [event: Event]
   'event-select': [event: Event]
 }>()
 
-/**
- * Anzahl der Events (für spätere Anzeigen/Optimierungen nutzbar).
- */
+// Computed
 const eventCount = computed(() => props.events.length)
 
-/**
- * Handhabt die Auswahl eines Events.
- *
- * @param event Das angeklickte/selektierte Event.
- * @emits event-click
- * @emits event-select
- */
+// Methods
 function handleEventClick(event: Event) {
   emit('event-click', event)
   emit('event-select', event)
 }
 
-/**
- * Formatiert ein Datum als Langform (de-DE), z. B. "Montag, 8. Oktober 2025".
- *
- * @param dateString ISO-Datum/Zeit.
- * @returns Formatierter Datumsstring oder Originalwert bei Fehler.
- */
 function formatEventDate(dateString: string) {
   try {
     return new Date(dateString).toLocaleDateString('de-DE', {
@@ -113,13 +61,6 @@ function formatEventDate(dateString: string) {
   }
 }
 
-
-/**
- * Formatiert die Uhrzeit (de-DE), z. B. "09:30".
- *
- * @param dateString ISO-Datum/Zeit.
- * @returns Formatierte Uhrzeit oder leerer String bei Fehler.
- */
 function formatEventTime(dateString: string) {
   try {
     return new Date(dateString).toLocaleTimeString('de-DE', {
@@ -131,12 +72,6 @@ function formatEventTime(dateString: string) {
   }
 }
 
-/**
- * Prüft, ob ein Event-Zeitpunkt in der Vergangenheit liegt.
- *
- * @param dateString ISO-Datum/Zeit des Events.
- * @returns true, wenn das Event bereits vergangen ist; sonst false.
- */
 function isEventInPast(dateString: string): boolean {
   try {
     const eventDate = new Date(dateString)
@@ -147,12 +82,6 @@ function isEventInPast(dateString: string): boolean {
   }
 }
 
-/**
- * Liefert ein Icon zur Visualisierung der Wiederholungsregel.
- *
- * @param repeat Wiederholungswert (z. B. "Täglich", "Wöchentlich", …, "Keine").
- * @returns Ein Emoji-Symbol oder leerer String.
- */
 function getEventRepeatIcon(repeat: string): string {
   switch (repeat) {
     case 'Täglich':

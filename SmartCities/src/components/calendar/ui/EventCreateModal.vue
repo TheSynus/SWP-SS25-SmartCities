@@ -3,105 +3,60 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
 
-/**
- * EventCreateModal Component 
- * Modal-Dialog zum Erstellen eines neuen Termins.
- *
- * Features:
- * - Formular für alle Termindaten (Titel, Datum, Kategorie, Wiederholung, Ort, Beschreibung)
- * - Dynamische Anzeige des Enddatums bei wiederholenden Terminen
- * - Automatisches Zurücksetzen des Formulars beim Öffnen/Schließen
- * - Animationen über Vue Transitions und Teleport
- *
- * Kommunikation:
- * - Props übergeben Sichtbarkeit und verfügbare Kategorien
- * - Emits geben Aktionen an die Elternkomponente: close, save(event)
- *
- * @component
- * @file EventCreateModal.vue
- * @description Modal zur Erstellung eines neuen Termins im Smart-Cities-Dashboard.
- * @author Kire Bozinovski, Dalshad Ahmad
- */
-
-/**
- * Struktur für ein neu zu erstellendes Event.
- */
+// Types
 interface NewEvent {
   title: string
-  date: string
+  start_time: string
   category: string
-  repeat: string
+  recurrence: string
   location: string
   description: string
-  endDate: string
+  end_time: string
 }
 
-/**
- * Kategorie-Objekt, das in der Dropdown-Auswahl verfügbar ist.
- */
 interface Category {
   id: number
-  name: string
+  title: string
   color: string
 }
 
-/**
- * Öffentliche Eigenschaften (Props) der Komponente.
- */
+// Props
 interface Props {
   isVisible: boolean
   categories: Category[]
 }
 
-/**
- * Props-Definition ohne Standardwerte.
- */
 const props = defineProps<Props>()
 
-
-/**
- * Events, die an die Elternkomponente gesendet werden.
- */
+// Emits
 const emit = defineEmits<{
   'close': []
   'save': [event: NewEvent]
 }>()
 
-/**
- * Lokales Event-Objekt, das im Formular gebunden ist.
- * Wird bei jedem Öffnen des Modals automatisch zurückgesetzt.
- */
+// Local state
 const newEvent = ref<NewEvent>({
   title: '',
-  date: '',
+  start_time: '',
   category: '',
-  repeat: '',
+  recurrence: '',
   location: '',
   description: '',
-  endDate: '',
+  end_time: '',
 })
 
-/**
- * Beobachtet den Sichtbarkeitsstatus (`isVisible`).
- * Wenn das Modal geöffnet wird, wird das Formular automatisch geleert.
- */
+// Watch for modal visibility to reset form
 watch(() => props.isVisible, (isVisible) => {
   if (isVisible) {
     resetForm()
   }
 })
 
-/**
- * Steuert, ob das Enddatum angezeigt werden soll.
- * Nur bei wiederholenden Terminen aktiv.
- */
+// Computed
 const showEndDate = computed(() => {
-  return newEvent.value.repeat && newEvent.value.repeat !== 'Keine'
+  return newEvent.value.recurrence && newEvent.value.recurrence !== 'Keine'
 })
 
-/**
- * Vordefinierte Auswahlmöglichkeiten für Wiederholungen.
- */
 const repeatOptions = [
   'Keine',
   'Täglich',
@@ -109,53 +64,51 @@ const repeatOptions = [
   'Monatlich',
   'Jährlich'
 ]
+// Mapping: Deutsch (Anzeige) → Englisch (DB)
+const recurrenceMapDeToEn: Record<string, string> = {
+  'Keine': 'none',
+  'Täglich': 'daily',
+  'Wöchentlich': 'weekly',
+  'Monatlich': 'monthly',
+  'Jährlich': 'yearly'
+}
 
-/**
- * Setzt das Formular auf die Standardwerte zurück.
- * Wird beim Öffnen und Schließen des Modals aufgerufen.
- */
+// Methods
 function resetForm() {
   newEvent.value = {
     title: '',
-    date: '',
+    start_time: '',
     category: '',
-    repeat: '',
+    recurrence: '',
     location: '',
     description: '',
-    endDate: '',
+    end_time: '',
   }
 }
 
-/**
- * Sendet das ausgefüllte Formular an die Elternkomponente.
- * @emits save
- */
 function handleSave() {
   console.log('Saving new event:', newEvent.value) // Debug
-  emit('save', { ...newEvent.value })
+  
+  // Konvertiere deutsche Wiederholung zu englisch für die DB
+  const eventToSave = {
+    ...newEvent.value,
+    recurrence: recurrenceMapDeToEn[newEvent.value.recurrence] || 'none'
+  }
+  
+  console.log('Event mit englischer recurrence:', eventToSave) // Debug
+  emit('save', eventToSave)
 }
 
-/**
- * Bricht die Erstellung ab, schließt das Modal und setzt das Formular zurück.
- * @emits close
- */
 function handleCancel() {
   emit('close')
   resetForm()
 }
 
-/**
- * Schließt das Modal, wenn außerhalb des Dialogbereichs geklickt wird.
- * @param event Mausereignis für Overlay-Klick
- * @emits close
- */
 function handleBackdropClick(event: Event) {
   if (event.target === event.currentTarget) {
     handleCancel()
   }
 }
-
-
 </script>
 
 <template>
@@ -201,7 +154,7 @@ function handleBackdropClick(event: Event) {
               <div>
                 <label class="block text-sm text-gray-300 mb-1">Startdatum</label>
                 <input
-                  v-model="newEvent.date"
+                  v-model="newEvent.start_time"
                   type="datetime-local"
                   class="w-full p-2 rounded bg-white/10 border border-white/20 text-sm"
                 />
@@ -216,16 +169,16 @@ function handleBackdropClick(event: Event) {
                 <option
                   v-for="category in categories"
                   :key="category.id"
-                  :value="category.name"
+                  :value="category.title"
                   class="bg-[#0B1739] text-white"
                 >
-                  {{ category.name }}
+                  {{ category.title }}
                 </option>
               </select>
               
               <!-- Repeat -->
               <select
-                v-model="newEvent.repeat"
+                v-model="newEvent.recurrence"
                 class="w-full p-2 rounded bg-white/10 text-sm text-white border-0 outline-0 focus:ring-0"
               >
                 <option disabled value="" class="bg-[#0B1739] text-gray-400">
@@ -244,7 +197,7 @@ function handleBackdropClick(event: Event) {
               <div v-if="showEndDate">
                 <label class="block text-sm text-gray-300 mb-1">Enddatum (bis wann wiederholen)</label>
                 <input
-                  v-model="newEvent.endDate"
+                  v-model="newEvent.end_time"
                   type="datetime-local"
                   class="w-full p-2 rounded bg-white/10 border border-white/20 text-sm"
                 />

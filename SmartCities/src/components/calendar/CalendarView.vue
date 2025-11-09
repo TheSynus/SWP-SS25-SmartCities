@@ -3,28 +3,7 @@
 <script setup lang="ts">
 import { ChevronLeft, ChevronRight } from 'lucide-vue-next'
 
-/**
- * Diese Komponente stellt die Kalendaransicht dar.
- * 
- * Sie zeigt eine Monatsübersicht mit einzelnen Tagen und den zugehörigen Events
- * Der Benutzer kann zwischen den Monaten navigieren, Tage auswählen und Events einsehen.
- * 
- * Diese Komponente ist modular und kommuniziert über Props und Events mit den Elternkomponenten
- * 
- * Das Layout ist responsiv und nutzt Tailwind
- * 
- * @component
- * @file CalendarView.vue
- * @description Vue-Komponente zur Darstellung eines interaktiven Kalenders.
- * @author Dalshad Ahmad, Kire Bozinovski
- */
- 
-
-
-
-/**
- * Repräsentation eines Events innerhalb Kalendar
- */
+// Types
 interface Event {
   id: string | number
   title: string
@@ -36,16 +15,12 @@ interface Event {
   endDate: string
 }
 
-/**
- * Definiert die Eingabeparameter (Props)
- * Diese Werte werden von der Elternkomponente übergeben.
- */
+// Props
 interface Props {
   currentDate: Date
   selectedDate: string | null
   month: string
   year: number
-  // Funktionen zur berechnung des Monatsrasters
   daysInMonth: (date: Date) => number
   firstDayOffset: (date: Date) => number
   isToday: (dayNumber: number) => boolean
@@ -54,7 +29,6 @@ interface Props {
   getCategoryColor: (category: string) => string
 }
 
-// Standardwerte für Props (Defaults, falls von Elternkomponente keine übergeben)
 const props = withDefaults(defineProps<Props>(), {
   currentDate: () => new Date(),
   selectedDate: null,
@@ -71,38 +45,22 @@ const props = withDefaults(defineProps<Props>(), {
   getCategoryColor: () => (category: string) => 'bg-gray-500'
 })
 
-
-/**
- * Definiert die Events (Emits), die von dieser Komponente an die Elternkomponente gesendet werden.
- * Diese Events werden ausgelöst, wenn der Benutzer navigiert oder ein Datum auswählt.
- */
+// Emits
 const emit = defineEmits<{
   'previous-month': []
   'next-month': []
   'select-date': [dayNumber: number]
 }>()
 
-/**
- * Navigiert zum vorherigen Monat.
- * Löst das "previous-month"-Event aus.
- */
+// Methods
 function handlePreviousMonth() {
   emit('previous-month')
 }
 
-/**
- * Navigiert zum nächsten Monat.
- * Löst das "next-month"-Event aus.
- */
 function handleNextMonth() {
   emit('next-month')
 }
 
-/**
- * Wählt ein bestimmtes Datum aus.
- * 
- * @param dayNumber - Tag im aktuellen Monat, der angeklickt wurde.
- */
 function handleSelectDate(dayNumber: number) {
   emit('select-date', dayNumber)
   console.log("DEBUG: CalendarView")

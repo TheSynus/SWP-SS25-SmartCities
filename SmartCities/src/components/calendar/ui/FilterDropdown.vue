@@ -3,33 +3,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-
-/**
- * FilterDisplay Component                  
- * Zeigt alle aktuell aktiven Filter in einer Liste mit Icons und Farben an.
- *
- * Funktionen:
- * - Listet gesetzte Filter wie Datum, Kategorie, Ort oder Suchtext auf.
- * - Hebt das aktive Kalenderdatum priorisiert hervor.
- * - Bietet Schaltflächen zum Entfernen einzelner Filter oder zum Zurücksetzen aller Filter.
- * - Dynamische Anzeige der Filteranzahl und Typ-basiertes Styling.
- *
- * Kommunikation:
- * - Props übergeben den aktuellen Filterzustand (filterData) und das gewählte Kalenderdatum.
- * - Emits informieren die Elternkomponente über „Reset“-Aktionen.
- *
- * Styling:
- * - Verwendet TailwindCSS für ein modulares, responsives Layout.
- *
- * @component
- * @file FilterDisplay.vue
- * @description Anzeige und Verwaltung der aktiven Filter in der Smart-Cities-App.
- * @author Dalshad Ahmad, Kire Bpzinovski
- */
-
-/**
- * Struktur der Filterdaten, die aktiv sein können.
- */
+// Types
 interface FilterData {
   date: string
   category: string
@@ -37,34 +11,24 @@ interface FilterData {
   searchText: string
 }
 
-/**
- * Öffentliche Eigenschaften (Props) der Komponente.
- */
+// Props
 interface Props {
   filterData: FilterData
   selectedDate: string | null
   class?: string
 }
 
-/**
- * Props-Definition mit Standardwerten.
- */
 const props = withDefaults(defineProps<Props>(), {
   class: ''
 })
 
-/**
- * Events (Emits), die an die Elternkomponente gesendet werden.
- */
+// Emits
 const emit = defineEmits<{
   'reset-all': []
   'reset-filter': [key: keyof FilterData | 'selectedDate']
 }>()
 
-/**
- * Berechnet eine Liste aller aktuell aktiven Filter.
- * Jeder Eintrag enthält Label, Wert, Icon und Typ zur Farbgebung.
- */
+// Computed
 const activeFilters = computed(() => {
   const filters: Array<{
     key: keyof FilterData | 'selectedDate'
@@ -74,7 +38,7 @@ const activeFilters = computed(() => {
     type: 'date' | 'text' | 'calendar'
   }> = []
 
-  // Prio
+  // Calendar Date Filter (has priority)
   if (props.selectedDate) {
     filters.push({
       key: 'selectedDate',
@@ -85,6 +49,7 @@ const activeFilters = computed(() => {
     })
   }
 
+  // Regular Date Filter (only if no calendar date)
   if (props.filterData.date && !props.selectedDate) {
     filters.push({
       key: 'date',
@@ -131,17 +96,9 @@ const activeFilters = computed(() => {
   return filters
 })
 
-/**
- * Gibt die Anzahl der aktuell aktiven Filter zurück.
- */
 const filterCount = computed(() => activeFilters.value.length)
 
-/**
- * Formatiert ein ISO-Datum für die Anzeige (deutsches Format).
- *
- * @param dateString ISO-Datum als String.
- * @returns Formatiertes Datum wie „Mi, 08.10.2025“ oder Originalwert bei Fehler.
- */
+// Methods
 function formatDate(dateString: string): string {
   try {
     return new Date(dateString).toLocaleDateString('de-DE', {
@@ -155,31 +112,14 @@ function formatDate(dateString: string): string {
   }
 }
 
-/**
- * Löst das Event zum Zurücksetzen aller Filter aus.
- *
- * @emits reset-all
- */
 function handleResetAll() {
   emit('reset-all')
 }
 
-/**
- * Entfernt einen einzelnen Filter anhand seines Schlüssels.
- *
- * @param key Schlüssel des zu löschenden Filters.
- * @emits reset-filter – mit Schlüsselwert
- */
 function handleResetFilter(key: keyof FilterData | 'selectedDate') {
   emit('reset-filter', key)
 }
 
-/**
- * Liefert CSS-Klassen für Farbgebung und Rahmen anhand des Filtertyps.
- *
- * @param type Art des Filters (calendar, date, text)
- * @returns TailwindCSS-Klassenstring zur Darstellung.
- */
 function getFilterTypeClass(type: string): string {
   switch (type) {
     case 'calendar':
