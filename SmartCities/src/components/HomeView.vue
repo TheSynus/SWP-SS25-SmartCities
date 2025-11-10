@@ -37,7 +37,7 @@ const handleTabChange = (tabName: string) => {
   <div class="min-h-screen flex flex-col ">
     <main class="flex-1 flex flex-col overflow-hidden">
       <div
-        class="h-full"
+        class="h-full flex-1 p-2.5"
         :style="
           props.scale !== 1
             ? {
