@@ -212,12 +212,8 @@ onMounted(async () => {
   <div class="h-screen flex flex-col bg-[#0B1739] text-white overflow-hidden">
     <!-- Compact Header -->
     <header class="bg-gray-900 border-b border-white/10 px-3 py-2 flex-shrink-0">
-      <div class="flex items-center justify-between mb-2">
+      <div class="flex items-right justify-between mb-2">
         <div>
-          <h1 class="text-lg font-bold">Kalender</h1>
-          <p class="text-xs text-gray-400">
-            {{ calendarStore.month.value }} {{ calendarStore.year.value }}
-          </p>
         </div>
 
         <div class="flex gap-2">
