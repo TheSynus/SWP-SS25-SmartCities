@@ -211,13 +211,9 @@ onMounted(async () => {
 <template>
   <div class="h-screen flex flex-col bg-[#0B1739] text-white overflow-hidden">
     <!-- Compact Header -->
-    <header class="bg-[#0d1f4d] border-b border-white/10 px-3 py-2 flex-shrink-0">
-      <div class="flex items-center justify-between mb-2">
+    <header class="bg-gray-900 border-b border-white/10 px-3 py-2 flex-shrink-0">
+      <div class="flex items-right justify-between mb-2">
         <div>
-          <h1 class="text-lg font-bold">Kalender</h1>
-          <p class="text-xs text-gray-400">
-            {{ calendarStore.month.value }} {{ calendarStore.year.value }}
-          </p>
         </div>
 
         <div class="flex gap-2">
@@ -343,7 +339,7 @@ onMounted(async () => {
     </header>
 
     <!-- Main Content -->
-    <main class="flex-1 overflow-hidden flex flex-col">
+    <main class="flex-1 overflow-hidden bg-gray-900 flex flex-col">
       <!-- Calendar View -->
       <div v-if="currentView === 'calendar'" class="flex-1 overflow-y-auto p-2">
         <!-- Month Navigation -->

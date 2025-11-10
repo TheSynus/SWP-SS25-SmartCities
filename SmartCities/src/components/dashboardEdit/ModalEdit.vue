@@ -33,7 +33,7 @@ onMounted(() => {
 
 <template>
   <!-- Main modal -->
-  <div class="relative p-4 w-full max-w-7xl max-h-full">
+  <div class="relative z-100 p-4 w-full max-w-7xl max-h-full">
     <!-- Modal content -->
     <div class="relative bg-white rounded-lg shadow-sm dark:bg-gray-700">
       <!-- Modal header -->

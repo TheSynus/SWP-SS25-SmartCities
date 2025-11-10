@@ -118,12 +118,7 @@ async function submitContact() {
 <template>
   <!-- Force Dark Mode inside the component -->
   <section class="relative dark w-full h-full bg-gray-900 text-gray-100">
-    <header class="mb-4">
-      <h2 class="text-2xl font-semibold text-gray-100">
-        {{ props.title ?? 'Mehr' }}
-      </h2>
-      <p class="text-sm text-gray-400">Schnellzugriff auf weitere Bereiche</p>
-    </header>
+   
 
     <!-- Stacked menu cards -->
     <div class="grid grid-cols-1 gap-4">

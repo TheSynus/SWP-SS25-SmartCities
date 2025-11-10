@@ -216,7 +216,7 @@ function normalizeDate(s: string) {
     </header>
 
     <!-- Main Content -->
-    <main class="flex flex-1 p-4 gap-6">
+    <main class="flex flex-1 p-4 bg-gray-900 gap-6">
       <!-- Event Sidebar -->
       <EventSidebar
         :filtered-events="calendarStore.filteredEvents.value"
