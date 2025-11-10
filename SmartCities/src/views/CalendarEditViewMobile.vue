@@ -276,15 +276,6 @@ onMounted(async () => {
               </button>
             </div>
           </div>
-
-          <!-- ← GEÄNDERT: + Button nur noch für Non-Admins sichtbar (oder als Shortcut) -->
-          <button
-            v-else
-            @click="openNewEvent"
-            class="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 transition text-xs font-medium"
-          >
-            + Neu
-          </button>
         </div>
       </div>
 
