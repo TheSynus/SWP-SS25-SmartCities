@@ -25,19 +25,19 @@ Um das Backend lokal zu starten, wird am besten **Docker Desktop** benötigt. Di
 
 1.  **Repository klonen:**
     ```bash
-    git clone <deine-repo-url>
+    git clone https://github.com/TheSynus/SWP-SS25-SmartCities
     cd SmartCities_Backend
     ```
 
 2.  **Umgebungsvariablen einrichten:**
     Kopiere die Vorlagedatei `api/.env.example` und benenne sie in `api/.env` um. Trage dort die notwendigen Werte ein wie den `WEATHER_API_KEY`.
 
-3.  **Container starten:**
-    Führe im Hauptverzeichnis des Projekts (`SmartCities_Backend`) das `restart.sh`-Skript aus:
+3.  **Stack bauen & starten:**  
+    Starte Starte mit folgendem Befehl den Docker-Stack:
     ```bash
-    ./restart.sh
+    docker compose up --build -d
     ```
-    Dieses Skript startet alle notwendigen Container (API, Datenbank, pgAdmin). Beim ersten Start wird das Datenbankschema aus `db/init.sql` automatisch angelegt.
+    Es starten alle notwendigen Container (API, Datenbank, pgAdmin). Beim ersten Start wird das Datenbankschema aus `db/init.sql` automatisch angelegt.
 
 4.  **Server Konfigurieren:**
     Nach dem ersten Start müssen die Server-Einstellungen über die `/setup`-Routen (siehe unten) konfiguriert werden, damit die externen APIs funktionieren.
@@ -127,11 +127,17 @@ Routen zur Interaktion mit der zugrundeliegenden Datenbank, stellen grundlegende
 * **/categorys** Verwaltung von Kategorien, die z.B. für Termine verwendet werden.
 * **/graphs** Verwaltung von Graphen. Bietet einen speziellen POST /graphs/uploadJson Endpunkt, um einen Graphen inklusive aller seiner Datenpunkte in einer einzigen Anfrage zu erstellen.
 * **/marker** Verwaltung von Events.
+
+**Router aufbau**
+
+Da alle Router gleich aufgebaut sind hier einmal beispielhaft hier einmal die Struktur anhand des Marker-Routers
+
   | Methode | Endpunkt | Beschreibung |
   | ------- | -------- | ------------ |
   | POST | /marker/ | Erstellt neuen Marker |
   | GET | /marker/ | Liefert alle Marker zurück
   | GET | /marker/:id | Liefert Marker basierend auf einer ID zurück
+  | PATCH | /marker/:id | Zum bearbeiten von bestehenden Markern
   | DELETE | /marker/:id | Löscht einen Marker basierend auf der ID
 
 **Beispiel für das Testen mit cURL:**
