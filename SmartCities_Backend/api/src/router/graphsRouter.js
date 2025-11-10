@@ -53,36 +53,6 @@ router.post("/uploadJson", async (req, res) => {
 })
 
 /*
-Route zum Erstellen eines Graphen (nur Metadaten)
-*/
-/*
-router.post('/', async (req, res) => {
-    const validation = await validateJSON(req.body, 'metadata');
-
-    //Bei fehlgeschlagener Validierung
-    if (!validation.valid) {
-      return res.status(400).json({
-        status: 'error',
-        message: 'Ungültige Daten',
-        errors: validation.errors,
-      });
-    }
-
-    const { title, type } = req.body;
-
-    try {
-        const newGraph = await pool.query(
-            "INSERT INTO graphs (title, type) VALUES ($1, $2) RETURNING *",
-            [title, type]
-        );
-        res.status(201).json(newGraph.rows[0]);
-    } catch (err) {
-        console.error("Fehler beim Erstellen des Graphen:", err.message);
-        res.status(500).json({ error: "Serverfehler beim Erstellen des Graphen." });
-    }
-});
-*/
-/*
 Routen zum erhalten aller verfügbaren Graphen
 */
 router.get('/', async (req, res) => {
