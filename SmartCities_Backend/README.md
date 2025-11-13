@@ -3,8 +3,8 @@
 Hier werden alle APIs für die Kommunikation zum Web-Server, 
 sowie zur Datenbank als auch nach außen Implementiert.
 
-Es gibt noch ne .env die nicht in git hochgeladen werden sollte.
-Eine Vorlage dieser mit allen Variablen ist in .env.example.
+Für den Backend-Betrieb ist eine .env-Datei notwendig. 
+Eine Vorlage dieser ist in .env.example im api-Folder zu finden.
 
 ## config.json
 In der config.json werden Variablen für den Server während des Betriebs gelesen, geschrieben und persistent gespeichert, wie zum Beispiel die Postleitzahl.
