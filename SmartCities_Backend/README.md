@@ -21,7 +21,7 @@ Die config.json sollte initial vor der Konfiguration des Server so aussehen, dam
 
 ## Inbetriebnahme 
 
-Um das Backend lokal zu starten, wird am besten **Docker Desktop** benötigt. Die gesamte Umgebung, inklusive der Datenbank, wird über Docker Compose gesteuert.
+Um das Backend lokal zu starten, wird **Docker Desktop** benötigt. Die gesamte Umgebung, inklusive der Datenbank, wird über Docker Compose gesteuert.
 
 1.  **Repository klonen:**
     ```bash
@@ -120,7 +120,7 @@ Aufbau des JSON-Response-Bodies:
 ```
 
 ### Datenbank-Routen
-Routen zur Interaktion mit der zugrundeliegenden Datenbank, stellen grundlegende CRUD-Operationen zur Verfügung. Sie unterstützen die Standard-HTTP-Methoden (GET, POST, PUT, DELETE).
+Routen zur Interaktion mit der zugrundeliegenden Datenbank, stellen grundlegende CRUD-Operationen zur Verfügung. Sie unterstützen die Standard-HTTP-Methoden (GET, POST, PATCH DELETE).
 
 * **/appointments** Verwaltung von Terminen.
 * **/cards** Verwaltung der Dashboard-Karten, inklusive Positionierung.
@@ -130,7 +130,7 @@ Routen zur Interaktion mit der zugrundeliegenden Datenbank, stellen grundlegende
 
 **Router aufbau**
 
-Da alle Router gleich aufgebaut sind hier einmal beispielhaft hier einmal die Struktur anhand des Marker-Routers
+Da alle Router gleich aufgebaut sind, wird nachfolgend exemplarisch die Struktur am Beispiel des Marker-Routers dargestellt.
 
   | Methode | Endpunkt | Beschreibung |
   | ------- | -------- | ------------ |
@@ -140,17 +140,16 @@ Da alle Router gleich aufgebaut sind hier einmal beispielhaft hier einmal die St
   | PATCH | /marker/:id | Zum bearbeiten von bestehenden Markern
   | DELETE | /marker/:id | Löscht einen Marker basierend auf der ID
 
-**Beispiel für das Testen mit cURL:**
+**Beispiel für das Testen mit cURL:** 
+
+Zur Überprüfung der API-Funktionalität sowie als Orientierungshilfe für das Frontend befindet sich im Verzeichnis `./testData` für jeden Datenbank-Router eine passende JSON-Vorlagendatei.
+
+Diese Dateien ermöglichen das einfache Testen und Validieren der einzelnen Router-Endpunkte, beispielsweise mit cURL:
 
 ```bash
-# Hochladen eines Graphen mit gültigen Daten
-curl -X POST "http://localhost:3000/graphs/uploadJson" -H "Content-Type: application/json" -d "@testData/body.json"
-
-# Hochladen eines Graphen mit ungültigen Daten
-curl -X POST "http://localhost:3000/graphs/uploadJson" -H "Content-Type: application/json" -d "@testData/badbody.json"
+# Hochladen eines Markers mit gültigen Daten
+curl -X POST "http://localhost:3000/graphs/uploadJson" -H "Content-Type: application/json" -d "@testData/marker.json"
 ```
-
-
 
 # Architektur & Datenmodell 
 Die Anwendung ist in drei Docker-Container aufgeteilt: die API (Node.js), die PostgreSQL-Datenbank und eine pgAdmin-Instanz zur Verwaltung. Das Herzstück des Backends ist das relationale Datenmodell in der PostgreSQL-Datenbank, welches die Grundlage für alle CRUD-Operationen bildet.
@@ -163,73 +162,83 @@ Das Schema definiert alle Entitäten wie appointments, cards oder graphs und der
 erDiagram
     %% Tabellen
     USERS {
-        int id PK
-        varchar(50) username "UNIQUE NOT NULL"
-        varchar(100) email "UNIQUE NOT NULL"
-        text password_hash "NOT NULL"
-        varchar(20) role "NOT NULL"
-        timestamp created_at "DEFAULT now()"
-        timestamp updated_at "DEFAULT now()"
+      int id PK
+      varchar(50) username "UNIQUE NOT NULL"
+      varchar(100) email "UNIQUE NOT NULL"
+      text password_hash "NOT NULL"
+      varchar(20) role "NOT NULL CHECK ('admin','user')"
+      timestamp created_at "DEFAULT CURRENT_TIMESTAMP"
+      timestamp updated_at "DEFAULT CURRENT_TIMESTAMP"
     }
 
     CATEGORY {
-        int id PK
-        varchar(200) title "NOT NULL"
-        varchar(7) color "DEFAULT #808080"
+      int id PK
+      varchar(200) title "NOT NULL"
+      varchar(7) color "DEFAULT '#808080'"
     }
 
     APPOINTMENTS {
-        int id PK
-        varchar(200) title "NOT NULL"
-        timestamp start_time "NOT NULL"
-        timestamp end_time "NOT NULL"
-        varchar(255) location
-        int category_id FK
-        recurrence_type recurrence "DEFAULT none"
-        text description
-    }
-
-    IMAGES {
-        int id PK
-        varchar(255) file_name "NOT NULL"
-        bytea file_data "NOT NULL"
-        varchar(100) mime_type "NOT NULL"
-        text additional_info
+      int id PK
+      varchar(200) title "NOT NULL"
+      timestamp start_time "NOT NULL"
+      timestamp end_time "NOT NULL"
+      varchar(255) location
+      int category_id FK "REFERENCES category(id) ON DELETE SET NULL"
+      recurrence_type recurrence "NOT NULL DEFAULT 'none'"
+      text description
     }
 
     GRAPHS {
-        int id PK
-        varchar(255) title
-        varchar(100) type
+      int id PK
+      varchar(255) title
+      varchar(100) type
     }
 
     GRAPHS_DATA {
-        int id PK
-        int graph_id FK
-        varchar(100) x_comp
-        varchar(100) y_comp
+      int id PK
+      int graph_id FK "REFERENCES graphs(id) ON DELETE CASCADE"
+      varchar(100) x_comp
+      varchar(100) y_comp
     }
 
     CARD {
-        int id PK
-        varchar(255) title "NOT NULL"
-        int position "NOT NULL"
-        card_type type "NOT NULL"
-        int graph_id FK
-        timestamp created_at "DEFAULT now()"
-        timestamp updated_at "DEFAULT now()"
+      int id PK
+      varchar(255) title "NOT NULL"
+      int position "NOT NULL"
+      card_type type "NOT NULL"
+      int graph_id FK "REFERENCES graphs(id) ON DELETE SET NULL"
+      timestamp created_at "DEFAULT CURRENT_TIMESTAMP"
+      timestamp updated_at "DEFAULT CURRENT_TIMESTAMP"
+    }
+
+    MARKER {
+      int id PK
+      varchar(255) name "NOT NULL"
+      text description "NOT NULL"
+      int category_id FK "REFERENCES category(id) ON DELETE SET NULL"
+      decimal latitude
+      decimal longitude
+      boolean is_public "DEFAULT FALSE"
+      timestamp created_at "DEFAULT CURRENT_TIMESTAMP"
+      timestamp updated_at "DEFAULT CURRENT_TIMESTAMP"
     }
     
     %% ENUMs
-    RECURRENCE_TYPE { varchar value PK } 
-    CARD_TYPE { varchar value PK }
+    RECURRENCE_TYPE { 
+      varchar value PK "('none','daily','weekly','monthly','yearly')"
+    }
+    
+    CARD_TYPE { 
+        varchar value PK "('weather','nina','wind','line','bar','column','pie','calender')"
+    }
 
     %% Beziehungen
-    CATEGORY ||--o{ APPOINTMENTS : "category_id"
-    GRAPHS ||--o{ GRAPHS_DATA : "graph_id"
-    GRAPHS ||--o{ CARD : "graph_id"
-    APPOINTMENTS }o--|| RECURRENCE_TYPE : "has recurrence"
-    CARD }o--|| CARD_TYPE : "has type"	
+    CATEGORY ||--o{ APPOINTMENTS : "category_id (SET NULL)"
+    CATEGORY ||--o{ MARKER : "category_id (SET NULL)"
+    GRAPHS ||--o{ GRAPHS_DATA : "graph_id (CASCADE)"
+    GRAPHS ||--o{ CARD : "graph_id (SET NULL)"
+    APPOINTMENTS }o--|| RECURRENCE_TYPE : "recurrence"
+    CARD }o--|| CARD_TYPE : "type"	
 ```
 
 
