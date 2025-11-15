@@ -1,10 +1,10 @@
 const express = require('express');
 const pool = require('../db.js');
 const Ajv = require('ajv'); 
-
 const router = express.Router();
 const ajv = new Ajv(); 
 
+/*##############################---Routen---##############################*/
 
 /*
 -- Route zum Erstellen einer Kategorie
@@ -140,6 +140,5 @@ async function validateJSON(data) {
         };
     }
 }
-
 
 module.exports = router;

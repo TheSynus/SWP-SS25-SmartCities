@@ -1,9 +1,10 @@
 const express = require('express');
 const pool = require('../db.js');
 const Ajv = require('ajv');
-
 const router = express.Router();
 const ajv = new Ajv();
+
+/*##############################---Routen---##############################*/
 
 /*
 Routen zum validieren und Speichern von neuen Graphen inkl. Daten

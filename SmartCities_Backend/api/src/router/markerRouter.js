@@ -4,7 +4,6 @@ const Ajv = require('ajv');
 const router = express.Router();
 const ajv = new Ajv();
 
-
 /*##############################---Routen---##############################*/
 
 /*

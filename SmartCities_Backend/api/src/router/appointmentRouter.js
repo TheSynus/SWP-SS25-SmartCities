@@ -1,14 +1,13 @@
 const express = require('express');
 const pool = require('../db.js');
 const Ajv = require('ajv'); 
-const addFormats = require('ajv-formats'); 
-
 const router = express.Router();
 const ajv = new Ajv(); 
-addFormats(ajv); 
+
+/*##############################---Routen---##############################*/
 
 /*
--- Route zum Erstellen eines Termins
+Route zum Erstellen eines Termins
 */
 router.post('/', async (req, res) => {
     
