@@ -3,9 +3,6 @@
 Hier werden alle APIs für die Kommunikation zum Web-Server, 
 sowie zur Datenbank als auch nach außen Implementiert.
 
-Für den Backend-Betrieb ist eine .env-Datei notwendig. 
-Eine Vorlage dieser ist in .env.example im api-Folder zu finden.
-
 ## config.json
 In der config.json werden Variablen für den Server während des Betriebs gelesen, geschrieben und persistent gespeichert, wie zum Beispiel die Postleitzahl.
 Die config.json sollte initial vor der Konfiguration des Server so aussehen, damit die Werte gesetzt werden können: 
@@ -15,7 +12,8 @@ Die config.json sollte initial vor der Konfiguration des Server so aussehen, dam
         "cityName":"",
         "regionalKey":-1
         "latitude": -1,
-        "longitude": -1
+        "longitude": -1,
+        "apiKey": ""
     } 
 ```    
 
@@ -29,17 +27,14 @@ Um das Backend lokal zu starten, wird **Docker Desktop** benötigt. Die gesamte 
     cd SmartCities_Backend
     ```
 
-2.  **Umgebungsvariablen einrichten:**
-    Kopiere die Vorlagedatei `api/.env.example` und benenne sie in `api/.env` um. Trage dort die notwendigen Werte ein wie den `WEATHER_API_KEY`.
-
-3.  **Stack bauen & starten:**  
+2.  **Stack bauen & starten:**  
     Starte Starte mit folgendem Befehl den Docker-Stack:
     ```bash
     docker compose up --build -d
     ```
     Es starten alle notwendigen Container (API, Datenbank, pgAdmin). Beim ersten Start wird das Datenbankschema aus `db/init.sql` automatisch angelegt.
 
-4.  **Server Konfigurieren:**
+3.  **Server Konfigurieren:**
     Nach dem ersten Start müssen die Server-Einstellungen über die `/setup`-Routen (siehe unten) konfiguriert werden, damit die externen APIs funktionieren.
 
 Der API-Server ist nun unter `http://localhost:3000` erreichbar.
@@ -55,6 +50,8 @@ Aufbau des JSON-Request-Bodies: `{ "regionalKey": "010560050050" }`, regionalKey
 * **/setup/geo-coords:** POST-Request zum initialen Setzen von Geokoordinaten der Gemeinde.\
 Aufbau des JSON-Request-Bodies: `{ "lat": 53.58, "lon": 9.70 }`, Abtrennung der Koordinaten mit einem Punkt.\
 Erhalt der Geokoortinaten z.B. einfach durch Google-Maps möglich.
+* **/setup/apiKey:** POST-Request zum (initialen) Setzen des OpenWeather-API Keys.\
+Aufbau des JSON-Request-Bodies: `{ "apiKey": "Eigener-API-Schlüssel" }`
 
 ### /nina/...
 Routen zum Abfragen von NINA-Warndaten für den Kreis der Gemeinde über den Regionalschlüssel
@@ -117,6 +114,47 @@ Aufbau des JSON-Response-Bodies:
     },
     ...
   ]
+```
+#### Testen der HTTP-Routen
+Die HTTP-Routen lassen sich über folgende Requests zum Beispiel über Postman oder die REST Client Erweiterung in VSCode testen.
+```
+POST http://localhost:3001/setup/plz
+Content-Type: application/json
+
+{
+  "plz": "22880"
+}
+
+###
+
+GET http://localhost:3001/nina/call
+
+###
+
+GET http://localhost:3001/nina/test
+
+###
+
+POST http://localhost:3001/setup/regionalKey
+Content-Type: application/json
+
+{
+  "regionalKey": "010560050050"
+}
+
+###
+
+POST http://localhost:3001/setup/geo-coords
+Content-Type: application/json
+
+{
+  "lat": 53.58,
+  "lon": 9.70
+}
+
+###
+
+GET http://localhost:3001/weather/call
 ```
 
 ### Datenbank-Routen

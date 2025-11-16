@@ -2,6 +2,67 @@
 
 This guide explains how to deploy the SmartCities web application in production using Docker Compose.
 
+## CI/CD with GitHub Actions
+
+The project uses GitHub Actions to automatically build and push Docker images to GitHub Container Registry (ghcr.io) whenever code is pushed to the `main` branch or when a version tag is created.
+
+### Automated Image Building
+
+When you push to the `main` branch, GitHub Actions will:
+1. Build the frontend and backend Docker images
+2. Push them to `ghcr.io/thesynus/swp-ss25-smartcities/frontend:latest` and `ghcr.io/thesynus/swp-ss25-smartcities/backend:latest`
+3. Cache layers for faster subsequent builds
+
+This means **you don't need to build images on the production server** - just pull the pre-built images.
+
+### Manual Workflow Trigger
+
+You can also manually trigger a build from the GitHub Actions tab:
+1. Go to the repository on GitHub
+2. Click "Actions" → "Build and Push Docker Images"
+3. Click "Run workflow"
+
+### Version Tagging
+
+To create a versioned release:
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+This will create images tagged with:
+- `v1.0.0` (full version)
+- `1.0` (major.minor)
+- `latest` (if on main branch)
+
+### Authenticating with GitHub Container Registry
+
+On your production server, authenticate Docker with GitHub Container Registry:
+
+```bash
+# Create a GitHub Personal Access Token (PAT) with 'read:packages' scope
+# Go to GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic)
+
+# Login to ghcr.io
+echo "YOUR_GITHUB_PAT" | docker login ghcr.io -u YOUR_GITHUB_USERNAME --password-stdin
+```
+
+The token only needs `read:packages` permission for pulling images.
+
+## Docker Compose Files
+
+The project includes two Docker Compose configurations:
+
+- **`docker-compose.prod.yml`**: Production deployment using pre-built images from GitHub Container Registry
+  - Use this for production deployments
+  - Images are automatically built by GitHub Actions
+  - No local building required
+
+- **`docker-compose.test.yml`**: Local testing with image building
+  - Use this for testing the entire production stack locally
+  - Builds images on your machine
+  - Useful for verifying changes before pushing to GitHub
+
 ## Prerequisites
 
 - Docker Engine 20.10+ and Docker Compose V2
@@ -11,14 +72,23 @@ This guide explains how to deploy the SmartCities web application in production 
 
 ## Quick Start
 
-### 1. Clone the Repository
+### 1. Authenticate with GitHub Container Registry
+
+```bash
+# Create a Personal Access Token at GitHub → Settings → Developer settings
+# Token needs 'read:packages' permission
+
+echo "YOUR_GITHUB_PAT" | docker login ghcr.io -u YOUR_GITHUB_USERNAME --password-stdin
+```
+
+### 2. Clone the Repository
 
 ```bash
 git clone git@github.com:TheSynus/SWP-SS25-SmartCities.git
 cd SWP-SS25-SmartCities
 ```
 
-### 2. Configure Environment Variables
+### 3. Configure Environment Variables
 
 ```bash
 # Copy the example environment file
@@ -30,7 +100,7 @@ nano .env.production
 
 **Important**: Change all default passwords before deployment!
 
-### 3. Configure Backend Settings
+### 4. Configure Backend Settings
 
 Ensure the backend configuration file has valid initial values:
 
@@ -58,11 +128,11 @@ Replace these values with your municipality's data:
 - `latitude`/`longitude`: Geo-coordinates for weather data
 - `apiKey`: Your OpenWeatherMap API key (get one at https://openweathermap.org/api)
 
-### 4. Deploy the Application
+### 5. Deploy the Application
 
 ```bash
-# Build and start all services
-docker compose -f docker-compose.prod.yml --env-file .env.production up -d --build
+# Pull pre-built images and start all services
+docker compose -f docker-compose.prod.yml --env-file .env.production up -d
 
 # View logs
 docker compose -f docker-compose.prod.yml logs -f
@@ -71,11 +141,29 @@ docker compose -f docker-compose.prod.yml logs -f
 docker compose -f docker-compose.prod.yml ps
 ```
 
+**Note**: The images are pulled from GitHub Container Registry. No build step is needed on the production server.
+
+### Local Testing
+
+For local testing of the entire stack with built images (before pushing to production), use the test compose file:
+```bash
+# Build and start the entire stack locally
+docker compose -f docker-compose.test.yml --env-file .env.production up -d --build
+
+# View logs
+docker compose -f docker-compose.test.yml logs -f
+
+# Stop local test stack
+docker compose -f docker-compose.test.yml down
+```
+
+This allows you to verify that everything builds correctly and works together before GitHub Actions builds and pushes the images.
+
 The application will be available at:
 - **Frontend**: http://your-server-ip (default port 80)
 - **API**: http://your-server-ip/api/
 
-### 5. Verify Deployment
+### 6. Verify Deployment
 
 ```bash
 # Check all containers are healthy
@@ -106,7 +194,6 @@ docker compose -f docker-compose.prod.yml --profile admin up -d
 - [ ] Changed all default passwords in `.env.production`
 - [ ] Generated strong, unique passwords (use `openssl rand -base64 32`)
 - [ ] Updated `config.json` with valid API key
-- [ ] Disabled pgAdmin or restricted access (use `--profile admin` only when needed)
 - [ ] Set up HTTPS/SSL (see SSL Setup section below)
 
 ### Configuration
@@ -224,15 +311,20 @@ docker exec -it smartcities_postgres psql -U admin -d webportal
 ### Update Application
 
 ```bash
-# Pull latest changes
+# Pull latest changes from git
 git pull origin main
 
-# Rebuild and restart
-docker compose -f docker-compose.prod.yml up -d --build
+# Pull latest Docker images from registry
+docker compose -f docker-compose.prod.yml pull
+
+# Restart with new images
+docker compose -f docker-compose.prod.yml up -d
 
 # Check for errors
 docker compose -f docker-compose.prod.yml logs -f
 ```
+
+**Note**: Since images are built by GitHub Actions, you just need to pull the latest images, not rebuild them locally.
 
 ## Monitoring and Health Checks
 

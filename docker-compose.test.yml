@@ -25,7 +25,9 @@ services:
 
   # Backend API
   api:
-    image: ghcr.io/thesynus/swp-ss25-smartcities/backend:latest
+    build:
+      context: ./SmartCities_Backend
+      dockerfile: api/Dockerfile
     container_name: smartcities_api
     restart: unless-stopped
     environment:
@@ -52,7 +54,9 @@ services:
 
   # Frontend (Vue + Nginx)
   frontend:
-    image: ghcr.io/thesynus/swp-ss25-smartcities/frontend:latest
+    build:
+      context: ./SmartCities
+      dockerfile: Dockerfile
     container_name: smartcities_frontend
     restart: unless-stopped
     ports:
