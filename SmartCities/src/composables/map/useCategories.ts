@@ -1,24 +1,31 @@
-// composables/useCategories.js
+// composables/useCategories.ts
 import { ref } from 'vue'
 import axios from 'axios'
+import type { Category } from '../calendar/useCalendarStore'
 
 const API_URL = import.meta.env.VITE_API_URL
 
 export function useCategories() {
   // State
-  const categories = ref([])
+  const categories = ref<Category[]>([])
   const loading = ref(false)
-  const error = ref(null)
+  const error = ref<string | null>(null)
 
   /*##########################
     Helper Function
   ##########################*/
-  const handleError = (err) => {
-    if (err.response && err.response.data) {
-      error.value = err.response.data.error || err.response.data.message
+  const handleError = (err: unknown) => {
+    const defaultMsg = 'Unbekannter Fehler'
+
+    if (axios.isAxiosError(err) && err.response?.data) {
+      const data = err.response.data as { error?: string; message?: string }
+      error.value = data.error ?? data.message ?? defaultMsg
+    } else if (err instanceof Error) {
+      error.value = err.message || defaultMsg
     } else {
-      error.value = err.message || 'Unbekannter Fehler'
+      error.value = defaultMsg
     }
+
     console.error('API Error:', error.value)
   }
 
@@ -29,7 +36,7 @@ export function useCategories() {
     loading.value = true
     error.value = null
     try {
-      const res = await axios.get(`${API_URL}/categorys`)
+      const res = await axios.get<Category[]>(`${API_URL}/categorys`)
       categories.value = res.data
     } catch (err) {
       handleError(err)
@@ -41,14 +48,13 @@ export function useCategories() {
   /*##########################
     Create Category
   ##########################*/
-  const createCategory = async (categoryData) => {
+  const createCategory = async (categoryData: Category) => {
     loading.value = true
     error.value = null
     try {
       const res = await axios.post(`${API_URL}/categorys`, categoryData)
 
       if (res.status === 201 && res.data) {
-        // sichere Variante: komplette Liste neu laden (um DB-Defaults wie color zu holen)
         await fetchCategories()
         return true
       }
@@ -64,14 +70,13 @@ export function useCategories() {
   /*##########################
     Update Category
   ##########################*/
-  const updateCategory = async (id, categoryData) => {
+  const updateCategory = async (id: number, categoryData: Category) => {
     loading.value = true
     error.value = null
     try {
       const res = await axios.patch(`${API_URL}/categorys/${id}`, categoryData)
 
       if (res.status === 200 && res.data) {
-        // Liste neu laden (zur Sicherheit)
         await fetchCategories()
         return true
       }
@@ -87,14 +92,14 @@ export function useCategories() {
   /*##########################
     Delete Category
   ##########################*/
-  const deleteCategory = async (id) => {
+  const deleteCategory = async (id: number) => {
     loading.value = true
     error.value = null
     try {
       const res = await axios.delete(`${API_URL}/categorys/${id}`)
 
       if (res.status === 204 || res.status === 200) {
-        categories.value = categories.value.filter((c) => c.id !== id)
+        categories.value = categories.value.filter((c: Category) => c.id !== id)
         return true
       }
       return false

@@ -14,9 +14,12 @@ export default defineConfigWithVueTs(
     files: ['**/*.{ts,mts,tsx,vue}'],
   },
 
-  globalIgnores(['**/dist/**', '**/dist-ssr/**', '**/coverage/**']),
+  {
+    ignores: ['**/dist/**', '**/dist-ssr/**', '**/coverage/**'],
+  } as any,
 
-  pluginVue.configs['flat/essential'],
-  vueTsConfigs.recommended,
-  skipFormatting,
+  ...(pluginVue.configs['flat/essential'] as any),
+  vueTsConfigs.recommended as any,
+  skipFormatting as any,
 )
+ 

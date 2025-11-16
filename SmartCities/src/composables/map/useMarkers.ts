@@ -1,27 +1,46 @@
 // composables/useMarkers.js
 import { ref, computed } from 'vue'
 import axios from 'axios'
-
 const API_URL = import.meta.env.VITE_API_URL
 
+interface Marker {
+  id: number
+  category_id: number | null
+  name: string
+  description: string
+
+  // Map-related
+  latitude?: string | number | null
+  longitude?: string | number | null
+
+  // Metadata
+  is_public?: boolean
+  created_at?: string | null
+}
 export function useMarkers() {
   // State
-  const markers = ref([])
+  const markers = ref<Marker[]>([])
   const loading = ref(false)
-  const error = ref(null)
+  const error = ref<string | null>(null)
 
   const searchQuery = ref('')
-  const selectedCategory = ref(null) // Kategorie-ID oder null für alle
+  const selectedCategory = ref(null)
 
   /*##########################
     Helper Functions
   ##########################*/
-  const handleError = (err) => {
-    if (err.response && err.response.data) {
-      error.value = err.response.data.error || err.response.data.message
+  const handleError = (err: unknown) => {
+    const defaultMsg = 'Unbekannter Fehler'
+
+    if (axios.isAxiosError(err) && err.response?.data) {
+      const data = err.response.data as { error?: string; message?: string }
+      error.value = data.error ?? data.message ?? defaultMsg
+    } else if (err instanceof Error) {
+      error.value = err.message || defaultMsg
     } else {
-      error.value = err.message || 'Unbekannter Fehler'
+      error.value = defaultMsg
     }
+
     console.error('API Error:', error.value)
   }
 
@@ -44,12 +63,12 @@ export function useMarkers() {
   /*##########################
     Fetch Single Marker by ID
   ##########################*/
-  const fetchMarker = async (id) => {
+  const fetchMarker = async (id: number) => {
     loading.value = true
     error.value = null
     try {
       const res = await axios.get(`${API_URL}/marker/${id}`)
-      return res.data // einzelner Marker
+      return res.data as Marker
     } catch (err) {
       handleError(err)
       return null
@@ -61,59 +80,14 @@ export function useMarkers() {
   /*##########################
     Create Marker
   ##########################*/
-  const createMarker = async (markerData) => {
+  const createMarker = async (markerData: Marker) => {
     loading.value = true
     error.value = null
     try {
       const res = await axios.post(`${API_URL}/marker`, markerData)
 
-      // Backend liefert kein Marker-Objekt zurück, daher reload nötig:
-      if (res.status === 201) {
+      if (res.status === 201 && res.data) {
         await fetchMarkers()
-      }
-
-      return true
-    } catch (err) {
-      handleError(err)
-      return false
-    } finally {
-      loading.value = false
-    }
-  }
-
-  /*##########################
-    Update Marker
-  ##########################*/
-  const updateMarker = async (id, markerData) => {
-    loading.value = true
-    error.value = null
-    try {
-      const res = await axios.patch(`${API_URL}/marker/${id}`, markerData)
-
-      // Backend liefert kein Objekt zurück → neu laden
-      if (res.status === 200) {
-        await fetchMarkers()
-      }
-
-      return true
-    } catch (err) {
-      handleError(err)
-      return false
-    } finally {
-      loading.value = false
-    }
-  }
-
-  /*##########################
-    Delete Marker
-  ##########################*/
-  const deleteMarker = async (id) => {
-    loading.value = true
-    error.value = null
-    try {
-      const res = await axios.delete(`${API_URL}/marker/${id}`)
-      if (res.status === 200 || res.status === 204) {
-        markers.value = markers.value.filter((m) => m.id !== id)
         return true
       }
       return false
@@ -126,16 +100,66 @@ export function useMarkers() {
   }
 
   /*##########################
-    Filtered & Searched Markers
+    Update Marker
+  ##########################*/
+  const updateMarker = async (id: number, markerData: Marker) => {
+    loading.value = true
+    error.value = null
+    try {
+      const res = await axios.patch(`${API_URL}/marker/${id}`, markerData)
+
+      if (res.status === 200 && res.data) {
+        await fetchMarkers()
+        return true
+      }
+      return false
+    } catch (err) {
+      handleError(err)
+      return false
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /*##########################
+    Delete Marker
+  ##########################*/
+  const deleteMarker = async (id: number) => {
+    loading.value = true
+    error.value = null
+    try {
+      const res = await axios.delete(`${API_URL}/marker/${id}`)
+
+      if (res.status === 204 || res.status === 200) {
+        markers.value = markers.value.filter((m: Marker) => m.id !== id)
+        return true
+      }
+      return false
+    } catch (err) {
+      handleError(err)
+      return false
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /*##########################
+    Computed: Filtered Markers
   ##########################*/
   const filteredMarkers = computed(() => {
-    return markers.value.filter((m) => {
+    const query = searchQuery.value.toLowerCase()
+    const category = selectedCategory.value
+
+    return markers.value.filter((marker) => {
+      const matchesQuery =
+        !query ||
+        marker.name.toLowerCase().includes(query) ||
+        marker.description.toLowerCase().includes(query)
+
       const matchesCategory =
-        selectedCategory.value === null || m.category_id === selectedCategory.value
-      const matchesSearch =
-        m.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-        m.description.toLowerCase().includes(searchQuery.value.toLowerCase())
-      return matchesCategory && matchesSearch
+        !category || marker.category_id === category
+
+      return matchesQuery && matchesCategory
     })
   })
 

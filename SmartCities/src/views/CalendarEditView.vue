@@ -2,7 +2,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useCalendarStore } from '../composables/calendar/useCalendarStore.ts'
 import { useModalStore } from '../composables/calendar/useModalStore.ts'
-import { useCategories } from '../composables/map/useCategories.js' // ← NEU
+import { useCategories } from '@/composables/map/useCategories.ts'
 
 // Komponenten importieren
 import EventSidebar from '../components/calendar/EventSidebar.vue'
@@ -27,7 +27,7 @@ const hasModalOpen = computed(() =>
 )
 
 // Click-Outside Handler für Dropdowns
-function handleClickOutside(event: Event) {
+function handleClickOutside(event: MouseEvent) {
   const target = event.target as HTMLElement
   if (!target.closest('.filter-dropdown') && !target.closest('.plus-dropdown')) {
     modalStore.closeAllDropdowns()
@@ -135,9 +135,9 @@ function handleImportClick() {
     try {
       const count = await calendarStore.importEventsFromJSON(file)
       alert(`✅ ${count} Events erfolgreich importiert!`)
-    } catch (error) {
+    } catch (error:unknown) {
       console.error('Import-Fehler:', error)
-      alert(`❌ Fehler beim Importieren: ${error.message}`)
+      alert(`❌ Fehler beim Importieren`)
     }
   }
 
@@ -185,7 +185,7 @@ function handleFileChange(e: Event) {
         return
       }
 
-      calendarStore.importEvents(normalized)
+      calendarStore.importEvents(normalized as any)
       alert(`${normalized.length} Termin(e) importiert.`)
     } catch (err) {
       console.error(err)
@@ -234,7 +234,7 @@ function normalizeDate(s: string) {
         @toggle-popup="modalStore.togglePopup"
         @apply-filters="calendarStore.applyFilters"
         @reset-filters="calendarStore.resetFilters"
-        @reset-single-filter="calendarStore.resetSingleFilter"
+        @reset-single-filter="(key) => calendarStore.resetSingleFilter(key as any)"
         @event-click="handleEventClick"
         @open-new-event="handleOpenNewEvent"
         @open-categories="handleOpenCategories"
