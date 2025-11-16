@@ -106,7 +106,6 @@ docker compose -f docker-compose.prod.yml --profile admin up -d
 - [ ] Changed all default passwords in `.env.production`
 - [ ] Generated strong, unique passwords (use `openssl rand -base64 32`)
 - [ ] Updated `config.json` with valid API key
-- [ ] Disabled pgAdmin or restricted access (use `--profile admin` only when needed)
 - [ ] Set up HTTPS/SSL (see SSL Setup section below)
 
 ### Configuration
