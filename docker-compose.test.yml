@@ -26,8 +26,8 @@ services:
   # Backend API
   api:
     build:
-      context: ./SmartCities_Backend/api
-      dockerfile: Dockerfile
+      context: ./SmartCities_Backend
+      dockerfile: api/Dockerfile
     container_name: smartcities_api
     restart: unless-stopped
     environment:

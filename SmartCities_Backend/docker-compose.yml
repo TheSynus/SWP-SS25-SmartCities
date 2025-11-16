@@ -31,7 +31,9 @@ services:
       - postgres
 
   api:
-    build: ./api
+    build:
+      context: .
+      dockerfile: api/Dockerfile
     container_name: node_api
     restart: unless-stopped
     ports:

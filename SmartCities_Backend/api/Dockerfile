@@ -5,12 +5,14 @@ RUN apk add --no-cache wget
 
 WORKDIR /app
 
-COPY package*.json ./
+COPY api/package*.json ./
 RUN npm install
 
-COPY src ./src
-COPY test ./test
-COPY config.json ./
+COPY api/src ./src
+COPY api/config.json ./
+
+# Copy testData to location accessible via ../../../testData from /app
+COPY testData /testData
 
 EXPOSE 3000
 

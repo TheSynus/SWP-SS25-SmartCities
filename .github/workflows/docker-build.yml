@@ -72,7 +72,7 @@ jobs:
       - name: Build and push backend image
         uses: docker/build-push-action@v5
         with:
-          context: ./SmartCities_Backend/api
+          context: ./SmartCities_Backend
           file: ./SmartCities_Backend/api/Dockerfile
           push: true
           tags: ${{ steps.meta-backend.outputs.tags }}

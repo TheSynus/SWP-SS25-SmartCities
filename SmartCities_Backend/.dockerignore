@@ -1,0 +1,12 @@
+api/node_modules
+api/npm-debug.log*
+api/.env
+api/.env.local
+api/.env.*.local
+*.md
+.git
+.gitignore
+.DS_Store
+api/coverage
+*.log
+db
