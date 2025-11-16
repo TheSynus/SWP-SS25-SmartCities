@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: postgres
+    image: postgres:18.1-alpine
     container_name: postgres_db
     restart: unless-stopped
     environment:
@@ -8,14 +8,13 @@ services:
       POSTGRES_PASSWORD: Admin!1234
       POSTGRES_DB: webportal
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - postgres_run:/var/run/postgresql
+      - postgres_data:/var/lib/postgresql
       - ./db:/docker-entrypoint-initdb.d
     ports:
       - "5432:5432"
 
   pgadmin:
-    image: dpage/pgadmin4
+    image: dpage/pgadmin4:9.1
     container_name: postgres_admin
     restart: unless-stopped
     environment:
@@ -49,5 +48,4 @@ services:
 
 volumes:
   postgres_data:
-  postgres_run:
   pgadmin_data:
