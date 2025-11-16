@@ -107,6 +107,24 @@ module.exports = (configValues, utils) => {
     console.log('Coordinates were set to: ', 'latitude: ', configValues.latitude, 'longitude: ', configValues.longitude);
   });
 
+
+  router.post('/apiKey', async (req, res) => {
+    const { apiKey } = req.body;
+    // Fehler, wenn kein Regionalschlüssel mitgeschickt wurde
+    if (!apiKey) {
+      console.error('USER-ERROR: tried to set api key, no api key provided');
+      return res.status(400).send('An api key is required');
+    }
+
+    // Wenn keine Fehler auftreten, wird der Regionalschlüssel gesetzt
+    configValues.apiKey = apiKey;
+    writeValueToJSON("./config.json", "apiKey", configValues.apiKey);
+
+    res.status(200).send('The api key was set successfully');
+    console.log('API key was set to: ' + configValues.apiKey);
+  });
+
+
   //module.exports = router;
   return router;
 
