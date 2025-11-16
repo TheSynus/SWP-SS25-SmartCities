@@ -50,7 +50,7 @@ module.exports = (configValues, utils) => {
   router.get('/test', async(req, res) => {
     // Lädt Testdaten aus nina_test.json
     //let warnData = getJSONContent("./test/nina_test.json");
-    let warndData = getJSONContent("../../../testData/nina_test.json");
+    let warnData = getJSONContent("../../../testData/nina_test.json");
     
     //Formatieren & zurückgeben
     warnData = warnData.map(m => {
