@@ -1,6 +1,8 @@
 # Production Deployment Guide
 
-This guide explains how to deploy the SmartCities web application in production using Docker Compose.
+This guide explains how to deploy the SmartCities web application in production using Docker Compose and pre-built images from GitHub Container Registry.
+
+> **Note**: For development setup, see [README.md](README.md#quick-start---development)
 
 ## CI/CD with GitHub Actions
 
@@ -62,6 +64,7 @@ The project includes two Docker Compose configurations:
   - Use this for testing the entire production stack locally
   - Builds images on your machine
   - Useful for verifying changes before pushing to GitHub
+  - See [README.md](README.md) for development setup
 
 ## Prerequisites
 
@@ -69,6 +72,19 @@ The project includes two Docker Compose configurations:
 - At least 2GB RAM and 10GB disk space
 - Linux server (tested on Ubuntu 22.04 LTS)
 - Open ports: 80 (HTTP) and optionally 443 (HTTPS)
+
+### Automated Server Setup with Ansible (Optional)
+
+If you prefer automated server provisioning, you can use the included Ansible playbook to install Docker and dependencies:
+
+```bash
+cd ansible
+ansible-playbook -i ansible_hosts playbook.yaml --ask-vault-pass
+```
+
+See **[ansible/README.md](ansible/README.md)** for detailed setup instructions.
+
+Otherwise, install Docker manually following the [official Docker documentation](https://docs.docker.com/engine/install/).
 
 ## Quick Start
 
@@ -143,22 +159,6 @@ docker compose -f docker-compose.prod.yml ps
 
 **Note**: The images are pulled from GitHub Container Registry. No build step is needed on the production server.
 
-### Local Testing
-
-For local testing of the entire stack with built images (before pushing to production), use the test compose file:
-```bash
-# Build and start the entire stack locally
-docker compose -f docker-compose.test.yml --env-file .env.production up -d --build
-
-# View logs
-docker compose -f docker-compose.test.yml logs -f
-
-# Stop local test stack
-docker compose -f docker-compose.test.yml down
-```
-
-This allows you to verify that everything builds correctly and works together before GitHub Actions builds and pushes the images.
-
 The application will be available at:
 - **Frontend**: http://your-server-ip (default port 80)
 - **API**: http://your-server-ip/api/
@@ -174,18 +174,6 @@ curl http://localhost/api/nina/test
 
 # Test the frontend
 curl http://localhost/health
-```
-
-## Optional: pgAdmin Access
-
-To enable pgAdmin for database management:
-
-```bash
-# Start with admin profile
-docker compose -f docker-compose.prod.yml --profile admin up -d
-
-# Access pgAdmin at http://your-server-ip:8080
-# Login with credentials from .env.production
 ```
 
 ## Production Checklist
@@ -458,9 +446,35 @@ Add to crontab:
 0 2 * * * /root/smartcities-backup/backup.sh >> /var/log/smartcities-backup.log 2>&1
 ```
 
+## Local Testing Before Deployment
+
+If you want to test the production stack locally before deploying, use `docker-compose.test.yml`:
+
+```bash
+# Copy environment file
+cp .env.production.example .env.production
+nano .env.production  # Edit with your settings
+
+# Build and start the entire production stack locally
+docker compose -f docker-compose.test.yml --env-file .env.production up -d --build
+
+# View logs
+docker compose -f docker-compose.test.yml logs -f
+
+# Test the application
+curl http://localhost/health
+curl http://localhost/api/nina/test
+
+# Stop when done
+docker compose -f docker-compose.test.yml down
+```
+
+This builds the images locally (like GitHub Actions would) and lets you verify everything works before pushing to production.
+
 ## Support
 
 For issues and questions:
 - Check logs: `docker compose -f docker-compose.prod.yml logs`
 - Review health status: `docker compose -f docker-compose.prod.yml ps`
-- Consult CLAUDE.md for architecture details
+- Consult [CLAUDE.md](CLAUDE.md) for architecture details
+- See [README.md](README.md) for development setup
