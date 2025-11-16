@@ -8,7 +8,8 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 
-COPY src ./src 
+COPY src ./src
+COPY test ./test
 COPY config.json ./
 
 EXPOSE 3000
