@@ -31,15 +31,6 @@ CREATE TABLE appointments (
     description TEXT
 );
 
--- images
-CREATE TABLE images (
-    id SERIAL PRIMARY KEY,
-    file_name VARCHAR(255) NOT NULL,
-    file_data BYTEA NOT NULL,
-    mime_type VARCHAR(100) NOT NULL,
-    additional_info TEXT
-);
-
 -- graphs
 CREATE TABLE graphs(
     id SERIAL PRIMARY KEY,
