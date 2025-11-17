@@ -371,7 +371,13 @@ docker compose -f docker-compose.prod.yml --env-file .env.production up -d
 
 ## License
 
-This project is developed as part of a university software project.
+**All Rights Reserved**
+
+This project was developed as part of a university course (Software Projekt) and is **not licensed for public use, modification, or distribution**.
+
+This code is provided for educational and evaluation purposes only. Any use, reproduction, or distribution outside of the course context requires explicit written permission from the project authors.
+
+**Note**: This project uses third-party dependencies that are governed by their own respective licenses (see `package.json` files).
 
 ## Support
 
