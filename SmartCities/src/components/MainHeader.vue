@@ -59,6 +59,7 @@
           <!-- Mobile menu button -->
           <button
             @click="toggleMobileMenu"
+            v-if="isAdmin"
             class="md:hidden p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
             aria-label="Toggle menu"
           >
