@@ -476,5 +476,4 @@ This builds the images locally (like GitHub Actions would) and lets you verify e
 For issues and questions:
 - Check logs: `docker compose -f docker-compose.prod.yml logs`
 - Review health status: `docker compose -f docker-compose.prod.yml ps`
-- Consult [CLAUDE.md](CLAUDE.md) for architecture details
 - See [README.md](README.md) for development setup
